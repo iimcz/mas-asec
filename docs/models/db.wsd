@@ -1,0 +1,128 @@
+@startuml DB
+
+' ==============================
+' Collective Access DB entities
+' ==============================
+
+entity Work {
+    * Id
+    Status : list
+    Title : text
+    Alternative-title : text
+    Subheading : text
+    Description : text
+    Classification : list
+    Year-of-publication : date
+    Genre : list
+    Class-Time : list
+    Class-Location : list
+    Note : text
+}
+
+entity Version {
+    * Id
+    Status : list
+    Title : text
+    Alternative-title : text
+    Year-of-publication : date
+    System : list
+    System-requirements : text
+    Note : text
+    Work : Work_Id <<FK>>
+}
+
+entity Object {
+    * Id
+    Title : text
+    Alternative-title : text
+    Description : text
+    Language : list
+    Data-carrier-type : list
+    Data-carrier-count : number
+    Copy-protection : list
+    Copy-protection-note : text
+    EAN : text
+    ISBN : text
+    Internal-note : text
+    Storage-location : list
+    Object-status : list
+    License-type : list
+}
+
+entity Person-Institution {
+    * Id
+    Name : text
+    Alternative-name : string
+    Category : list
+    Website : url
+}
+
+' ==============================
+' Emulation entities
+' ==============================
+
+entity Platform {
+    * Id
+    Name : text
+
+}
+
+entity Environment {
+    * Id
+    Emulator-config : object
+    Image : text
+    Base-image : UUID
+}
+
+entity Emulator {
+    * Id
+    Name : text
+    Version : text
+    Release : date
+    Base-OS : text
+}
+
+entity Converter {
+    * Id
+    Source-media-type : list
+    
+}
+
+entity PlayerProfile {
+    * Id
+    Name : string
+
+}
+
+entity SaveState {
+    * Id
+}
+
+' ==============================
+' Access
+' ==============================
+
+entity User {
+    * Id
+    Username : text
+    Password : hash
+    Name : text
+    Note : text
+}
+
+' TODO: SSO login entities
+
+' ==============================
+' Relations
+' ==============================
+
+Object }o..|| Platform
+Object }o..|| Version
+Object }|..|| Converter
+
+Work ||..o{ Version
+
+Emulator }|..|| Environment
+Version ||..o{ PlayerProfile
+
+@enduml

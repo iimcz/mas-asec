@@ -1,0 +1,9 @@
+@startuml Acquisition
+
+User -> AsWebUI: Select
+AsWebUI -> AsBackend: Get available metadata
+AsBackend -> CollectiveAccess: Get available metadata
+CollectiveAccess -> AsBackend
+AsBackend -> AsWebUI
+
+@enduml

@@ -1,0 +1,458 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1",
+    "title": "OpenAPI3Definition 19",
+    "description": ""
+  },
+  "paths": {
+    "/api/v1/works": {
+      "get": {
+        "operationId": "GetWorks",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Work"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work/{workId}": {
+      "get": {
+        "operationId": "GetWork",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Work"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work/{workId}/versions": {
+      "get": {
+        "operationId": "GetWorkVersions",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Version"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work/{workId}/version": {
+      "put": {
+        "operationId": "AddWorkVersion",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Version"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/tools": {
+      "get": {
+        "operationId": "GetDigitalizationTools",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DigitalizationTool"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/start": {
+      "post": {
+        "operationId": "StartDigitalizationWithTool",
+        "description": "",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/stop": {
+      "post": {
+        "operationId": "StopDigitalizationProcess",
+        "description": "",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DigitalizationProcess"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/{processId}/status": {
+      "get": {
+        "operationId": "GetProcessStatus",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/work/{workId}/version/{versionId}": {
+      "post": {
+        "operationId": "UpdateWorkVersion",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "versionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "workId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Version"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {},
+    "schemas": {
+      "DigitalizationTool": {
+        "properties": {
+          "Id": {
+            "nullable": false,
+            "type": "string"
+          },
+          "Name": {
+            "nullable": false,
+            "type": "string"
+          },
+          "Version": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "Object": {
+        "properties": {
+          "id": {
+            "nullable": false,
+            "type": "string"
+          },
+          "title": {
+            "nullable": false,
+            "type": "string"
+          },
+          "alternativeTitle": {
+            "nullable": true,
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "language": {
+            "nullable": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "copyProtection": {
+            "nullable": true,
+            "type": "string"
+          },
+          "copyProtectionNote": {
+            "nullable": true,
+            "type": "string"
+          },
+          "EAN": {
+            "nullable": true,
+            "type": "string"
+          },
+          "ISBN": {
+            "nullable": true,
+            "type": "string"
+          }
+        }
+      },
+      "Work": {
+        "properties": {
+          "id": {
+            "nullable": false,
+            "type": "string"
+          },
+          "title": {
+            "nullable": false,
+            "type": "string"
+          },
+          "alternativeTitle": {
+            "nullable": true,
+            "type": "string"
+          },
+          "subheading": {
+            "nullable": true,
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "yearOfPublication": {
+            "nullable": true,
+            "type": "string"
+          },
+          "genre": {
+            "nullable": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "classificationTime": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "classificationLocation": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Version": {
+        "properties": {
+          "id": {
+            "nullable": false,
+            "type": "string"
+          },
+          "workId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "status": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "title": {
+            "nullable": true,
+            "type": "string"
+          },
+          "alternativeTitle": {
+            "nullable": true,
+            "type": "string"
+          },
+          "yearOfPublication": {
+            "nullable": true,
+            "type": "string"
+          },
+          "system": {
+            "nullable": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "systemRequirements": {
+            "nullable": true,
+            "type": "string"
+          },
+          "note": {
+            "nullable": true,
+            "type": "string"
+          }
+        }
+      },
+      "DigitalizationProcess": {
+        "properties": {
+          "processId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "toolId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "status": {
+            "nullable": false,
+            "type": "string"
+          },
+          "startTime": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
