@@ -28,7 +28,8 @@ entity Version {
     System : list
     System-requirements : text
     Note : text
-    Work : Work_Id <<FK>>
+    --
+    Work : <<FK>>
 }
 
 entity Object {
@@ -47,9 +48,11 @@ entity Object {
     Storage-location : list
     Object-status : list
     License-type : list
+    --
+    VersionId : <<FK>>
 }
 
-entity Person-Institution {
+entity PersonInstitution {
     * Id
     Name : text
     Alternative-name : string
@@ -82,6 +85,12 @@ entity Emulator {
     Base-OS : text
 }
 
+entity EmulatorVersion {
+    * Id
+    Version : text
+
+}
+
 entity Converter {
     * Id
     Source-media-type : list
@@ -96,19 +105,38 @@ entity PlayerProfile {
 
 entity SaveState {
     * Id
+    --
+    EmulatorVersionId : <<FK>>
+}
+
+' ==============================
+' Recordings
+' ==============================
+
+entity VideoRecording {
+    * Id
+    --
+    VersionId : <<FK>>
+}
+
+entity InputRecording {
+    * Id
+    --
+    VersionId : <<FK>>
+    EmulatorVersionId : <<FK>>
 }
 
 ' ==============================
 ' Access
 ' ==============================
 
-entity User {
-    * Id
-    Username : text
-    Password : hash
-    Name : text
-    Note : text
-}
+'entity User {
+'    * Id
+'    Username : text
+'    Password : hash
+'    Name : text
+'    Note : text
+'}
 
 ' TODO: SSO login entities
 
@@ -118,11 +146,21 @@ entity User {
 
 Object }o..|| Platform
 Object }o..|| Version
-Object }|..|| Converter
+Object }o..|| Converter
 
 Work ||..o{ Version
+PersonInstitution }|..o{ Work
 
-Emulator }|..|| Environment
+EmulatorVersion }o..|| Emulator
+
+Emulator ||..o{ Environment
 Version ||..o{ PlayerProfile
+
+InputRecording }o..|| EmulatorVersion
+InputRecording }o..|| Version
+
+VideoRecording }o..|| Version
+
+SaveState }o..|| EmulatorVersion
 
 @enduml
