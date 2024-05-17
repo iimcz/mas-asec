@@ -26,97 +26,27 @@
             }
           }
         }
-      }
-    },
-    "/api/v1/work/{workId}": {
-      "get": {
-        "operationId": "GetWork",
-        "description": "",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Work"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/work/{workId}/versions": {
-      "get": {
-        "operationId": "GetWorkVersions",
-        "description": "",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Version"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/work/{workId}/version": {
+      },
       "put": {
-        "operationId": "AddWorkVersion",
+        "operationId": "AddWork",
         "description": "",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Version"
+                "$ref": "#/components/schemas/Work"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "The newly created work (with id)",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Version"
+                  "$ref": "#/components/schemas/Work"
                 }
               }
             }
@@ -204,7 +134,7 @@
     },
     "/api/v1/digitalization/{processId}/status": {
       "get": {
-        "operationId": "GetProcessStatus",
+        "operationId": "GetDigitalizationProcessStatus",
         "description": "",
         "parameters": [
           {
@@ -230,9 +160,192 @@
         }
       }
     },
-    "/api/v1/work/{workId}/version/{versionId}": {
+    "/api/v1/works/{workId}": {
+      "get": {
+        "operationId": "GetWork",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Work"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/works/{workId}/versions": {
+      "get": {
+        "operationId": "GetWorkVersions",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Version"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/emulators": {
+      "get": {
+        "operationId": "GetEmulators",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Emulator"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/works/{workid}": {
       "post": {
-        "operationId": "UpdateWorkVersion",
+        "operationId": "UpdateWork",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Work"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated work",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Work"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/{processId}/restart": {
+      "post": {
+        "operationId": "RestartDigitalizationProcess",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versions": {
+      "put": {
+        "operationId": "AddWorkVersion",
+        "description": "",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Version"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versions/{versionId}": {
+      "get": {
+        "operationId": "GetWorkVersion",
         "description": "",
         "parameters": [
           {
@@ -242,10 +355,28 @@
             "schema": {
               "type": "string"
             }
-          },
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "UpdateWorkVersion",
+        "description": "",
+        "parameters": [
           {
             "in": "path",
-            "name": "workId",
+            "name": "versionId",
             "required": true,
             "schema": {
               "type": "string"
@@ -274,6 +405,200 @@
           }
         }
       }
+    },
+    "/api/v1/versions/{versionId}/artefacts": {
+      "get": {
+        "operationId": "GetVersionArtefacts",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "versionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/artefacts": {
+      "put": {
+        "operationId": "AddVersionArtefact",
+        "description": "",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Artefact"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/artefacts/{artefactId}": {
+      "get": {
+        "operationId": "GetVersionArtefact",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "artefactId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "UpdateVersionArtefact",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "artefactId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Artefact"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/{processId}/upload": {
+      "post": {
+        "operationId": "UploadDigitalizationFile",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/{processId}/input": {
+      "post": {
+        "operationId": "ProvideDigitalizationInput",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DigitalizationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -292,6 +617,14 @@
           "Version": {
             "nullable": false,
             "type": "string"
+          },
+          "PhysicalMediaType": {
+            "nullable": false,
+            "type": "string"
+          },
+          "IsAvailable": {
+            "nullable": false,
+            "type": "boolean"
           }
         }
       },
@@ -371,14 +704,14 @@
               "type": "string"
             }
           },
-          "classificationTime": {
+          "classificationByTime": {
             "nullable": true,
             "type": "array",
             "items": {
               "type": "string"
             }
           },
-          "classificationLocation": {
+          "classificationByLocation": {
             "nullable": true,
             "type": "array",
             "items": {
@@ -447,7 +780,90 @@
             "nullable": false,
             "type": "string"
           },
+          "statusDetail": {
+            "nullable": false,
+            "type": "string"
+          },
           "startTime": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "Emulator": {
+        "properties": {
+          "Id": {
+            "nullable": false,
+            "type": "string"
+          },
+          "Name": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "DigitalizationInput": {
+        "properties": {
+          "data": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "Artefact": {
+        "properties": {
+          "id": {
+            "nullable": false,
+            "type": "string"
+          },
+          "versionId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "name": {
+            "nullable": false,
+            "type": "string"
+          },
+          "physicalMediaState": {
+            "nullable": false,
+            "type": "string"
+          },
+          "archivationDate": {
+            "nullable": false,
+            "type": "string"
+          },
+          "archiver": {
+            "nullable": false,
+            "type": "string"
+          },
+          "note": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "GameObject": {
+        "properties": {
+          "id": {
+            "nullable": false,
+            "type": "string"
+          },
+          "includedArtefactIds": {
+            "nullable": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "versionId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "emulatorId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "conversionDate": {
             "nullable": false,
             "type": "string"
           }
