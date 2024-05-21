@@ -97,18 +97,6 @@ entity Converter {
     
 }
 
-entity PlayerProfile {
-    * Id
-    Name : string
-
-}
-
-entity SaveState {
-    * Id
-    --
-    EmulatorVersionId : <<FK>>
-}
-
 ' ==============================
 ' Recordings
 ' ==============================
@@ -123,6 +111,18 @@ entity InputRecording {
     * Id
     --
     VersionId : <<FK>>
+    EmulatorVersionId : <<FK>>
+}
+
+entity PlayerProfile {
+    * Id
+    Name : string
+
+}
+
+entity SaveState {
+    * Id
+    --
     EmulatorVersionId : <<FK>>
 }
 
