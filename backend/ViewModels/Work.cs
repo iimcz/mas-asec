@@ -49,14 +49,13 @@ public record Work
             if (createMissing)
             {
                 var textGenres = genres.Select(g => g.Name);
-                var newGenres = Genre.Where(g => textGenres.Contains(g)).Select( g =>
+                var newGenres = Genre.Where(g => !textGenres.Contains(g)).Select( g =>
                     new Genre() {
                         Id = Guid.NewGuid(),
                         Name = g
                     }
                 );
                 dbGenres.AddRange(newGenres);
-                await dbContext.Genres.AddRangeAsync(newGenres);
             }
         }
 
@@ -70,14 +69,13 @@ public record Work
             if (createMissing)
             {
                 var textStatuses = statuses.Select(s => s.Value);
-                var newStatuses = Status.Where(s => textStatuses.Contains(s)).Select( s =>
+                var newStatuses = Status.Where(s => !textStatuses.Contains(s)).Select( s =>
                     new Status() {
                         Id = Guid.NewGuid(),
                         Value = s
                     }
                 );
                 dbStatuses.AddRange(newStatuses);
-                await dbContext.Statuses.AddRangeAsync(newStatuses);
             }
         }
 
@@ -91,14 +89,13 @@ public record Work
             if (createMissing)
             {
                 var textClassifications = classifications.Select(c => c.Value);
-                var newClassifications = Classification.Where(c => textClassifications.Contains(c)).Select( c =>
+                var newClassifications = Classification.Where(c => !textClassifications.Contains(c)).Select( c =>
                     new Classification() {
                         Id = Guid.NewGuid(),
                         Value = c
                     }
                 );
                 dbClassifications.AddRange(newClassifications);
-                await dbContext.Classifications.AddRangeAsync(newClassifications);
             }
         }
 
@@ -112,14 +109,13 @@ public record Work
             if (createMissing)
             {
                 var textTimeClassifications = timeClassifications.Select(c => c.Time);
-                var newTimeClassifications = TimeClassification.Where(c => textTimeClassifications.Contains(c)).Select(c =>
+                var newTimeClassifications = TimeClassification.Where(c => !textTimeClassifications.Contains(c)).Select(c =>
                     new TimeClassification() {
                         Id = Guid.NewGuid(),
                         Time = c
                     }
                 );
                 dbTimeClassifications.AddRange(newTimeClassifications);
-                await dbContext.TimeClassifications.AddRangeAsync(newTimeClassifications);
             }
         }
 
@@ -133,14 +129,13 @@ public record Work
             if (createMissing)
             {
                 var textLocationClassifications = locationClassifications.Select(c => c.Location);
-                var newLocationClassifications = LocationClassification.Where(c => textLocationClassifications.Contains(c)).Select( c =>
+                var newLocationClassifications = LocationClassification.Where(c => !textLocationClassifications.Contains(c)).Select( c =>
                     new LocationClassification() {
                         Id = Guid.NewGuid(),
                         Location = c
                     }
                 );
                 dbLocationClassifications.AddRange(newLocationClassifications);
-                await dbContext.LocationClassifications.AddRangeAsync(newLocationClassifications);
             }
         }
 
