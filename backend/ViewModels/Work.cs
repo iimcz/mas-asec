@@ -7,16 +7,16 @@ namespace asec.ViewModels;
 public record Work
 {
     public string Id { get; set; } = "";
-    public IList<string>? Status { get; set; }
+    public IEnumerable<string> Status { get; set; }
     public string Title { get; set; } = "";
     public string AlternativeTitle { get; set; } = "";
     public string Subheading { get; set; } = "";
     public string Description { get; set; } = "";
-    public IList<string>? Classification { get; set; }
+    public IEnumerable<string> Classification { get; set; }
     public DateOnly YearOfPublication { get; set; }
-    public IList<string>? Genre { get; set; }
-    public IList<string>? TimeClassification { get; set; }
-    public IList<string>? LocationClassification { get; set; }
+    public IEnumerable<string> Genre { get; set; }
+    public IEnumerable<string> TimeClassification { get; set; }
+    public IEnumerable<string> LocationClassification { get; set; }
     public string Note { get; set; } = "";
 
     public static Work FromDbEntity(asec.Models.Archive.Work dbWork)
