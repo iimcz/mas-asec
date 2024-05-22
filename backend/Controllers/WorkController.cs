@@ -75,8 +75,25 @@ public class WorkController : ControllerBase
         _logger.LogDebug("Work found, updating work id: {0}", workId);
         work.Id = workId;
         var dbWork = await work.ToDbEntity(_dbContext, true);
-        
+
         await _dbContext.SaveChangesAsync();
         return Ok(ViewModels.Work.FromDbEntity(dbWork));
+    }
+
+    [HttpPost("{workId}/versions")]
+    public async Task<IActionResult> GetWorkVersions(string workId)
+    {
+        var work = await _dbContext.Works
+            .Include(w => w.Versions)
+            .ThenInclude(v => v.Status)
+            .Include(w => w.Versions)
+            .ThenInclude(v => v.System)
+            .FirstOrDefaultAsync(w => w.Id == Guid.Parse(workId));
+        if (work == null)
+            return NotFound();
+        if (work.Versions == null)
+            return Ok(new List<ViewModels.Version>());
+        var result = work.Versions.Select(ViewModels.Version.FromDBEntity);
+        return Ok(result);
     }
 }
