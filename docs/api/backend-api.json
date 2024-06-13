@@ -77,54 +77,26 @@
       }
     },
     "/api/v1/digitalization/start": {
-      "post": {
-        "operationId": "StartDigitalizationWithTool",
+      "put": {
+        "operationId": "StartDigitalizationWithToolForVersion",
         "description": "",
         "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "type": "string"
+                "$ref": "#/components/schemas/DigitalizationRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "The newly started digitalization process",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DigitalizationProcess"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/digitalization/stop": {
-      "post": {
-        "operationId": "StopDigitalizationProcess",
-        "description": "",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DigitalizationProcess"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -434,34 +406,6 @@
         }
       }
     },
-    "/api/v1/artefacts": {
-      "put": {
-        "operationId": "AddVersionArtefact",
-        "description": "",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Artefact"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Artefact"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/artefacts/{artefactId}": {
       "get": {
         "operationId": "GetVersionArtefact",
@@ -513,7 +457,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "The updated artefact.",
             "content": {
               "application/json": {
                 "schema": {
@@ -593,6 +537,377 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/{processId}/log": {
+      "get": {
+        "operationId": "GetProcessLog",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Output log of the processing tool.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/{processId}/finalize": {
+      "post": {
+        "operationId": "FinalizeVersionArtefact",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Artefact"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The newly created artefact.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/{processId}/stop": {
+      "post": {
+        "operationId": "StopDigitalizationProcess",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DigitalizationProcess"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The stopped process",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/start": {
+      "put": {
+        "operationId": "StartConversionForEmulator",
+        "description": "",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The newly started conversion process",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/status": {
+      "get": {
+        "operationId": "GetConversionProcessStatus",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/stop": {
+      "post": {
+        "operationId": "StopConversionProcess",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DigitalizationProcess"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/run": {
+      "post": {
+        "operationId": "RunConversionProcess",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionProcess"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/log": {
+      "get": {
+        "operationId": "GetConversionProcessLog",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/restart": {
+      "post": {
+        "operationId": "RestartConversionProcess",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionProcess"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/finalize": {
+      "post": {
+        "operationId": "FinalizeConversionProcess",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionProcess"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The newly created GamePackage ready for emulation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/artefacts": {
+      "post": {
+        "operationId": "AssignArtefactsForConversion",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionArtefacts"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
                 }
               }
             }
@@ -842,7 +1157,73 @@
           }
         }
       },
-      "GameObject": {
+      "DigitalizationRequest": {
+        "properties": {
+          "toolId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "versionId": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "ConversionRequest": {
+        "properties": {
+          "emulatorId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "versionId": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "ConversionProcess": {
+        "properties": {
+          "processId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "emulatorId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "status": {
+            "nullable": false,
+            "type": "string"
+          },
+          "statusDetail": {
+            "nullable": false,
+            "type": "string"
+          },
+          "startTime": {
+            "nullable": false,
+            "type": "string"
+          },
+          "artefactIds": {
+            "nullable": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ConversionArtefacts": {
+        "properties": {
+          "artefactIds": {
+            "nullable": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "GamePackage": {
         "properties": {
           "id": {
             "nullable": false,
