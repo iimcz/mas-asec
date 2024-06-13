@@ -21,6 +21,7 @@ builder.Services.AddDbContext<AsecDBContext>(b => {
         b.UseSqlServer(connectionString);
     }
 });
+builder.Services.AddCors();
 builder.Services.AddAsecServices();
 builder.Services.AddControllers()
     .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
@@ -36,6 +37,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(config => {
+    config
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowAnyOrigin();
+});
 //app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
