@@ -13,7 +13,7 @@ public record Work
     public string Subheading { get; set; } = "";
     public string Description { get; set; } = "";
     public IEnumerable<string> Classification { get; set; }
-    public DateOnly YearOfPublication { get; set; }
+    public string YearOfPublication { get; set; } = "";
     public IEnumerable<string> Genre { get; set; }
     public IEnumerable<string> TimeClassification { get; set; }
     public IEnumerable<string> LocationClassification { get; set; }

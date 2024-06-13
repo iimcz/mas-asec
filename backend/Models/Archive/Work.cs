@@ -12,7 +12,7 @@ public class Work
     public string Subheading { get; set; } = "";
     public string Description { get; set; } = "";
     public IEnumerable<Classification> Classification { get; set; }
-    public DateOnly YearOfPublication { get; set; }
+    public string YearOfPublication { get; set; } = "";
     public IEnumerable<Genre> Genre { get; set; }
     public IEnumerable<TimeClassification> TimeClassification { get; set; }
     public IEnumerable<LocationClassification> LocationClassification { get; set; }
