@@ -80,7 +80,7 @@ public class WorkController : ControllerBase
         return Ok(ViewModels.Work.FromDbEntity(dbWork));
     }
 
-    [HttpPost("{workId}/versions")]
+    [HttpGet("{workId}/versions")]
     public async Task<IActionResult> GetWorkVersions(string workId)
     {
         var work = await _dbContext.Works
