@@ -11,7 +11,7 @@ public record Version
     public IEnumerable<string> Status { get; set; }
     public string Title { get; set; } = "";
     public string AlternativeTitle { get; set; } = "";
-    public DateOnly YearOfPublication { get; set; }
+    public string YearOfPublication { get; set; } = "";
     public IEnumerable<string> System { get; set; }
     public string SystemRequirements { get; set; } = "";
     public string Note { get; set; } = "";
