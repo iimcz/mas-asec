@@ -1,4 +1,4 @@
-using asec.EaasApi;
+using asec.Compatibility.EaasApi;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 

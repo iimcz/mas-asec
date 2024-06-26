@@ -1,4 +1,4 @@
-namespace asec.EaasApi.Models;
+namespace asec.Compatibility.EaasApi.Models;
 
 public record Provenance(
     string url,

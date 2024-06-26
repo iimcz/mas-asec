@@ -1,7 +1,7 @@
-using asec.EaasApi.Models;
+using asec.Compatibility.EaasApi.Models;
 using RestSharp;
 
-namespace asec.EaasApi;
+namespace asec.Compatibility.EaasApi;
 public class EmulatorRepositoryClient
 {
     private const string CONFIG_SECTION = "EaaSAPI";
@@ -18,9 +18,9 @@ public class EmulatorRepositoryClient
         _client = new RestClient(baseUrl);
     }
 
-    public async Task<List<EmulatorMetaData>?> GetEmulators()
+    public async Task<IEnumerable<EmulatorMetaData>> GetEmulators()
     {
         var request = new RestRequest("/emulator-repository/emulators");
-        return await _client.GetAsync<List<EmulatorMetaData>>(request);
+        return await _client.GetAsync<IEnumerable<EmulatorMetaData>>(request);
     }
 }
