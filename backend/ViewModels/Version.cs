@@ -93,7 +93,8 @@ public record Version
         }
         else
         {
-            var dbWork = await dbContext.Works.FindAsync(WorkId);
+            var dbWorkId = Guid.Parse(WorkId);
+            var dbWork = await dbContext.Works.FindAsync(dbWorkId);
             return new() {
                 Id = Guid.Empty,
                 Title = Title,
