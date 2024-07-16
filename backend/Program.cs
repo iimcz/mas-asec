@@ -1,3 +1,4 @@
+using asec.Configuration;
 using asec.Extensions;
 using asec.Models;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.ConfigureOptions<DigitalizationToolsOptionsSetup>();
 
 var app = builder.Build();
 
