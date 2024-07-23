@@ -13,7 +13,6 @@ public class WorkController : ControllerBase
 {
     private ILogger<WorkController> _logger;
     private AsecDBContext _dbContext;
-    private RemoteLLMClient _llmClient;
     public WorkController(AsecDBContext dbContext, ILogger<WorkController> logger)
     {
         _logger = logger;
@@ -99,11 +98,5 @@ public class WorkController : ControllerBase
             return Ok(new List<ViewModels.Version>());
         var result = work.Versions.Select(ViewModels.Version.FromDBEntity);
         return Ok(result);
-    }
-
-    [HttpPost("scrape")]
-    public async Task<IActionResult> ScrapeWorkFromUrl([FromBody] string url)
-    {
-        return Ok(await _llmClient.TryDeduceWorkPropertiesFrom(url));
     }
 }
