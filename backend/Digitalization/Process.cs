@@ -1,12 +1,13 @@
+using System.Threading.Channels;
 using asec.Digitalization.Tools;
 
 namespace asec.Digitalization;
 
 public class Process
 {
-
     public Guid Id { get; private set; } = Guid.NewGuid();
     public IDigitalizationTool DigitalizationTool { get; private set; }
+    public Models.Archive.Version Version { get; private set; }
     public CancellationToken CancellationToken { get; private set; }
     public DateTime StartTime { get; private set; }
 
@@ -19,11 +20,18 @@ public class Process
     // TODO: consider locking modification to avoid changing the value during get from different thread
     public ProcessStatus Status { get; set; }
     public string StatusDetail { get; set; }
+    
+    public ChannelWriter<string> InputChannel => _inputChannel.Writer;
+    private Channel<string> _inputChannel = Channel.CreateBounded<string>(new BoundedChannelOptions(1) {
+        FullMode = BoundedChannelFullMode.DropOldest,
+        SingleReader = true,
+        SingleWriter = false
+    });
 
-
-    public Process(IDigitalizationTool digitalizationTool, string dirsBase)
+    public Process(IDigitalizationTool digitalizationTool, Models.Archive.Version version, string dirsBase)
     {
         DigitalizationTool = digitalizationTool;
+        Version = version;
         BaseDir = Path.Combine(dirsBase, Id.ToString());
         WorkDir = Path.Combine(BaseDir, "work");
         UploadDir = Path.Combine(BaseDir, "upload");
@@ -34,28 +42,18 @@ public class Process
         CreateDirectoryStructure();
     }
 
-    public async Task<string> WaitForInput()
+    public async Task<string> WaitForInput(string statusDetail, CancellationToken cancellationToken)
     {
         if (Status != ProcessStatus.Running)
             throw new InvalidOperationException("Tried to wait when not running.");
         Status = ProcessStatus.WaitingForInput;
+        StatusDetail = statusDetail;
 
-
-        Status = ProcessStatus.Running;
-
-        // ...
-        return null;
-    }
-
-    public async Task WaitForProcess()
-    {
-        if (Status != ProcessStatus.Running)
-            throw new InvalidOperationException("Tried to wait when not running.");
-        Status = ProcessStatus.WaitingForProcess;
-
-        // ...
+        var result = await _inputChannel.Reader.ReadAsync(cancellationToken);
 
         Status = ProcessStatus.Running;
+        StatusDetail = String.Empty;
+        return result;
     }
 
     public Task<string> Start(CancellationToken cancellationToken)

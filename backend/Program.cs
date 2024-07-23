@@ -2,6 +2,7 @@ using asec.Configuration;
 using asec.Extensions;
 using asec.Models;
 using Microsoft.EntityFrameworkCore;
+using Minio.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,14 @@ builder.Services.AddDbContext<AsecDBContext>(b => {
     }
 });
 builder.Services.AddCors();
+builder.Services.AddMinio(options => {
+    var section = builder.Configuration.GetSection("ObjectStorage");
+    options.Endpoint = section.GetValue<string>("Endpoint") ?? "";
+    options.AccessKey = section.GetValue<string>("AccessKey") ?? "";
+    options.SecretKey = section.GetValue<string>("SecretKey") ?? "";
+    options.Region = section.GetValue<string>("Region") ?? "";
+    options.SessionToken = section.GetValue<string>("SessionToken") ?? "";
+});
 builder.Services.AddAsecServices();
 builder.Services.AddControllers()
     .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);

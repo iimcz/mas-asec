@@ -1,4 +1,5 @@
 using asec.Models.Archive;
+using asec.Models.Digitalization;
 using Microsoft.EntityFrameworkCore;
 
 namespace asec.Models;
@@ -7,6 +8,7 @@ public class AsecDBContext : DbContext
 {
     public DbSet<Work> Works { get; set; }
     public DbSet<Archive.Version> Versions { get; set; }
+    public DbSet<Artefact> Artefacts { get; set; }
 
     public DbSet<Classification> Classifications { get; set; }
     public DbSet<TimeClassification> TimeClassifications { get; set; }
@@ -33,6 +35,7 @@ public class AsecDBContext : DbContext
 
         modelBuilder.Entity<Archive.Version>().HasMany(v => v.Status).WithMany();
         modelBuilder.Entity<Archive.Version>().HasMany(v => v.System).WithMany();
+        modelBuilder.Entity<Archive.Version>().HasMany(v => v.Artefacts).WithOne();
 
         // TODO: seed DB
     }

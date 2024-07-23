@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using asec.Models.Digitalization;
 
 namespace asec.Models.Archive;
 
@@ -14,5 +15,6 @@ public class Version
     public IEnumerable<System> System { get; set; }
     public string SystemRequirements { get; set; } = "";
     public string Note { get; set; } = "";
+    public IEnumerable<Artefact> Artefacts { get; set; }
 
 }

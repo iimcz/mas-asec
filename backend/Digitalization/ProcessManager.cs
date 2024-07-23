@@ -13,7 +13,7 @@ public class ProcessManager : IProcessManager
         _processBaseDir = config.GetSection("Digitalization").GetValue<string>("ProcessBaseDir");
     }
 
-    public async Task CancelProcess(Guid processId)
+    public async Task CancelProcessAsync(Guid processId)
     {
         ProcessRecord record;
         if (!_processes.TryGetValue(processId, out record))
@@ -22,12 +22,12 @@ public class ProcessManager : IProcessManager
         await record.Task.WaitAsync(CancellationToken.None);
     }
 
-    public async Task FinishProcess(Guid processId)
+    public async Task<string> FinishProcessAsync(Guid processId)
     {
         ProcessRecord record;
         if (!_processes.TryGetValue(processId, out record))
             throw new ArgumentException("Process not found", nameof(processId));
-        await record.Task.WaitAsync(CancellationToken.None);
+        return await record.Task.WaitAsync(CancellationToken.None);
     }
 
     public Process GetProcess(Guid processId)
@@ -38,9 +38,9 @@ public class ProcessManager : IProcessManager
         return record.Process;
     }
 
-    public Process StartProcess(IDigitalizationTool tool)
+    public Process StartProcess(IDigitalizationTool tool, Models.Archive.Version version)
     {
-        var process = new Process(tool, _processBaseDir);
+        var process = new Process(tool, version, _processBaseDir);
         var tokenSource = new CancellationTokenSource();
         var processTask = Task.Run(() => process.Start(tokenSource.Token));
 
@@ -67,6 +67,6 @@ public class ProcessManager : IProcessManager
     private record ProcessRecord(
         Process Process,
         CancellationTokenSource TokenSource,
-        Task Task
+        Task<string> Task
     );
 }
