@@ -59,4 +59,14 @@ public class VersionController : ControllerBase
         await _dbContext.SaveChangesAsync();
         return Ok(ViewModels.Version.FromDBEntity(dbVersion));
     }
+
+    [HttpGet("{versionId}/artefacts")]
+    public async Task<IActionResult> GetArtefacts(string versionId)
+    {
+        var id = Guid.Parse(versionId);
+        var version = await _dbContext.Versions.Include(v => v.Artefacts).FirstOrDefaultAsync(v => v.Id == id);
+        if (version == null)
+            return NotFound();
+        return Ok(version.Artefacts.Select(a => ViewModels.Artefact.FromDBEntity(a)));
+    }
 }
