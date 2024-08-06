@@ -77,7 +77,8 @@ public class DigitalizationController : ControllerBase
         // TODO: check for success (or maybe exception?)
         var artefactObject = await _minioClient.PutObjectAsync(args);
 
-        var dbArtefact = artefact.ToDBEntity(process.Version);
+        artefact.VersionId = process.VersionId.ToString();
+        var dbArtefact = await artefact.ToDBEntity(_dbContext);
         dbArtefact.Id = objectId;
         
         await _dbContext.Artefacts.AddAsync(dbArtefact);
@@ -113,7 +114,9 @@ public class DigitalizationController : ControllerBase
         if (process == null)
             return NotFound();
         var tool = process.DigitalizationTool;
-        var version = process.Version;
+        var version = await _dbContext.Versions.FindAsync(process.VersionId);
+        if (version == null)
+            return NotFound();
         await _processManager.CancelProcessAsync(process.Id);
         var newProcess = _processManager.StartProcess(tool, version);
         return Ok(DigitalizationProcess.FromProcess(newProcess));

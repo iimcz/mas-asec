@@ -6,8 +6,8 @@ namespace asec.Digitalization;
 public class Process
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
+    public Guid VersionId { get; private set; }
     public IDigitalizationTool DigitalizationTool { get; private set; }
-    public Models.Archive.Version Version { get; private set; }
     public CancellationToken CancellationToken { get; private set; }
     public DateTime StartTime { get; private set; }
 
@@ -31,7 +31,7 @@ public class Process
     public Process(IDigitalizationTool digitalizationTool, Models.Archive.Version version, string dirsBase)
     {
         DigitalizationTool = digitalizationTool;
-        Version = version;
+        VersionId = version.Id;
         BaseDir = Path.Combine(dirsBase, Id.ToString());
         WorkDir = Path.Combine(BaseDir, "work");
         UploadDir = Path.Combine(BaseDir, "upload");

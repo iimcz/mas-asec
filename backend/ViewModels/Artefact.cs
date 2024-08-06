@@ -27,19 +27,6 @@ public record Artefact
         };
     }
 
-    public Models.Digitalization.Artefact ToDBEntity(Models.Archive.Version version)
-    {
-        return new() {
-            Id = Guid.Empty,
-            Version = version,
-            Name = Name,
-            PhysicalMediaState = PhysicalMediaState,
-            ArchivationDate = DateTime.Parse(ArchivationDate),
-            Archiver = Archiver,
-            Note = Note
-        };
-    }
-
     public static Artefact FromDBEntity(Models.Digitalization.Artefact artefact)
     {
         return new() {
