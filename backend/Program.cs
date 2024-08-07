@@ -10,7 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 //builder.Configuration.AddJsonFile("emulators.json", false);
 
 // Add services to the container.
-builder.Services.AddDbContext<AsecDBContext>(b => {
+builder.Services.AddDbContext<AsecDBContext>(b =>
+{
     var section = builder.Configuration.GetSection("Database");
     var useSqlite = section.GetValue<bool>("UseSqlite");
     var connectionString = section.GetValue<string>("ConnectionString");
@@ -24,7 +25,8 @@ builder.Services.AddDbContext<AsecDBContext>(b => {
     }
 });
 builder.Services.AddCors();
-builder.Services.AddMinio(options => {
+builder.Services.AddMinio(options =>
+{
     var section = builder.Configuration.GetSection("ObjectStorage");
     options.Endpoint = section.GetValue<string>("Endpoint") ?? "";
     options.AccessKey = section.GetValue<string>("AccessKey") ?? "";
@@ -48,7 +50,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors(config => {
+app.UseCors(config =>
+{
     config
     .AllowAnyHeader()
     .AllowAnyMethod()
