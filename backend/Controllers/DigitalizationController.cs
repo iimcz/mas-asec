@@ -1,4 +1,5 @@
 using asec.Digitalization;
+using asec.LongRunning;
 using asec.Models;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -13,13 +14,14 @@ namespace asec.Controllers;
 public class DigitalizationController : ControllerBase
 {
     private readonly string _minioArtefactBucket;
+    private readonly string _digitalizationDirsBase;
     private ILogger<DigitalizationController> _logger;
     private IToolRepository _tools;
-    private IProcessManager _processManager;
+    private IProcessManager<Process> _processManager;
     private IMinioClient _minioClient;
     private AsecDBContext _dbContext;
 
-    public DigitalizationController(ILogger<DigitalizationController> logger, IToolRepository tools, IProcessManager processManager, IMinioClient minioClient, IConfiguration config, AsecDBContext dbContext)
+    public DigitalizationController(ILogger<DigitalizationController> logger, IToolRepository tools, IProcessManager<Process> processManager, IMinioClient minioClient, IConfiguration config, AsecDBContext dbContext)
     {
         _logger = logger;
         _tools = tools;
@@ -55,8 +57,9 @@ public class DigitalizationController : ControllerBase
         if (version == null)
             return NotFound();
 
-        var process = _processManager.StartProcess(tool, version);
-        return Ok(DigitalizationProcess.FromProcess(process));
+        var process = new Process(tool, version, _digitalizationDirsBase);
+        _processManager.StartProcess(process);
+        return base.Ok(ViewModels.DigitalizationProcess.FromProcess(process));
     }
 
     [HttpPost("{processId}/finalize")]
@@ -118,8 +121,9 @@ public class DigitalizationController : ControllerBase
         if (version == null)
             return NotFound();
         await _processManager.CancelProcessAsync(process.Id);
-        var newProcess = _processManager.StartProcess(tool, version);
-        return Ok(DigitalizationProcess.FromProcess(newProcess));
+        var newProcess = new Process(tool, version, _digitalizationDirsBase);
+        _processManager.StartProcess(newProcess);
+        return base.Ok(DigitalizationProcess.FromProcess(newProcess));
     }
 
     [HttpGet("{processId}/status")]
@@ -127,7 +131,7 @@ public class DigitalizationController : ControllerBase
     public IActionResult GetDigitalizationProcessStatus(string processId)
     {
         var process = _processManager.GetProcess(Guid.Parse(processId));
-        return Ok(DigitalizationProcess.FromProcess(process));
+        return base.Ok(DigitalizationProcess.FromProcess(process));
     }
 
     [HttpPost("{processId}/stop")]
@@ -138,7 +142,7 @@ public class DigitalizationController : ControllerBase
         if (process == null)
             return NotFound();
         await _processManager.CancelProcessAsync(process.Id);
-        return Ok(DigitalizationProcess.FromProcess(process));
+        return base.Ok(DigitalizationProcess.FromProcess(process));
     }
 
     [HttpPost("{processId}/upload/{uploadId}")]
@@ -157,6 +161,6 @@ public class DigitalizationController : ControllerBase
             // TODO: notify process of the upload
         }
 
-        return Ok(DigitalizationProcess.FromProcess(process));
+        return base.Ok(DigitalizationProcess.FromProcess(process));
     }
 }

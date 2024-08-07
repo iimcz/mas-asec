@@ -1,4 +1,4 @@
-namespace asec.Digitalization;
+namespace asec.LongRunning;
 
 public enum ProcessStatus
 {

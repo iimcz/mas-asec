@@ -1,9 +1,10 @@
 using System.Threading.Channels;
 using asec.Digitalization.Tools;
+using asec.LongRunning;
 
 namespace asec.Digitalization;
 
-public class Process
+public class Process : IProcess
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Guid VersionId { get; private set; }
@@ -14,7 +15,7 @@ public class Process
     public string BaseDir { get; private set; }
     public string WorkDir { get; private set; }
     public string UploadDir { get; private set; }
-    public string OutputPagh { get; private set; }
+    public string OutputPath { get; private set; }
     public string LogPath { get; private set; }
 
     // TODO: consider locking modification to avoid changing the value during get from different thread
@@ -36,7 +37,7 @@ public class Process
         WorkDir = Path.Combine(BaseDir, "work");
         UploadDir = Path.Combine(BaseDir, "upload");
 
-        OutputPagh = Path.Combine(BaseDir, "output");
+        OutputPath = Path.Combine(BaseDir, "output");
         LogPath = Path.Combine(BaseDir, "log.txt");
 
         CreateDirectoryStructure();

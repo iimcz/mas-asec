@@ -1,17 +1,10 @@
-
-using asec.Digitalization.Tools;
+using asec.LongRunning;
 
 namespace asec.Digitalization;
 
-public class ProcessManager : IProcessManager
+public class ProcessManager<T> : IProcessManager<T> where T : IProcess
 {
-    private readonly string _processBaseDir;
-    private Dictionary<Guid, ProcessRecord> _processes = new();
-
-    public ProcessManager(IConfiguration config)
-    {
-        _processBaseDir = config.GetSection("Digitalization").GetValue<string>("ProcessBaseDir");
-    }
+    private readonly Dictionary<Guid, ProcessRecord> _processes = new();
 
     public async Task CancelProcessAsync(Guid processId)
     {
@@ -30,22 +23,20 @@ public class ProcessManager : IProcessManager
         return await record.Task.WaitAsync(CancellationToken.None);
     }
 
-    public Process GetProcess(Guid processId)
+    public T GetProcess(Guid processId)
     {
         ProcessRecord record;
         if (!_processes.TryGetValue(processId, out record))
-            return null;
+            return default;
         return record.Process;
     }
 
-    public Process StartProcess(IDigitalizationTool tool, Models.Archive.Version version)
+    public void StartProcess(T process)
     {
-        var process = new Process(tool, version, _processBaseDir);
         var tokenSource = new CancellationTokenSource();
         var processTask = Task.Run(() => process.Start(tokenSource.Token));
 
         _processes.Add(process.Id, new(process, tokenSource, processTask));
-        return process;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -65,7 +56,7 @@ public class ProcessManager : IProcessManager
     }
 
     private record ProcessRecord(
-        Process Process,
+        T Process,
         CancellationTokenSource TokenSource,
         Task<string> Task
     );

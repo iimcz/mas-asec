@@ -1,4 +1,5 @@
 using asec.Digitalization;
+using asec.LongRunning;
 
 namespace asec.Extensions;
 
@@ -9,8 +10,8 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IToolRepository, ToolRepository>();
         services.AddHostedService(provider => provider.GetService<IToolRepository>()!);
 
-        services.AddSingleton<IProcessManager, ProcessManager>();
-        services.AddHostedService(provider => provider.GetService<IProcessManager>()!);
+        services.AddSingleton<IProcessManager<Process>, ProcessManager<Process>>();
+        services.AddHostedService(provider => provider.GetService<IProcessManager<Process>>()!);
         return services;
     }
 }
