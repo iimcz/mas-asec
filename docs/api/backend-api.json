@@ -682,43 +682,6 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DigitalizationProcess"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConversionProcess"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/conversion/{processId}/run": {
-      "post": {
-        "operationId": "RunConversionProcess",
-        "description": "",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "processId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
                 "$ref": "#/components/schemas/ConversionProcess"
               }
             }
@@ -821,7 +784,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ConversionProcess"
+                "$ref": "#/components/schemas/GamePackage"
               }
             }
           }
@@ -833,43 +796,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GamePackage"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/conversion/{processId}/artefacts": {
-      "post": {
-        "operationId": "AssignArtefactsForConversion",
-        "description": "",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "processId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConversionArtefacts"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConversionProcess"
                 }
               }
             }
@@ -915,6 +841,258 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versions/{versionId}/packages": {
+      "get": {
+        "operationId": "GetVersionGamePackages",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "versionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GamePackage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/packages/{packageId}": {
+      "get": {
+        "operationId": "GetGamePackage",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "packageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "UpdateGamePackage",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "packageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GamePackage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/packages/{packageId}/emulate": {
+      "get": {
+        "operationId": "EmulateGamePackage",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "packageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmulationState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/emulation/{emulationId}/finish": {
+      "post": {
+        "operationId": "FinishEmulation",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "emulationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmulationFinishRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmulationState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/emulation/{emulationId}/video": {
+      "get": {
+        "operationId": "GetVideoStreamFrame",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "emulationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/emulation/{emulationId}/ping": {
+      "get": {
+        "operationId": "PingRunningEmulation",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "emulationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmulationState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/input": {
+      "post": {
+        "operationId": "ProvideConversionInput",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
                 }
               }
             }
@@ -1182,9 +1360,12 @@
             "nullable": false,
             "type": "string"
           },
-          "versionId": {
+          "artefactIds": {
             "nullable": false,
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1219,17 +1400,6 @@
           }
         }
       },
-      "ConversionArtefacts": {
-        "properties": {
-          "artefactIds": {
-            "nullable": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
       "GamePackage": {
         "properties": {
           "id": {
@@ -1254,6 +1424,66 @@
           "conversionDate": {
             "nullable": false,
             "type": "string"
+          }
+        }
+      },
+      "EmulationRequest": {
+        "properties": {
+          "packageId": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "EmulationState": {
+        "properties": {
+          "id": {
+            "nullable": false,
+            "type": "string"
+          },
+          "packageId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "status": {
+            "nullable": false,
+            "type": "string"
+          },
+          "statusDetail": {
+            "nullable": false,
+            "type": "string"
+          },
+          "isGpuPassthrough": {
+            "nullable": false,
+            "type": "string"
+          },
+          "isUsbPassthrough": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "ConversionInput": {
+        "properties": {
+          "data": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "EmulationFinishRequest": {
+        "properties": {
+          "keepScreenRecording": {
+            "nullable": false,
+            "type": "boolean"
+          },
+          "keepWebcamRecording": {
+            "nullable": false,
+            "type": "boolean"
+          },
+          "saveMachineState": {
+            "nullable": false,
+            "type": "boolean"
           }
         }
       }
