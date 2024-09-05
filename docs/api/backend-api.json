@@ -264,15 +264,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "boolean"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "",
@@ -743,15 +734,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConversionProcess"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "",
@@ -1099,6 +1081,59 @@
           }
         }
       }
+    },
+    "/api/v1/platforms": {
+      "get": {
+        "operationId": "GetPlatforms",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Platform"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platforms/{platformName}/emulators": {
+      "get": {
+        "operationId": "GetEmulatorsForPlatform",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platformName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Emulator"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1299,6 +1334,13 @@
           "name": {
             "nullable": false,
             "type": "string"
+          },
+          "platforms": {
+            "nullable": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1337,6 +1379,18 @@
             "type": "string"
           },
           "note": {
+            "nullable": false,
+            "type": "string"
+          },
+          "physicalMediaType": {
+            "nullable": false,
+            "type": "string"
+          },
+          "digitalizationToolId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "artefactType": {
             "nullable": false,
             "type": "string"
           }
@@ -1484,6 +1538,21 @@
           "saveMachineState": {
             "nullable": false,
             "type": "boolean"
+          }
+        }
+      },
+      "Platform": {
+        "properties": {
+          "name": {
+            "nullable": false,
+            "type": "string"
+          },
+          "physicalMediaTypes": {
+            "nullable": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }
