@@ -1390,7 +1390,7 @@
             "nullable": false,
             "type": "string"
           },
-          "artefactType": {
+          "type": {
             "nullable": false,
             "type": "string"
           }
