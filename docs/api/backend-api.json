@@ -1142,97 +1142,67 @@
       "DigitalizationTool": {
         "properties": {
           "id": {
+            "description": "GUID of the digitalization tool.",
             "nullable": false,
             "type": "string"
           },
           "name": {
+            "description": "Name of the tool, possibly referencing the used hardware as well.",
             "nullable": false,
             "type": "string"
           },
           "version": {
+            "description": "Version of the digitalization tool. Can contain both software and hardware versions.",
             "nullable": false,
             "type": "string"
           },
           "physicalMediaType": {
+            "description": "Media type supported by this particular tool. If the used software/hardware supports multiple media types, these will be presented as separate digitalization tools.",
             "nullable": false,
             "type": "string"
           },
           "isAvailable": {
+            "description": "Whether the tool is available. If a tool is configured on the server side but missing required software or hardware components, it will be marked as not available.",
             "nullable": false,
             "type": "boolean"
-          }
-        }
-      },
-      "Object": {
-        "properties": {
-          "id": {
-            "nullable": false,
-            "type": "string"
-          },
-          "title": {
-            "nullable": false,
-            "type": "string"
-          },
-          "alternativeTitle": {
-            "nullable": true,
-            "type": "string"
-          },
-          "description": {
-            "nullable": true,
-            "type": "string"
-          },
-          "language": {
-            "nullable": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "copyProtection": {
-            "nullable": true,
-            "type": "string"
-          },
-          "copyProtectionNote": {
-            "nullable": true,
-            "type": "string"
-          },
-          "EAN": {
-            "nullable": true,
-            "type": "string"
-          },
-          "ISBN": {
-            "nullable": true,
-            "type": "string"
           }
         }
       },
       "Work": {
         "properties": {
           "id": {
+            "readOnly": true,
+            "description": "GUID of the Work representing a single game.",
             "nullable": false,
             "type": "string"
           },
           "title": {
+            "description": "Main title of the Work.",
             "nullable": false,
             "type": "string"
           },
           "alternativeTitle": {
+            "description": "Alternative title of the Work.",
             "nullable": true,
             "type": "string"
           },
           "subheading": {
+            "description": "Subheading of the main title of the Work.",
             "nullable": true,
             "type": "string"
           },
           "description": {
+            "description": "Short description of the Work.",
             "nullable": true,
             "type": "string"
           },
           "yearOfPublication": {
+            "description": "Year of the Work's publication if available, broader time specification if a concrete year is not known.",
             "nullable": true,
             "type": "string"
           },
           "genre": {
+            "description": "List of genres this Work falls into.",
             "nullable": false,
             "type": "array",
             "items": {
@@ -1240,6 +1210,7 @@
             }
           },
           "classificationByTime": {
+            "description": "Work classification decided by its publication year.",
             "nullable": true,
             "type": "array",
             "items": {
@@ -1247,6 +1218,7 @@
             }
           },
           "classificationByLocation": {
+            "description": "Work classification decided by its publication or development location.",
             "nullable": true,
             "type": "array",
             "items": {
@@ -1258,14 +1230,19 @@
       "Version": {
         "properties": {
           "id": {
+            "readOnly": true,
+            "description": "GUID of the Version of a game.",
             "nullable": false,
             "type": "string"
           },
           "workId": {
+            "readOnly": true,
+            "description": "GUID of the associated Work.",
             "nullable": false,
             "type": "string"
           },
           "status": {
+            "description": "Current status of this particular Version (i.e. 'in publication', 'abandonware', etc.)",
             "nullable": true,
             "type": "array",
             "items": {
@@ -1273,18 +1250,22 @@
             }
           },
           "title": {
+            "description": "Title of this particular version of the Work (can be identical).",
             "nullable": true,
             "type": "string"
           },
           "alternativeTitle": {
+            "description": "Alternative title of this particular version of the Work (can be identical).",
             "nullable": true,
             "type": "string"
           },
           "yearOfPublication": {
+            "description": "Year of publication for this Version.",
             "nullable": true,
             "type": "string"
           },
           "system": {
+            "description": "Systems which are supported by this Version of the Work.",
             "nullable": false,
             "type": "array",
             "items": {
@@ -1292,10 +1273,12 @@
             }
           },
           "systemRequirements": {
+            "description": "Minimum system requirements to run this Version.",
             "nullable": true,
             "type": "string"
           },
           "note": {
+            "description": "Generic note field.",
             "nullable": true,
             "type": "string"
           }
@@ -1304,22 +1287,36 @@
       "DigitalizationProcess": {
         "properties": {
           "processId": {
+            "description": "GUID of this created process.",
             "nullable": false,
             "type": "string"
           },
           "toolId": {
+            "description": "GUID of the tool used to create and start this process.",
             "nullable": false,
             "type": "string"
           },
           "status": {
+            "description": "Current status of the process.",
+            "enum": [
+              "Initialization",
+              "Running",
+              "WaitingForInput",
+              "WaitingForProcess",
+              "Failed",
+              "Success",
+              "Restarting"
+            ],
             "nullable": false,
             "type": "string"
           },
           "statusDetail": {
+            "description": "Tool-specific detail of the current process' status.",
             "nullable": false,
             "type": "string"
           },
           "startTime": {
+            "description": "Date and time when the process was started.",
             "nullable": false,
             "type": "string"
           }
@@ -1328,14 +1325,22 @@
       "Emulator": {
         "properties": {
           "id": {
+            "description": "GUID of the emulator.",
             "nullable": false,
             "type": "string"
           },
           "name": {
+            "description": "Name of the emulator.",
+            "nullable": false,
+            "type": "string"
+          },
+          "url": {
+            "description": "Home URL of the emulator.",
             "nullable": false,
             "type": "string"
           },
           "platforms": {
+            "description": "Platforms supported by this emulator.",
             "nullable": false,
             "type": "array",
             "items": {
@@ -1347,6 +1352,7 @@
       "DigitalizationInput": {
         "properties": {
           "data": {
+            "description": "Tool-specific input data.",
             "nullable": false,
             "type": "string"
           }
@@ -1355,42 +1361,58 @@
       "Artefact": {
         "properties": {
           "id": {
+            "readOnly": true,
+            "description": "Internally a GUID, generated by the backend. Should be left out for endpoints that require Artefact as input.",
             "nullable": false,
             "type": "string"
           },
           "versionId": {
+            "readOnly": true,
+            "description": "GUID of the associated version. Should be left out for endpoints that require Artefact as input.",
             "nullable": false,
             "type": "string"
           },
           "name": {
+            "description": "Name of the artefact (can be identical to Version or Work name).",
             "nullable": false,
             "type": "string"
           },
           "physicalMediaState": {
+            "description": "Assessment of the state of the physical source media. Up to the user.",
             "nullable": false,
             "type": "string"
           },
           "archivationDate": {
+            "readOnly": true,
+            "description": "Date and time when the digitalization process took place. Should be left out for endpoints that require Artefact as input.",
             "nullable": false,
             "type": "string"
           },
           "archiver": {
+            "description": "Name or identifier of the person who performed digitalization of this Artefact.",
             "nullable": false,
             "type": "string"
           },
           "note": {
+            "description": "Any additional notes regarding the process, media or Artefact.",
             "nullable": false,
             "type": "string"
           },
           "physicalMediaType": {
+            "readOnly": true,
+            "description": "Type of the source media used for digitalization. Process metadata. Should be left out for endpoints that require Artefact as input.",
             "nullable": false,
             "type": "string"
           },
           "digitalizationToolId": {
+            "readOnly": true,
+            "description": "GUID of the tool used for digitalization. Should be left out for endpoints that require Artefact as input.",
             "nullable": false,
             "type": "string"
           },
           "type": {
+            "readOnly": true,
+            "description": "What type of artefact this is (SFM floppy file, ZIP archive, etc.). Should be left out for endpoints that require Artefact as input.",
             "nullable": false,
             "type": "string"
           }
@@ -1399,10 +1421,12 @@
       "DigitalizationRequest": {
         "properties": {
           "toolId": {
+            "description": "GUID of the tool to use for digitalization.",
             "nullable": false,
             "type": "string"
           },
           "versionId": {
+            "description": "GUID of the version with which the resulting Artefact will be associated.",
             "nullable": false,
             "type": "string"
           }
@@ -1411,10 +1435,12 @@
       "ConversionRequest": {
         "properties": {
           "emulatorId": {
+            "description": "GUID of the emulator for which the conversion is requested.",
             "nullable": false,
             "type": "string"
           },
           "artefactIds": {
+            "description": "Collection of GUIDs of Artefacts which should be included in this conversion. For example a single floppy disk or a collection of CDs for multi-CD titles.",
             "nullable": false,
             "type": "array",
             "items": {
@@ -1426,26 +1452,41 @@
       "ConversionProcess": {
         "properties": {
           "processId": {
+            "description": "GUID of the created conversion process.",
             "nullable": false,
             "type": "string"
           },
           "emulatorId": {
+            "description": "GUID of the emulator for which conversion is being done.",
             "nullable": false,
             "type": "string"
           },
           "status": {
+            "description": "Current status of the process.",
+            "enum": [
+              "Initialization",
+              "Running",
+              "WaitingForInput",
+              "WaitingForProcess",
+              "Failed",
+              "Success",
+              "Restarting"
+            ],
             "nullable": false,
             "type": "string"
           },
           "statusDetail": {
+            "description": "Convertor-dependent detail string for the current process status.",
             "nullable": false,
             "type": "string"
           },
           "startTime": {
+            "description": "Date and time when the conversion process started.",
             "nullable": false,
             "type": "string"
           },
           "artefactIds": {
+            "description": "Collection of GUIDs representing the Artefacts which are being converted.",
             "nullable": false,
             "type": "array",
             "items": {
@@ -1457,10 +1498,12 @@
       "GamePackage": {
         "properties": {
           "id": {
+            "description": "GUID of this GamePackage.",
             "nullable": false,
             "type": "string"
           },
           "includedArtefactIds": {
+            "description": "GUIDs of all Artefacts included in this GamePackage.",
             "nullable": false,
             "type": "array",
             "items": {
@@ -1468,14 +1511,17 @@
             }
           },
           "versionId": {
+            "description": "GUID of the Version of a Work from which this GamePackage was created.",
             "nullable": false,
             "type": "string"
           },
           "emulatorId": {
+            "description": "GUID of the Emulator for which this game package was created and its Artefacts converted.",
             "nullable": false,
             "type": "string"
           },
           "conversionDate": {
+            "description": "Date and time when conversion of Artefacts for this GamePackage took place.",
             "nullable": false,
             "type": "string"
           }
@@ -1484,6 +1530,7 @@
       "EmulationRequest": {
         "properties": {
           "packageId": {
+            "description": "GUID of GamePackage which should be started. All other info required for emulation is already included in the respective GamePackage.",
             "nullable": false,
             "type": "string"
           }
@@ -1492,26 +1539,32 @@
       "EmulationState": {
         "properties": {
           "id": {
+            "description": "GUID of the currently running emulation.",
             "nullable": false,
             "type": "string"
           },
           "packageId": {
+            "description": "GUID of the GamePackage used to start this emulation.",
             "nullable": false,
             "type": "string"
           },
           "status": {
+            "description": "Status of the emulation.",
             "nullable": false,
             "type": "string"
           },
           "statusDetail": {
+            "description": "Emulator-specific detail string for the current status.",
             "nullable": false,
             "type": "string"
           },
           "isGpuPassthrough": {
+            "description": "Whether the system's dedicated GPU is being passed through to the virtual machine.",
             "nullable": false,
             "type": "string"
           },
           "isUsbPassthrough": {
+            "description": "Whether USB devices are being passed through to the virtual machine.",
             "nullable": false,
             "type": "string"
           }
@@ -1520,6 +1573,7 @@
       "ConversionInput": {
         "properties": {
           "data": {
+            "description": "Converter-specific input data.",
             "nullable": false,
             "type": "string"
           }
@@ -1528,14 +1582,17 @@
       "EmulationFinishRequest": {
         "properties": {
           "keepScreenRecording": {
+            "description": "Whether screen recording should be kept or (in case of false) permanently deleted.",
             "nullable": false,
             "type": "boolean"
           },
           "keepWebcamRecording": {
+            "description": "Whether recording of the webcam stream should be kept or (in case of false) permanently deleted.",
             "nullable": false,
             "type": "boolean"
           },
           "saveMachineState": {
+            "description": "Whether the current state of the emulated machine should be saved so that it can be continued at a later date.",
             "nullable": false,
             "type": "boolean"
           }
@@ -1544,10 +1601,12 @@
       "Platform": {
         "properties": {
           "name": {
+            "description": "Name of this gaming platform. Also serves as key instead of a separate ID.",
             "nullable": false,
             "type": "string"
           },
           "physicalMediaTypes": {
+            "description": "Types of physical media supported by this platform. Can be used to filter relevant Artefacts based on media type.",
             "nullable": false,
             "type": "array",
             "items": {
