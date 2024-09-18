@@ -1334,8 +1334,13 @@
             "nullable": false,
             "type": "string"
           },
-          "url": {
+          "homepage": {
             "description": "Home URL of the emulator.",
+            "nullable": false,
+            "type": "string"
+          },
+          "version": {
+            "description": "Version of this instance of the emulator.",
             "nullable": false,
             "type": "string"
           },
@@ -1398,21 +1403,27 @@
             "nullable": false,
             "type": "string"
           },
+          "type": {
+            "readOnly": true,
+            "description": "What type of artefact this is (SFM floppy file, ZIP archive, etc.). Should be left out for endpoints that require Artefact as input.",
+            "nullable": false,
+            "type": "string"
+          },
           "physicalMediaType": {
             "readOnly": true,
             "description": "Type of the source media used for digitalization. Process metadata. Should be left out for endpoints that require Artefact as input.",
             "nullable": false,
             "type": "string"
           },
-          "digitalizationToolId": {
+          "originalFileName": {
             "readOnly": true,
-            "description": "GUID of the tool used for digitalization. Should be left out for endpoints that require Artefact as input.",
+            "description": "Filename of the digitalization file, as was created during the digitalization process.",
             "nullable": false,
             "type": "string"
           },
-          "type": {
+          "digitalizationToolId": {
             "readOnly": true,
-            "description": "What type of artefact this is (SFM floppy file, ZIP archive, etc.). Should be left out for endpoints that require Artefact as input.",
+            "description": "GUID of the tool used for digitalization. Should be left out for endpoints that require Artefact as input.",
             "nullable": false,
             "type": "string"
           }
@@ -1561,12 +1572,12 @@
           "isGpuPassthrough": {
             "description": "Whether the system's dedicated GPU is being passed through to the virtual machine.",
             "nullable": false,
-            "type": "string"
+            "type": "boolean"
           },
           "isUsbPassthrough": {
             "description": "Whether USB devices are being passed through to the virtual machine.",
             "nullable": false,
-            "type": "string"
+            "type": "boolean"
           }
         }
       },
