@@ -2,7 +2,6 @@
     "Configurations": [
         {
             "$type": "greaseweazle",
-            "Id": "greaseweazle-small-diskette",
             "GWPath": "/usr/bin/gw",
             "DevicePath": "",
             "Drive": ""

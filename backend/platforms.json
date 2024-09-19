@@ -1,0 +1,9 @@
+[
+    {
+        "Name": "DOS",
+        "MediaTypes": [
+            "Floppy35",
+            "Floppy54"
+        ]
+    }
+]

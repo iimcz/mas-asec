@@ -1,5 +1,24 @@
 {
-    "Emulators": [
-        
+    "Configurations": [
+        {
+            "Name": "DOSBox",
+            "Homepage": "https://www.dosbox.com/",
+            "Platforms": [
+                "DOS"
+            ],
+            "Environments": [
+                {
+                    "Version": "0.74-3",
+                    "EaasId": "abcd-efgh-ijkl-mnop",
+                    "Converters": [
+                        {
+                            "$type": "floppy",
+                            "GWPath": "/path/to/greaseweazle",
+                            "TargetFormat": "ibm.scan:.img"
+                        }
+                    ]
+                }
+            ]
+        }
     ]
 }
