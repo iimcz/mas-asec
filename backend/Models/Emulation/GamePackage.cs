@@ -1,0 +1,13 @@
+using asec.Models.Digitalization;
+
+namespace asec.Models.Emulation;
+
+public class GamePackage
+{
+    public Guid Id { get; set; }
+    public IEnumerable<Artefact> IncludedArtefacts { get; set; }
+    public Archive.Version Version { get; set; }
+    public EmulationEnvironment Environment { get; set; }
+    public Converter Converter { get; set; }
+    public DateTime ConversionDate { get; set; }
+}

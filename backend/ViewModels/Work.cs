@@ -142,7 +142,13 @@ public record Work
         if (!String.IsNullOrEmpty(Id))
         {
             var dbId = Guid.Parse(Id);
-            var dbWork = await dbContext.Works.FindAsync(dbId);
+            var dbWork = await dbContext.Works
+                .Include(w => w.Status)
+                .Include(w => w.Genre)
+                .Include(w => w.Classification)
+                .Include(w => w.TimeClassification)
+                .Include(w => w.LocationClassification)
+                .FirstOrDefaultAsync(w => w.Id == dbId);
             if (dbWork != null)
             {
                 dbWork.Status = dbStatuses;

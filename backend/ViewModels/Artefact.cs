@@ -1,5 +1,6 @@
 using asec.Models;
 using asec.Models.Archive;
+using asec.Models.Digitalization;
 
 namespace asec.ViewModels;
 
@@ -12,18 +13,39 @@ public record Artefact
     public string ArchivationDate { get; set; }
     public string Archiver { get; set; }
     public string Note { get; set; }
+    public string Type { get; set; }
+    public string PhysicalMediaType { get; set; }
+    public string OriginalFilename { get; set; }
+    public string DigitalizationToolId { get; set; }
 
     public async Task<Models.Digitalization.Artefact> ToDBEntity(AsecDBContext context)
     {
-        var version = await context.Versions.FindAsync(Guid.Parse(VersionId));
+        Models.Archive.Version version = null;
+        if (Guid.TryParse(VersionId, out var versionId))
+            version = await context.Versions.FindAsync(versionId);
+        Models.Digitalization.DigitalizationTool tool = null;
+        if (Guid.TryParse(DigitalizationToolId, out var toolId))
+            tool = await context.DigitalizationTools.FindAsync(toolId);
+
+        var artefactType = ArtefactType.Unknown;
+        if (Type != null)
+            Enum.TryParse(Type, true, out artefactType);
+        var mediaType = Models.Digitalization.PhysicalMediaType.Unknown;
+        if (PhysicalMediaType != null)
+            Enum.TryParse(PhysicalMediaType, true, out mediaType);
+        
         return new() {
             Id = Guid.Empty,
             Version = version,
             Name = Name,
             PhysicalMediaState = PhysicalMediaState,
-            ArchivationDate = DateTime.Parse(ArchivationDate),
+            ArchivationDate = string.IsNullOrEmpty(ArchivationDate) ? DateTime.Now : DateTime.Parse(ArchivationDate),
             Archiver = Archiver,
-            Note = Note
+            Note = Note,
+            Type = artefactType,
+            PhysicalMediaType = mediaType,
+            OriginalFilename = OriginalFilename,
+            DigitalizationTool = tool
         };
     }
 
@@ -33,10 +55,14 @@ public record Artefact
             Id = artefact.Id.ToString(),
             VersionId = artefact.Version.Id.ToString(),
             Name = artefact.Name,
-            PhysicalMediaState = artefact.PhysicalMediaState.ToString(),
+            PhysicalMediaState = artefact.PhysicalMediaState,
             ArchivationDate = artefact.ArchivationDate.ToString(),
             Archiver = artefact.Archiver,
-            Note = artefact.Note
+            Note = artefact.Note,
+            Type = artefact.Type.ToString(),
+            PhysicalMediaType = artefact.PhysicalMediaType.ToString(),
+            OriginalFilename = artefact.OriginalFilename,
+            DigitalizationToolId = artefact.DigitalizationTool.Id.ToString()
         };
     }
 }
