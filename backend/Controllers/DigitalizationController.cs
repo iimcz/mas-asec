@@ -15,13 +15,13 @@ public class DigitalizationController : ControllerBase
 {
     private readonly string _minioArtefactBucket;
     private readonly string _digitalizationDirsBase;
-    private ILogger<DigitalizationController> _logger;
-    private IToolRepository _tools;
-    private IProcessManager<Process> _processManager;
-    private IMinioClient _minioClient;
-    private AsecDBContext _dbContext;
+    private readonly ILogger<DigitalizationController> _logger;
+    private readonly IToolRepository _tools;
+    private readonly IProcessManager<Process, DigitalizationResult> _processManager;
+    private readonly IMinioClient _minioClient;
+    private readonly AsecDBContext _dbContext;
 
-    public DigitalizationController(ILogger<DigitalizationController> logger, IToolRepository tools, IProcessManager<Process> processManager, IMinioClient minioClient, IConfiguration config, AsecDBContext dbContext)
+    public DigitalizationController(ILogger<DigitalizationController> logger, IToolRepository tools, IProcessManager<Process, DigitalizationResult> processManager, IMinioClient minioClient, IConfiguration config, AsecDBContext dbContext)
     {
         _logger = logger;
         _tools = tools;
@@ -29,6 +29,7 @@ public class DigitalizationController : ControllerBase
         _minioClient = minioClient;
         _dbContext = dbContext;
         _minioArtefactBucket = config.GetSection("ObjectStorage").GetValue<string>("ArtefactBucket");
+        _digitalizationDirsBase = config.GetSection("Digitalization").GetValue<string>("ProcessBaseDir");
     }
 
     [HttpGet("tools")]
@@ -36,13 +37,29 @@ public class DigitalizationController : ControllerBase
     public IActionResult GetDigitalizationTools()
     {
         var result = _tools.GetDigitalizationTools().Select(tool => new DigitalizationTool (
-            tool.Id,
+            tool.Id.ToString(),
+            tool.Slug,
             tool.Name,
             tool.Version,
             tool.PhysicalMedia.ToString(),
             tool.IsAvailable
         ));
         return Ok(result);
+    }
+
+    [HttpGet("tools/{toolId}")]
+    [Produces(typeof(DigitalizationTool))]
+    public IActionResult GetDigitalizationTool(string toolId)
+    {
+        var tool = _tools.GetDigitalizationTool(toolId);
+        return Ok(new DigitalizationTool(
+            tool.Id.ToString(),
+            tool.Slug,
+            tool.Name,
+            tool.Version,
+            tool.PhysicalMedia.ToString(),
+            tool.IsAvailable
+        ));
     }
 
     [HttpPut("start")]
@@ -59,7 +76,7 @@ public class DigitalizationController : ControllerBase
 
         var process = new Process(tool, version, _digitalizationDirsBase);
         _processManager.StartProcess(process);
-        return base.Ok(ViewModels.DigitalizationProcess.FromProcess(process));
+        return base.Ok(DigitalizationProcess.FromProcess(process));
     }
 
     [HttpPost("{processId}/finalize")]
@@ -74,7 +91,7 @@ public class DigitalizationController : ControllerBase
         var processResult = await _processManager.FinishProcessAsync(id);
         var objectId = Guid.NewGuid();
         var args = new PutObjectArgs()
-            .WithFileName(processResult)
+            .WithFileName(processResult.Filename)
             .WithBucket(_minioArtefactBucket)
             .WithObject(objectId.ToString());
         // TODO: check for success (or maybe exception?)
@@ -83,9 +100,16 @@ public class DigitalizationController : ControllerBase
         artefact.VersionId = process.VersionId.ToString();
         var dbArtefact = await artefact.ToDBEntity(_dbContext);
         dbArtefact.Id = objectId;
+        dbArtefact.Type = processResult.Type;
+        dbArtefact.OriginalFilename = Path.GetFileName(processResult.Filename);
+        dbArtefact.ArchivationDate = process.StartTime;
+        dbArtefact.PhysicalMediaType = process.DigitalizationTool.PhysicalMedia;
+        dbArtefact.DigitalizationTool = await _dbContext.DigitalizationTools.FindAsync(process.DigitalizationTool.Id);
+        // TODO: overwrite other info with the process equivalents
         
         await _dbContext.Artefacts.AddAsync(dbArtefact);
         await _dbContext.SaveChangesAsync();
+        _processManager.RemoveProcess(process);
 
         return Ok(Artefact.FromDBEntity(dbArtefact));
     }
@@ -103,9 +127,12 @@ public class DigitalizationController : ControllerBase
     }
 
     [HttpGet("{processId}/log")]
+    // TODO: add file content-disposition headers for the log download button
     public IActionResult GetProcessLog(string processId)
     {
         var process = _processManager.GetProcess(Guid.Parse(processId));
+        if (process == null)
+            return NotFound();
         return PhysicalFile(process.LogPath, "text/plain", true);
     }
 
@@ -113,6 +140,7 @@ public class DigitalizationController : ControllerBase
     [Produces(typeof(DigitalizationProcess))]
     public async Task<IActionResult> RestartDigitalizationProcess(string processId)
     {
+        // TODO: keep process id, since this should technically be the same process
         var process = _processManager.GetProcess(Guid.Parse(processId));
         if (process == null)
             return NotFound();
@@ -121,9 +149,10 @@ public class DigitalizationController : ControllerBase
         if (version == null)
             return NotFound();
         await _processManager.CancelProcessAsync(process.Id);
+        _processManager.RemoveProcess(process);
         var newProcess = new Process(tool, version, _digitalizationDirsBase);
         _processManager.StartProcess(newProcess);
-        return base.Ok(DigitalizationProcess.FromProcess(newProcess));
+        return Ok(DigitalizationProcess.FromProcess(newProcess));
     }
 
     [HttpGet("{processId}/status")]
@@ -131,7 +160,7 @@ public class DigitalizationController : ControllerBase
     public IActionResult GetDigitalizationProcessStatus(string processId)
     {
         var process = _processManager.GetProcess(Guid.Parse(processId));
-        return base.Ok(DigitalizationProcess.FromProcess(process));
+        return Ok(DigitalizationProcess.FromProcess(process));
     }
 
     [HttpPost("{processId}/stop")]
@@ -142,7 +171,7 @@ public class DigitalizationController : ControllerBase
         if (process == null)
             return NotFound();
         await _processManager.CancelProcessAsync(process.Id);
-        return base.Ok(DigitalizationProcess.FromProcess(process));
+        return Ok(DigitalizationProcess.FromProcess(process));
     }
 
     [HttpPost("{processId}/upload/{uploadId}")]
@@ -161,6 +190,11 @@ public class DigitalizationController : ControllerBase
             // TODO: notify process of the upload
         }
 
-        return base.Ok(DigitalizationProcess.FromProcess(process));
+        return Ok(DigitalizationProcess.FromProcess(process));
+    }
+
+    public async Task GetRunningProcesses()
+    {
+        // TODO...
     }
 }

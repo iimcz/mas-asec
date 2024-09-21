@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using asec.LongRunning;
+using asec.Models.Digitalization;
 
 namespace asec.Digitalization.Tools;
 
@@ -22,11 +23,21 @@ public class GreaseweazleTool : IDigitalizationTool
     private readonly Regex ToolVersionRegex = new Regex(@"^Host Tools: (\d+).(\d+)$");
     private readonly Regex FirmwareVersionRegex = new Regex(@"^\s*Firmware: (\d+).(\d+)$");
 
-    public string Id => _config.Id;
+    public Guid Id { get; set; } = Guid.NewGuid();
+    
+    public string Slug => _config.Slug;
 
     public string Name => "Greaseweazle";
 
-    public string Version { get; private set; }
+    public string Version { get; private set; } = "";
+
+    public string Environment {
+        get {
+            string OS = System.Environment.OSVersion.VersionString;
+            string CLR = System.Environment.Version.ToString();
+            return $"OS:{OS},CLR:{CLR}";
+        }
+    }
 
     public PhysicalMediaType PhysicalMedia => _config.MediaType;
 
@@ -37,8 +48,8 @@ public class GreaseweazleTool : IDigitalizationTool
     public GreaseweazleTool(GreaseweazleToolConfig config)
     {
         _config = config;
-        if (_config.MediaType != PhysicalMediaType.Diskette35 &&
-            _config.MediaType != PhysicalMediaType.Diskette54)
+        if (_config.MediaType != PhysicalMediaType.Floppy35 &&
+            _config.MediaType != PhysicalMediaType.Floppy54)
             throw new ArgumentException("Invalid physical media type: {}", nameof(_config.MediaType));
     }
 
@@ -86,7 +97,7 @@ public class GreaseweazleTool : IDigitalizationTool
         }
     }
 
-    public async Task<string> Start(Process process, CancellationToken cancellationToken)
+    public async Task<DigitalizationResult> Start(Process process, CancellationToken cancellationToken)
     {
         using var logStream = new FileStream(process.LogPath, FileMode.Append);
         using var logWriter = new StreamWriter(logStream);
@@ -119,6 +130,7 @@ public class GreaseweazleTool : IDigitalizationTool
         {
             process.Status = ProcessStatus.Failed;
             process.StatusDetail = StatusDetail.DriveCheckError.ToString();
+            return null;
         }
         process.Status = ProcessStatus.Running;
 
@@ -144,13 +156,14 @@ public class GreaseweazleTool : IDigitalizationTool
         await gwProcess.WaitForExitAsync(cancellationToken);
         if (!gwProcess.HasExited || gwProcess.ExitCode != 0)
         {
+            // TODO: check other failure modes ("Command Failed: GetInfo: Bad Command")
             process.Status = ProcessStatus.Failed;
             process.StatusDetail = StatusDetail.FailedToProcessMedia.ToString();
             return null;
         }
         process.Status = ProcessStatus.Success;
 
-        return outputFileName;
+        return new(outputFileName, ArtefactType.SfmFloppy);
     }
 
     private enum StatusDetail

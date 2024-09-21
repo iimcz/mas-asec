@@ -4,7 +4,7 @@ using asec.LongRunning;
 
 namespace asec.Digitalization;
 
-public class Process : IProcess
+public class Process : IProcess<DigitalizationResult>
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Guid VersionId { get; private set; }
@@ -57,7 +57,7 @@ public class Process : IProcess
         return result;
     }
 
-    public Task<string> Start(CancellationToken cancellationToken)
+    public Task<DigitalizationResult> Start(CancellationToken cancellationToken)
     {
         StartTime = DateTime.Now;
         CancellationToken = cancellationToken;

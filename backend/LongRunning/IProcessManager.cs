@@ -1,9 +1,10 @@
 namespace asec.LongRunning;
 
-public interface IProcessManager<T> : IHostedService where T : IProcess
+public interface IProcessManager<TProcess, TResult> : IHostedService where TProcess : IProcess<TResult>
 {
-    T GetProcess(Guid processId);
-    void StartProcess(T process);
+    TProcess GetProcess(Guid processId);
+    void StartProcess(TProcess process);
     Task CancelProcessAsync(Guid processId);
-    Task<string> FinishProcessAsync(Guid processId);
+    Task<TResult> FinishProcessAsync(Guid processId);
+    void RemoveProcess(TProcess process);
 }

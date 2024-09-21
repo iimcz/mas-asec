@@ -2,6 +2,7 @@
     "Configurations": [
         {
             "$type": "greaseweazle",
+            "Slug": "greaseweazle-35-diskette",
             "GWPath": "/usr/bin/gw",
             "DevicePath": "",
             "Drive": ""
