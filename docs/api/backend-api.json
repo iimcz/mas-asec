@@ -76,6 +76,34 @@
         }
       }
     },
+    "/api/v1/digitalization/tools/{toolId}": {
+      "get": {
+        "operationId": "GetDigitalizationTool",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "toolId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationTool"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/digitalization/start": {
       "put": {
         "operationId": "StartDigitalizationWithToolForVersion",
@@ -1145,6 +1173,9 @@
             "description": "GUID of the digitalization tool.",
             "nullable": false,
             "type": "string"
+          },
+          "slug": {
+            "description": "Identifier useful for identifying the type of the tool for UI purposes."
           },
           "name": {
             "description": "Name of the tool, possibly referencing the used hardware as well.",
