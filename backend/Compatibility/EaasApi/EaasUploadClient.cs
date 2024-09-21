@@ -12,9 +12,10 @@ public class EaasUploadClient : BaseEaasClient
 
     public async Task<UploadResponse> Upload(string filepath, CancellationToken cancellationToken)
     {
-        RestRequest request = new();
+        RestRequest request = new("/upload");
         string filename = Path.GetFileName(filepath);
-        request.AddFile(Path.GetFileName(filename), filepath);
+        request.AlwaysSingleFileAsContent = true;
+        request.AddFile(Path.GetFileName(filename), filepath, ContentType.Binary);
         request.AddQueryParameter("filename", filename);
         
         return await _client.PostAsync<UploadResponse>(request, cancellationToken);
