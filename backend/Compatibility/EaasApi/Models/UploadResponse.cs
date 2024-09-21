@@ -8,5 +8,6 @@ public record UploadedItem(
 public record UploadResponse(
     string status,
     string message,
+    List<string> uploads, /* deprecated */
     List<UploadedItem> uploadedItemList
 ) : EmilResponseType(status, message);
