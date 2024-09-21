@@ -21,10 +21,11 @@ public class EmulatorController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetEmulators()
     {
-        var eaasData = await _eaasClient.GetEmulators();
-        var result = eaasData?.Select(
-            e => new Emulator(e.name, e.version)
-        );
-        return Ok(result);
+        throw new NotImplementedException();
+        //var eaasData = await _eaasClient.GetEmulators();
+        //var result = eaasData?.Select(
+        //    e => new Emulator(e.name, e.version)
+        //);
+        //return Ok(result);
     }
 }

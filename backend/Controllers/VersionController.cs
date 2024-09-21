@@ -1,4 +1,6 @@
+using System.Runtime.CompilerServices;
 using asec.Models;
+using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -64,9 +66,28 @@ public class VersionController : ControllerBase
     public async Task<IActionResult> GetArtefacts(string versionId)
     {
         var id = Guid.Parse(versionId);
-        var version = await _dbContext.Versions.Include(v => v.Artefacts).FirstOrDefaultAsync(v => v.Id == id);
+        var version = await _dbContext.Versions
+            .Include(v => v.Artefacts)
+            .ThenInclude(a => a.DigitalizationTool)
+            .FirstOrDefaultAsync(v => v.Id == id);
         if (version == null)
             return NotFound();
         return Ok(version.Artefacts.Select(a => ViewModels.Artefact.FromDBEntity(a)));
+    }
+
+    [HttpGet("{versionId}/gamepackages")]
+    public async Task<IActionResult> GetGamePackages(string versionId)
+    {
+        var id = Guid.Parse(versionId);
+        var version = await _dbContext.Versions
+            .Include(v => v.GamePackages)
+            .ThenInclude(p => p.IncludedArtefacts)
+            .Include(v => v.GamePackages)
+            .ThenInclude(p => p.Environment)
+            .FirstOrDefaultAsync(v => v.Id == id);
+        if (version == null)
+            return NotFound();
+        var packages = version.GamePackages.Select(p => GamePackage.FromGamePackage(p));
+        return Ok(packages);
     }
 }

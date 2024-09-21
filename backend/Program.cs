@@ -1,4 +1,5 @@
 using asec.Configuration;
+using asec.Emulation;
 using asec.Extensions;
 using asec.Models;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.ConfigureOptions<DigitalizationToolsOptionsSetup>();
+builder.Services.ConfigureOptions<EmulatorOptionsSetup>();
 
 var app = builder.Build();
 
@@ -60,4 +62,5 @@ app.UseCors(config =>
 //app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+app.LoadPlatforms();
 app.Run();
