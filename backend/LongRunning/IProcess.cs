@@ -1,8 +1,9 @@
 using System.Threading.Channels;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace asec.LongRunning;
 
-public interface IProcess
+public interface IProcess<TResult>
 {
     Guid Id { get; }
     CancellationToken CancellationToken { get; }
@@ -13,5 +14,5 @@ public interface IProcess
     ProcessStatus Status { get; }
     string StatusDetail { get; }
 
-    Task<string> Start(CancellationToken cancellationToken);
+    Task<TResult> Start(CancellationToken cancellationToken);
 }
