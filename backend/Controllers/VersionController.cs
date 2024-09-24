@@ -75,7 +75,7 @@ public class VersionController : ControllerBase
         return Ok(version.Artefacts.Select(a => ViewModels.Artefact.FromDBEntity(a)));
     }
 
-    [HttpGet("{versionId}/gamepackages")]
+    [HttpGet("{versionId}/packages")]
     public async Task<IActionResult> GetGamePackages(string versionId)
     {
         var id = Guid.Parse(versionId);
