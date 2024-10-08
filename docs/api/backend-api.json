@@ -1540,11 +1540,18 @@
       "GamePackage": {
         "properties": {
           "id": {
+            "readOnly": true,
             "description": "GUID of this GamePackage.",
             "nullable": false,
             "type": "string"
           },
+          "name": {
+            "description": "Name of this GamePackage",
+            "nullable": false,
+            "type": "string"
+          },
           "includedArtefactIds": {
+            "readOnly": true,
             "description": "GUIDs of all Artefacts included in this GamePackage.",
             "nullable": false,
             "type": "array",
@@ -1553,16 +1560,19 @@
             }
           },
           "versionId": {
+            "readOnly": true,
             "description": "GUID of the Version of a Work from which this GamePackage was created.",
             "nullable": false,
             "type": "string"
           },
           "emulatorId": {
+            "readOnly": true,
             "description": "GUID of the Emulator for which this game package was created and its Artefacts converted.",
             "nullable": false,
             "type": "string"
           },
           "conversionDate": {
+            "readOnly": true,
             "description": "Date and time when conversion of Artefacts for this GamePackage took place.",
             "nullable": false,
             "type": "string"
