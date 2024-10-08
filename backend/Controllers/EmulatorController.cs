@@ -1,6 +1,9 @@
+using System.Data.Common;
 using asec.Compatibility.EaasApi;
+using asec.Models;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace asec.Controllers;
 
@@ -8,24 +11,21 @@ namespace asec.Controllers;
 [Route("/api/v1/emulators")]
 public class EmulatorController : ControllerBase
 {
-    EmulatorRepositoryClient _eaasClient;
+    private AsecDBContext _dbContext;
 
-    public EmulatorController(IConfiguration config)
+    public EmulatorController(AsecDBContext dbContext)
     {
-        _eaasClient = new(config);
-        
-        var emulatorsSection = config.GetSection("Emulators");
+        _dbContext = dbContext;
     }
 
-
-    [HttpGet]
+    [HttpGet()]
     public async Task<IActionResult> GetEmulators()
     {
-        throw new NotImplementedException();
-        //var eaasData = await _eaasClient.GetEmulators();
-        //var result = eaasData?.Select(
-        //    e => new Emulator(e.name, e.version)
-        //);
-        //return Ok(result);
+        return Ok(
+            (await _dbContext.Environments
+                .Include(e => e.Emulator)
+                .ThenInclude(em => em.Platforms)
+                .ToListAsync()
+            ).Select(e => Emulator.FromEmulationEnvironment(e)));
     }
 }

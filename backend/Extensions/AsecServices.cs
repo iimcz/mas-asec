@@ -22,9 +22,13 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IProcessManager<DataConversion.Process, ConversionResult>, ProcessManager<DataConversion.Process, ConversionResult>>();
         services.AddHostedService(provider => provider.GetService<IProcessManager<DataConversion.Process, ConversionResult>>()!);
 
+        services.AddSingleton<IProcessManager<Emulation.Process, EmulationResult>, ProcessManager<Emulation.Process, EmulationResult>>();
+        services.AddHostedService(provider => provider.GetService<IProcessManager<Emulation.Process, EmulationResult>>()!);
+
         // EaaS clients
         services.AddScoped<EaasUploadClient>();
         services.AddScoped<ObjectRepositoryClient>();
+        services.AddScoped<ComponentsClient>();
         
         return services;
     }

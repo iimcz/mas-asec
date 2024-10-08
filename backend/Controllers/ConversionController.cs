@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using asec.Compatibility.EaasApi;
 using asec.Compatibility.EaasApi.Models;
 using asec.Models.Digitalization;
-using Azure;
 
 namespace asec.Controllers;
 
@@ -21,7 +20,7 @@ public class ConversionController : ControllerBase
     private readonly string _unzipBinary;
     private ILogger<ConversionController> _logger;
     private AsecDBContext _dbContext;
-    private IProcessManager<Process, ConversionResult> _processManager;
+    private IProcessManager<DataConversion.Process, ConversionResult> _processManager;
     private IEmulatorRepository _emulatorRepository;
     private IServiceScopeFactory _serviceScopeFactory;
 
@@ -32,7 +31,7 @@ public class ConversionController : ControllerBase
     public ConversionController(
         ILogger<ConversionController> logger,
         AsecDBContext dbContext,
-        IProcessManager<Process, ConversionResult> processManager,
+        IProcessManager<DataConversion.Process, ConversionResult> processManager,
         IEmulatorRepository emulatorRepository,
         IServiceScopeFactory serviceScopeFactory,
         IConfiguration config,
@@ -69,7 +68,7 @@ public class ConversionController : ControllerBase
         if (converter == null)
             return NotFound();
 
-        var process = new Process(environmentId, converter, artefacts, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
+        var process = new DataConversion.Process(environmentId, converter, artefacts, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
         _processManager.StartProcess(process);
         
         return Ok(ConversionProcess.FromProcess(process));
@@ -77,7 +76,7 @@ public class ConversionController : ControllerBase
 
     [HttpPost("{processId}/finalize")]
     [Produces(typeof(GamePackage))]
-    public async Task<IActionResult> FinalizeConversionProcess(string processId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> FinalizeConversionProcess(string processId, [FromBody] GamePackage package, CancellationToken cancellationToken = default)
     {
         var process = _processManager.GetProcess(Guid.Parse(processId));
         if (process == null)
@@ -115,6 +114,7 @@ public class ConversionController : ControllerBase
             .FirstOrDefaultAsync(a => a.Id == artefactIds[0], cancellationToken))?.Version;
         var dbGamePackage = new Models.Emulation.GamePackage() {
             Id = Guid.Parse(eaasObjectId),
+            Name = package.Name,
             ConversionDate = process.StartTime,
             Converter = await _dbContext.Converters.FindAsync(process.Converter.Id),
             Environment = await _dbContext.Environments.FindAsync(process.EnvironmentId),
@@ -159,7 +159,7 @@ public class ConversionController : ControllerBase
         await _processManager.CancelProcessAsync(process.Id);
         _processManager.RemoveProcess(process);
 
-        var newProcess = new Process(process.EnvironmentId, process.Converter, process.Artefacts, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
+        var newProcess = new DataConversion.Process(process.EnvironmentId, process.Converter, process.Artefacts, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
         _processManager.StartProcess(newProcess);
 
         return Ok(ConversionProcess.FromProcess(newProcess));
@@ -187,12 +187,14 @@ public class ConversionController : ControllerBase
         return Ok(ConversionProcess.FromProcess(process));
     }
 
-    private static string DeviceIdFromType(ArtefactType type)
+    private static string DeviceIdFromType(ArtefactType _)
     {
-        return type switch {
-            ArtefactType.IsoImage => DeviceID.ISO,
-            ArtefactType.SfmFloppy => DeviceID.Floppy,
-            _ => DeviceID.Files
-        };
+        // TODO: For now always use Files. In the future it would be nice
+        // to properly specify the device. This is here to ensure even a floppy
+        // gets presented to the virtual machine as an .img file, instead of
+        // an inserted floppy disk. That would require also checking if the format
+        // is supported by QEMU and wouldn't allow differently formatted floppies
+        // for different platforms/emulators.
+        return DeviceID.Files;
     }
 }

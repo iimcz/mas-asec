@@ -5,6 +5,7 @@ namespace asec.Models.Emulation;
 public class GamePackage
 {
     public Guid Id { get; set; }
+    public string Name { get; set; }
     public IEnumerable<Artefact> IncludedArtefacts { get; set; }
     public Archive.Version Version { get; set; }
     public EmulationEnvironment Environment { get; set; }
