@@ -219,6 +219,72 @@
         }
       }
     },
+    "/api/v1/works/{workId}/paratexts": {
+      "get": {
+        "operationId": "GetWorkParatexts",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Paratext"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "AddWorkParatext",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Paratext"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/emulators": {
       "get": {
         "operationId": "GetEmulators",
@@ -418,6 +484,72 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Artefact"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versions/{versionId}/paratexts": {
+      "get": {
+        "operationId": "GetVersionParatexts",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "versionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Paratext"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "AddVersionParatext",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "versionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Paratext"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
                 }
               }
             }
@@ -980,6 +1112,37 @@
         }
       }
     },
+    "/api/v1/packages/{packageId}/paratexts": {
+      "get": {
+        "operationId": "GetPackageParatexts",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "packageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Paratext"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/emulation/{emulationId}/finish": {
       "post": {
         "operationId": "FinishEmulation",
@@ -1156,6 +1319,69 @@
                   "items": {
                     "$ref": "#/components/schemas/Emulator"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/paratexts/{paratextId}": {
+      "get": {
+        "operationId": "GetParatext",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "paratextId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "UpdateParatext",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "paratextId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Paratext"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
                 }
               }
             }
@@ -1664,6 +1890,59 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "Paratext": {
+        "properties": {
+          "id": {
+            "readOnly": true,
+            "description": "GUID of the Paratext.",
+            "nullable": false,
+            "type": "string"
+          },
+          "workId": {
+            "readOnly": true,
+            "description": "GUID of the Work this Paratext belongs to. A paratext will always belong to at least a Work, but can belong to one of the sub objects as well (Version or Package).",
+            "nullable": true,
+            "type": "string"
+          },
+          "versionId": {
+            "readOnly": true,
+            "description": "GUID of the Version this Paratext belongs to. Will be null if this Paratext does not belong to a Version",
+            "nullable": true,
+            "type": "string"
+          },
+          "packageId": {
+            "readOnly": true,
+            "description": "GUID of the Package this Paratext belongs to. In this case the Paratext is a recording of some king. If this Paratext does not belong to a Package, packageId will be null.",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of this Paratext.",
+            "nullable": false,
+            "type": "string"
+          },
+          "description": {
+            "description": "Description of this Paratext.",
+            "nullable": false,
+            "type": "string"
+          },
+          "source": {
+            "description": "Source of this Paratext. Verbal description.",
+            "nullable": false,
+            "type": "string"
+          },
+          "sourceUrl": {
+            "description": "Source Url of this Paratext, in case it was scraped/downloaded from somewhere or is available at this location.",
+            "nullable": false,
+            "type": "string"
+          },
+          "thumbnail": {
+            "description": "Thumbnail definition for this Paratext. Will start with 'url:' if the thumbnail should be fetched. Otherwise will start with 'template:' if a generic icon should be used. The following generic icons should be supported: link, document, archive, sound, image, video. Image and video will usually have a 'url:' thumbnail, but should be supported as well in case a real thumbnail couldn't be generated.",
+            "nullable": false,
+            "type": "string"
           }
         }
       }
