@@ -62,6 +62,7 @@ public class GamePackageController : ControllerBase
             return NotFound();
         // We only update the name here.
         package.Name = inPackage.Name;
+        await _dbContext.SaveChangesAsync();
         return Ok(GamePackage.FromGamePackage(package));
     }
 
@@ -76,5 +77,15 @@ public class GamePackageController : ControllerBase
         var process = new Process(package.Id, _serviceScopeFactory, _emulationBaseDirs, _ffmpegPath, _mainDisplay);
         _processManager.StartProcess(process);
         return Ok(EmulationState.FromProcess(process));
+    }
+
+    [HttpGet("{packageId}/paratexts")]
+    public async Task<IActionResult> GetPackageParatexts(string packageId)
+    {
+        var id = Guid.Parse(packageId);
+        var package = await _dbContext.GamePackages.Include(p => p.Paratexts).FirstOrDefaultAsync(p => p.Id == id);
+        if (package == null)
+            return NotFound();
+        return Ok(package.Paratexts.Select(p => Paratext.FromDBParatext(p)));
     }
 }
