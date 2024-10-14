@@ -30,6 +30,8 @@ public class AsecDBContext : DbContext
     public DbSet<Converter> Converters { get; set; }
     public DbSet<GamePackage> GamePackages { get; set; }
 
+    public DbSet<Paratext> Paratexts { get; set; }
+
     public AsecDBContext(DbContextOptions<AsecDBContext> options) : base(options)
     {
         Database.EnsureCreated();

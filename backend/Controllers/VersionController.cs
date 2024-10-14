@@ -3,6 +3,7 @@ using asec.Models;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace asec.Controllers;
 
@@ -89,5 +90,38 @@ public class VersionController : ControllerBase
             return NotFound();
         var packages = version.GamePackages.Select(p => GamePackage.FromGamePackage(p));
         return Ok(packages);
+    }
+
+    [HttpPut("{versionId}/paratexts")]
+    public async Task<IActionResult> AddVersionParatext(string versionId, [FromBody] Paratext paratext)
+    {
+        var id = Guid.Parse(versionId);
+        var version = await _dbContext.Versions.Include(v => v.Work).FirstOrDefaultAsync(v => v.Id == id);
+        if (version == null)
+            return NotFound();
+        var newParatext = new Models.Archive.Paratext() {
+            Id = Guid.NewGuid(),
+            Work = version.Work,
+            Version = version,
+            Name = paratext.Name,
+            Description = paratext.Description,
+            Source = paratext.Source,
+            SourceUrl = paratext.SourceUrl,
+            Thumbnail = "template:unknown",
+            Downloadable = false,
+        };
+        _dbContext.Paratexts.Add(newParatext);
+        await _dbContext.SaveChangesAsync();
+        return Ok(Paratext.FromDBParatext(newParatext));
+    }
+
+    [HttpGet("{versionId}/paratexts")]
+    public async Task<IActionResult> GetVersionParatexts(string versionId)
+    {
+        var id = Guid.Parse(versionId);
+        var version = await _dbContext.Versions.Include(v => v.Paratexts).FirstOrDefaultAsync(v => v.Id == id);
+        if (version == null)
+            return NotFound();
+        return Ok(version.Paratexts.Select(p => Paratext.FromDBParatext(p)));
     }
 }

@@ -18,5 +18,6 @@ public class Version
     public string Note { get; set; } = "";
     public IEnumerable<Artefact> Artefacts { get; set; }
     public IEnumerable<GamePackage> GamePackages { get; set; }
+    public IEnumerable<Paratext> Paratexts { get; set; }
 
 }

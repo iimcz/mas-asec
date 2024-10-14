@@ -1,8 +1,6 @@
-using asec.Compatibility.RemoteLLMApi;
 using asec.Models;
 using asec.Models.Archive;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace asec.Controllers;
@@ -98,5 +96,40 @@ public class WorkController : ControllerBase
             return Ok(new List<ViewModels.Version>());
         var result = work.Versions.Select(ViewModels.Version.FromDBEntity);
         return Ok(result);
+    }
+
+    [HttpPut("{workId}/paratexts")]
+    public async Task<IActionResult> AddWorkParatext(string workId, [FromBody] ViewModels.Paratext paratext)
+    {
+        var id = Guid.Parse(workId);
+        var work = await _dbContext.Works.FindAsync(id);
+        if (work == null)
+            return NotFound();
+        // TODO: somehow choose a proper thumbnail
+        var newParatext = new Models.Archive.Paratext() {
+            Id = Guid.NewGuid(),
+            Work = work,
+            Name = paratext.Name,
+            Description = paratext.Description,
+            Source = paratext.Source,
+            SourceUrl = paratext.SourceUrl,
+            Thumbnail = "template:unknown",
+            Downloadable = false,
+        };
+        _dbContext.Paratexts.Add(newParatext);
+        await _dbContext.SaveChangesAsync();
+        return Ok(ViewModels.Paratext.FromDBParatext(newParatext));
+    }
+
+    [HttpGet("{workId}/paratexts")]
+    public async Task<IActionResult> GetWorkParatexts(string workId)
+    {
+        var id = Guid.Parse(workId);
+        var work = await _dbContext.Works
+            .Include(w => w.Paratexts)
+            .FirstOrDefaultAsync(w => w.Id == id);
+        if (work == null)
+            return NotFound();
+        return Ok(work.Paratexts.Select(p => ViewModels.Paratext.FromDBParatext(p)));
     }
 }

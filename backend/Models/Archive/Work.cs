@@ -17,5 +17,6 @@ public class Work
     public IEnumerable<TimeClassification> TimeClassification { get; set; }
     public IEnumerable<LocationClassification> LocationClassification { get; set; }
     public IEnumerable<Version> Versions { get; set; }
+    public IEnumerable<Paratext> Paratexts { get; set; }
     public string Note { get; set; } = "";
 }
