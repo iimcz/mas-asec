@@ -20,6 +20,7 @@ public class GamePackageController : ControllerBase
     private readonly string _ffmpegPath;
     private readonly string _emulationBaseDirs;
     private readonly string _mainDisplay;
+    private readonly string _emulationStreamBaseUrl;
 
     public GamePackageController(IConfiguration configuration, AsecDBContext dbContext, IServiceScopeFactory serviceScopeFactory, IProcessManager<Process, EmulationResult> processManager)
     {
@@ -31,6 +32,7 @@ public class GamePackageController : ControllerBase
         _ffmpegPath = section.GetValue<string>("FfmpegPath");
         _emulationBaseDirs = section.GetValue<string>("ProcessBaseDir");
         _mainDisplay = section.GetValue<string>("MainDisplay");
+        _emulationStreamBaseUrl = section.GetValue<string>("StreamOutBaseUrl");
     }
 
     [HttpGet("{packageId}")]
@@ -74,7 +76,13 @@ public class GamePackageController : ControllerBase
         if (package == null)
             return NotFound();
         
-        var process = new Process(package.Id, _serviceScopeFactory, _emulationBaseDirs, _ffmpegPath, _mainDisplay);
+        var process = new Process(
+            package.Id,
+            _serviceScopeFactory,
+            _emulationBaseDirs,
+            _ffmpegPath,
+            _mainDisplay,
+            _emulationStreamBaseUrl);
         _processManager.StartProcess(process);
         return Ok(EmulationState.FromProcess(process));
     }

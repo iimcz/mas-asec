@@ -9,11 +9,13 @@ namespace asec.Controllers;
 [Route("/api/v1/emulation")]
 public class EmulationController : ControllerBase
 {
+    private readonly string _emulationStreamBaseUrl;
     private IProcessManager<Process, EmulationResult> _processManager;
 
-    public EmulationController(IProcessManager<Process, EmulationResult> processManager)
+    public EmulationController(IProcessManager<Process, EmulationResult> processManager, IConfiguration configuration)
     {
         _processManager = processManager;
+        _emulationStreamBaseUrl = configuration.GetSection("Emulation").GetValue<string>("StreamBaseUrl");
     }
 
     [HttpGet("{emulationId}/ping")]
@@ -59,7 +61,10 @@ public class EmulationController : ControllerBase
     [HttpGet("{emulationId}/video")]
     public IActionResult GetVideoStreamFrame(string emulationId)
     {
-        // TODO: separate streams for each emulation
-        return Ok("http://adept2:8889/machine/");
+        var id = Guid.Parse(emulationId);
+        var emulationProcess = _processManager.GetProcess(id);
+        if (emulationProcess == null)
+            return NotFound();
+        return Ok(_emulationStreamBaseUrl + id.ToString());
     }
 }

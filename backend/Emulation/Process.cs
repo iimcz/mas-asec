@@ -50,13 +50,15 @@ public class Process : IProcess<EmulationResult>
     private IServiceScopeFactory _serviceScopeFactory;
     private string _ffmpegPath;
     private string _mainDisplay;
+    private string _streamBaseUrl;
 
-    public Process(Guid packageId, IServiceScopeFactory serviceScopeFactory, string dirsBase, string ffmpegPath, string mainDisplay)
+    public Process(Guid packageId, IServiceScopeFactory serviceScopeFactory, string dirsBase, string ffmpegPath, string mainDisplay, string streamBaseUrl)
     {
         PackageId = packageId;
         _serviceScopeFactory = serviceScopeFactory;
         _ffmpegPath = ffmpegPath;
         _mainDisplay = mainDisplay;
+        _streamBaseUrl = streamBaseUrl;
 
         BaseDir = Path.Combine(dirsBase, Id.ToString());
         LogPath = Path.Combine(BaseDir, "log.txt");
@@ -114,7 +116,7 @@ public class Process : IProcess<EmulationResult>
 
         var subTasks = new List<Task>() {
             Task.Run(() => AutoPassthroughUSB(runningComponent.id, Path.Combine(SubprocessLogsDir, "usbpassthrough.txt"), _mainDisplay), cancellationToken),
-            Task.Run(() => PassthroughAndRecordScreen(Path.Combine(SubprocessLogsDir, "ffmpeg-screen.txt"), Path.Combine(RecordingsDir, "screen.mp4")), cancellationToken)
+            Task.Run(() => PassthroughAndRecordScreen(Path.Combine(SubprocessLogsDir, "ffmpeg-screen.txt"), Path.Combine(RecordingsDir, "screen"), ".mp4"), cancellationToken)
         };
 
         bool saveMachineState = true;
@@ -149,11 +151,11 @@ public class Process : IProcess<EmulationResult>
 
         // TODO: return actual values
         return new EmulationResult(
-            null, ""
+            new List<VideoFile>(), ""
         );
     }
 
-    private async Task PassthroughAndRecordScreen(string logPath, string recordingPath)
+    private async Task PassthroughAndRecordScreen(string logPath, string recordingPath, string recordingExt)
     {
         using var logWriter = new StreamWriter(logPath);
         void outputCallback(object sender, DataReceivedEventArgs e)
@@ -161,6 +163,9 @@ public class Process : IProcess<EmulationResult>
             if (e.Data != null)
                 logWriter.WriteLine(e.Data);
         };
+
+        int ffmpegRetry = 0;
+        string outputUrl = _streamBaseUrl + Id.ToString();
 
         ProcessStartInfo ffmpegInfo = new(_ffmpegPath);
         ffmpegInfo.ArgumentList.Add("-f");
@@ -173,13 +178,13 @@ public class Process : IProcess<EmulationResult>
         ffmpegInfo.ArgumentList.Add("vp8");
         ffmpegInfo.ArgumentList.Add("-f");
         ffmpegInfo.ArgumentList.Add("rtsp");
-        ffmpegInfo.ArgumentList.Add("rtsp://adept2:8554/machine"); // TODO: parametrize this
+        ffmpegInfo.ArgumentList.Add(outputUrl);
 
         // Recording config
         ffmpegInfo.ArgumentList.Add("-c:v");
         ffmpegInfo.ArgumentList.Add("h264");
         ffmpegInfo.ArgumentList.Add("-y");
-        ffmpegInfo.ArgumentList.Add(recordingPath);
+        ffmpegInfo.ArgumentList.Add(recordingPath + ffmpegRetry + recordingExt);
 
         ffmpegInfo.RedirectStandardOutput = true;
         ffmpegInfo.RedirectStandardError = true;
@@ -188,6 +193,7 @@ public class Process : IProcess<EmulationResult>
         if (ffmpegProcess == null)
             return; // TODO: error handling
         ffmpegProcess.OutputDataReceived += outputCallback;
+        ffmpegProcess.ErrorDataReceived += outputCallback;
         ffmpegProcess.BeginOutputReadLine();
         ffmpegProcess.BeginErrorReadLine();
 
@@ -196,9 +202,14 @@ public class Process : IProcess<EmulationResult>
             if (ffmpegProcess.HasExited)
             {
                 // Keep restarting ffmpeg
+                await logWriter.WriteLineAsync("## Restarting FFMPEG...");
+                await logWriter.FlushAsync();
+                ffmpegRetry++;
                 await Task.Delay(TimeSpan.FromSeconds(2));
+                ffmpegInfo.ArgumentList[^1] = recordingPath + ffmpegRetry + recordingExt;
                 ffmpegProcess = System.Diagnostics.Process.Start(ffmpegInfo)!;
                 ffmpegProcess.OutputDataReceived += outputCallback;
+                ffmpegProcess.ErrorDataReceived += outputCallback;
                 ffmpegProcess.BeginOutputReadLine();
                 ffmpegProcess.BeginErrorReadLine();
             }
@@ -231,12 +242,17 @@ public class Process : IProcess<EmulationResult>
             bool connected = await Linux.PollDisplayConnected(displayToCheck);
             if (connected != lastConnected)
             {
+                await logWriter.WriteLineAsync("Display connection status changed, running connection commands:");
                 foreach (var device in devices)
                 {
-                    // Disconnect device when we switch back to the integrated GPU
-                    // -> connected is true
-                    var command = connected ? device.disconnectCommand : device.connectCommand;
-                    await qemuClient.PostCommand(command);
+                    if (device.deviceType == "keyboard" || device.deviceType == "mouse")
+                    {
+                        // Disconnect device when we switch back to the integrated GPU
+                        // -> connected is true
+                        var command = connected ? device.disconnectCommand : device.connectCommand;
+                        await logWriter.WriteLineAsync($"\t{command}");
+                        await qemuClient.PostCommand(command);
+                    }
                 }
                 lastConnected = connected;
             }
