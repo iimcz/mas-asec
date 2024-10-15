@@ -50,10 +50,10 @@ public class ComponentsClient : BaseEaasClient
 
     public async Task StopComponent(string componentId)
     {
-        throw new NotImplementedException();
-        //RestRequest request = new($"/components/{componentId}/stop");
-        //request.Interceptors.Add()
-        //await _client.GetAsync<ProcessResultUrl>
+        RestRequest request = new($"/components/{componentId}/stop");
+        await _client.GetAsync<ProcessResultUrl>(request);
+
+        // TODO: save emulator log from the above returned url, if not null.
     }
 
     private async Task<MachineComponentResponse> StartMachineComponent(MachineComponentRequest inRequest)
