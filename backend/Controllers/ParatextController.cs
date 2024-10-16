@@ -82,6 +82,8 @@ public class ParatextController : ControllerBase
         if (!dbParatext.Downloadable)
             return BadRequest();
 
+        // TODO: use some kind of proxy for direct access instead of
+        // caching the file ourselves.
         var tmpFile = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
         var getObjectArgs = new GetObjectArgs()
             .WithBucket(_bucketName)

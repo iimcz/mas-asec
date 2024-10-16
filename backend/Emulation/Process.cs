@@ -149,9 +149,20 @@ public class Process : IProcess<EmulationResult>
 
         await Task.WhenAll(subTasks);
 
+        // TODO: merge video files - right now we just choose the biggest one, as that represents
+        // the longest continuous video stream. It is however possible that the recording gets
+        // interrupted and restarted for some reason (maybe resolution changes? etc.), so
+        // we should handle that as well.
+        var largestScreenRecording = Directory.EnumerateFiles(RecordingsDir)
+            .Where(f => Path.GetFileName(f).StartsWith("screen")).MaxBy(f => new FileInfo(f).Length);
+
+        List<VideoFile> recordings = new();
+        if (largestScreenRecording != null)
+            recordings.Add(new(largestScreenRecording, RecordingType.Screen));
+
         // TODO: return actual values
         return new EmulationResult(
-            new List<VideoFile>(), ""
+            recordings, ""
         );
     }
 
@@ -220,6 +231,7 @@ public class Process : IProcess<EmulationResult>
         {
             Linux.Kill(ffmpegProcess, Signum.SIGINT);
         }
+
         await ffmpegProcess.WaitForExitAsync();
     }
 
