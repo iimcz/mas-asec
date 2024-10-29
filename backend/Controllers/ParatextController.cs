@@ -51,21 +51,27 @@ public class ParatextController : ControllerBase
     }
 
     [HttpPost("{paratextId}/upload/{filename}")]
-    public async Task<IActionResult> UploadParatextFile(string paratextId, string filename)
+    public async Task<IActionResult> UploadParatextFile(string paratextId, string filename, [FromBody] IFormFile file)
     {
         var id = Guid.Parse(paratextId);
         var dbParatext = await _dbContext.Paratexts.FindAsync(id);
         if (dbParatext == null)
             return NotFound();
 
-        var stream = Request.Body;
+        var tmpFile = Path.GetTempFileName();
+        using (var fileStream = new FileStream(tmpFile, FileMode.OpenOrCreate, FileAccess.Write))
+        {
+            await file.CopyToAsync(fileStream);
+        }
+
         var putObjectArgs = new PutObjectArgs()
             .WithBucket(_bucketName)
-            .WithStreamData(stream)
+            .WithFileName(tmpFile)
             .WithObject(dbParatext.Id.ToString());
         await _minioClient.PutObjectAsync(putObjectArgs);
         dbParatext.Downloadable = true;
         dbParatext.Filename = filename;
+        System.IO.File.Delete(tmpFile);
         await _dbContext.SaveChangesAsync();
 
         return Ok(Paratext.FromDBParatext(dbParatext));

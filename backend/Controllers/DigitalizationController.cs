@@ -176,17 +176,16 @@ public class DigitalizationController : ControllerBase
 
     [HttpPost("{processId}/upload/{uploadId}")]
     [Produces(typeof(DigitalizationProcess))]
-    public async Task<IActionResult> UploadDigitalizationFile(string processId, string uploadId)
+    public async Task<IActionResult> UploadDigitalizationFile(string processId, string uploadId, [FromBody] IFormFile file)
     {
         // TODO: proper upload handling
         var process = _processManager.GetProcess(Guid.Parse(processId));
         if (process == null)
             return NotFound();
 
-        var stream = Request.Body;
         using (var fileStream = new FileStream(Path.Combine(process.UploadDir, uploadId), FileMode.Create))
         {
-            await stream.CopyToAsync(fileStream);
+            await file.CopyToAsync(fileStream);
             // TODO: notify process of the upload
         }
 
