@@ -119,7 +119,12 @@ public class VersionController : ControllerBase
     public async Task<IActionResult> GetVersionParatexts(string versionId)
     {
         var id = Guid.Parse(versionId);
-        var version = await _dbContext.Versions.Include(v => v.Paratexts).FirstOrDefaultAsync(v => v.Id == id);
+        var version = await _dbContext.Versions
+            .Include(v => v.Paratexts)
+            .ThenInclude(p => p.Work)
+            .Include(v => v.Paratexts)
+            .ThenInclude(p => p.GamePackage)
+            .FirstOrDefaultAsync(v => v.Id == id);
         if (version == null)
             return NotFound();
         return Ok(version.Paratexts.Select(p => Paratext.FromDBParatext(p)));

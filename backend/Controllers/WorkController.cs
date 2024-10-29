@@ -127,6 +127,9 @@ public class WorkController : ControllerBase
         var id = Guid.Parse(workId);
         var work = await _dbContext.Works
             .Include(w => w.Paratexts)
+            .ThenInclude(p => p.Version)
+            .Include(w => w.Paratexts)
+            .ThenInclude(p => p.GamePackage)
             .FirstOrDefaultAsync(w => w.Id == id);
         if (work == null)
             return NotFound();

@@ -91,7 +91,12 @@ public class GamePackageController : ControllerBase
     public async Task<IActionResult> GetPackageParatexts(string packageId)
     {
         var id = Guid.Parse(packageId);
-        var package = await _dbContext.GamePackages.Include(p => p.Paratexts).FirstOrDefaultAsync(p => p.Id == id);
+        var package = await _dbContext.GamePackages
+            .Include(p => p.Paratexts)
+            .ThenInclude(p => p.Work)
+            .Include(p => p.Paratexts)
+            .ThenInclude(p => p.Version)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (package == null)
             return NotFound();
         return Ok(package.Paratexts.Select(p => Paratext.FromDBParatext(p)));

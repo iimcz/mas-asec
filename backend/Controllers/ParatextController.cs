@@ -1,6 +1,7 @@
 using asec.Models;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Minio;
 using Minio.DataModel.Args;
 
@@ -27,7 +28,11 @@ public class ParatextController : ControllerBase
     public async Task<IActionResult> GetParatext(string paratextId)
     {
         var id = Guid.Parse(paratextId);
-        var dbParatext = await _dbContext.Paratexts.FindAsync(id);
+        var dbParatext = await _dbContext.Paratexts
+            .Include(p => p.Work)
+            .Include(p => p.Version)
+            .Include(p => p.GamePackage)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (dbParatext == null)
             return NotFound();
         return Ok(Paratext.FromDBParatext(dbParatext));
@@ -37,7 +42,11 @@ public class ParatextController : ControllerBase
     public async Task<IActionResult> UpdateParatext(string paratextId, [FromBody] Paratext paratext)
     {
         var id = Guid.Parse(paratextId);
-        var dbParatext = await _dbContext.Paratexts.FindAsync(id);
+        var dbParatext = await _dbContext.Paratexts
+            .Include(p => p.Work)
+            .Include(p => p.Version)
+            .Include(p => p.GamePackage)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (dbParatext == null)
             return NotFound();
 
