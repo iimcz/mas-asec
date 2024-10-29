@@ -1975,7 +1975,7 @@
           "workId": {
             "readOnly": true,
             "description": "GUID of the Work this Paratext belongs to. A paratext will always belong to at least a Work, but can belong to one of the sub objects as well (Version or Package).",
-            "nullable": true,
+            "nullable": false,
             "type": "string"
           },
           "versionId": {
@@ -1986,7 +1986,7 @@
           },
           "packageId": {
             "readOnly": true,
-            "description": "GUID of the Package this Paratext belongs to. In this case the Paratext is a recording of some king. If this Paratext does not belong to a Package, packageId will be null.",
+            "description": "GUID of the Package this Paratext belongs to. In this case the Paratext is a recording of some kind. If this Paratext does not belong to a Package, packageId will be null.",
             "nullable": true,
             "type": "string"
           },
@@ -2007,7 +2007,7 @@
           },
           "sourceUrl": {
             "description": "Source Url of this Paratext, in case it was scraped/downloaded from somewhere or is available at this location.",
-            "nullable": false,
+            "nullable": true,
             "type": "string"
           },
           "downloadable": {
