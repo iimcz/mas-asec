@@ -60,7 +60,7 @@ public class ParatextController : ControllerBase
     }
 
     [HttpPost("{paratextId}/upload/{filename}")]
-    public async Task<IActionResult> UploadParatextFile(string paratextId, string filename, [FromBody] IFormFile file)
+    public async Task<IActionResult> UploadParatextFile(string paratextId, string filename, [FromForm] IFormFile file)
     {
         var id = Guid.Parse(paratextId);
         var dbParatext = await _dbContext.Paratexts.FindAsync(id);
