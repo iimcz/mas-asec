@@ -14,7 +14,8 @@
                         {
                             "$type": "floppy",
                             "GWPath": "/path/to/greaseweazle",
-                            "TargetFormat": "ibm.scan:.img"
+                            "ConversionFormat": "ibm.scan",
+                            "ConversionSuffix": ".img"
                         }
                     ]
                 }
