@@ -76,7 +76,7 @@ public class EmulatorRepository : IEmulatorRepository
             
             if (environment == null)
             {
-                _logger.LogInformation("Environment for environment {} version {} not found, adding to database.", config.Name, env.Version);
+                _logger.LogInformation("Environment record for environment {} version {} not found, adding to database.", config.Name, env.Version);
                 environment = new() {
                     Id = Guid.Empty,
                     Emulator = emulator,

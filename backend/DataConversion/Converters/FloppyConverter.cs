@@ -10,6 +10,8 @@ namespace asec.DataConversion.Converters;
 public class FloppyConverterConfig : ConverterConfig
 {
     public string GWPath { get; set; }
+    public string ConversionFormat { get; set; }
+    public string ConversionSuffix { get; set; }
     public override IConverter ConstructConverter()
     {
         return new FloppyConverter(this);
@@ -55,9 +57,12 @@ public class FloppyConverter : IConverter
     {
         get
         {
+            // TODO: maybe separate non-pure-environmental variables, like target format, elsewhere
             string OS = System.Environment.OSVersion.VersionString;
             string CLR = System.Environment.Version.ToString();
-            return $"OS:{OS},CLR:{CLR}";
+            string TRF = _config.ConversionFormat;
+            string TRS = _config.ConversionSuffix;
+            return $"OS:{OS},CLR:{CLR},TRF:{TRF},TRS:{TRS}";
         }
     }
 
@@ -85,12 +90,19 @@ public class FloppyConverter : IConverter
         process.Status = ProcessStatus.Running;
 
         List<ConvertedFile> outFiles = new();
+        int copy = 0;
 
         foreach (Artefact a in process.Artefacts)
         {
-            logWriter.WriteLine("Converting artefact: " + a.Id.ToString());
+            logWriter.WriteLine($"Converting artefact: {a.Id} (name: {a.Name})");
             string sfmFile = await process.FetchArtefact(a, false, cancellationToken);
-            string imgFile = Path.Combine(process.OutputDir, Path.GetFileNameWithoutExtension(sfmFile) + ".img");
+            string outFile = Path.Combine(process.OutputDir, Path.GetFileNameWithoutExtension(sfmFile) + _config.ConversionSuffix);
+
+            while (File.Exists(outFile))
+            {
+                outFile = outFile.Substring(0, outFile.Length - _config.ConversionSuffix.Length) + copy + _config.ConversionSuffix;
+                copy++;
+            }
 
             ProcessStartInfo gwProcessInfo = new ProcessStartInfo(_config.GWPath)
             {
@@ -99,9 +111,9 @@ public class FloppyConverter : IConverter
             };
             gwProcessInfo.ArgumentList.Add("convert");
             gwProcessInfo.ArgumentList.Add("--format");
-            gwProcessInfo.ArgumentList.Add("ibm.scan");
+            gwProcessInfo.ArgumentList.Add(_config.ConversionFormat);
             gwProcessInfo.ArgumentList.Add(sfmFile);
-            gwProcessInfo.ArgumentList.Add(imgFile);
+            gwProcessInfo.ArgumentList.Add(outFile);
             var gwProcess = System.Diagnostics.Process.Start(gwProcessInfo) ?? throw new Exception("Failed to start process");
             gwProcess.OutputDataReceived += logCallback;
             gwProcess.ErrorDataReceived += logCallback;
@@ -116,8 +128,11 @@ public class FloppyConverter : IConverter
                 return null;
             }
 
-            outFiles.Add(new(imgFile, DeviceID.FromQID(DeviceID.Floppy)));
+            outFiles.Add(new(outFile, DeviceID.FromQID(DeviceID.Floppy)));
         }
+
+        logWriter.WriteLine("Conversion process finished successfully.");
+
         process.Status = ProcessStatus.Success;
         return new(outFiles);
     }
