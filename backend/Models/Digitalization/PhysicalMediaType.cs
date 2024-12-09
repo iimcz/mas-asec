@@ -7,6 +7,7 @@ public enum PhysicalMediaType
     CD,
     DVD,
     Flash,
+    AudioCassette,
     None,
     Unknown
 }

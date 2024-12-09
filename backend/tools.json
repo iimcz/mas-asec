@@ -6,6 +6,13 @@
             "GWPath": "/usr/bin/gw",
             "DevicePath": "",
             "Drive": ""
+        },
+        {
+            "$type": "ffmpegrec",
+            "Slug": "ffmpeg-rec-cassette-wav",
+            "FfmpegPath": "/usr/bin/ffmpeg",
+            "InputDevice": "pulse",
+            "InputPath": "alsa.device.of.some.kind"
         }
     ]
 }

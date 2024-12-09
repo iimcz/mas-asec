@@ -44,7 +44,9 @@ public class FloppyConverter : IConverter
         if (versionLine == null)
             return "N/A";
         var versionMatch = ToolVersionRegex.Match(versionLine);
-        return versionMatch.Groups[1].Value;
+        if (!versionMatch.Success)
+            return "N/A";
+        return $"{versionMatch.Groups[1].Value}.{versionMatch.Groups[2].Value}";
     }
 
     public Guid Id { get; set; }
