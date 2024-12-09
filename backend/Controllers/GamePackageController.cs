@@ -21,6 +21,8 @@ public class GamePackageController : ControllerBase
     private readonly string _emulationBaseDirs;
     private readonly string _mainDisplay;
     private readonly string _emulationStreamBaseUrl;
+    private readonly string _webcamDevice;
+    private readonly string _eaasDrive;
 
     public GamePackageController(IConfiguration configuration, AsecDBContext dbContext, IServiceScopeFactory serviceScopeFactory, IProcessManager<Process, EmulationResult> processManager)
     {
@@ -33,6 +35,8 @@ public class GamePackageController : ControllerBase
         _emulationBaseDirs = section.GetValue<string>("ProcessBaseDir");
         _mainDisplay = section.GetValue<string>("MainDisplay");
         _emulationStreamBaseUrl = section.GetValue<string>("StreamOutBaseUrl");
+        _webcamDevice = section.GetValue<string>("WebcamDevice");
+        _eaasDrive = section.GetValue<string>("EaasDrive");
     }
 
     [HttpGet("{packageId}")]
@@ -76,13 +80,19 @@ public class GamePackageController : ControllerBase
         if (package == null)
             return NotFound();
         
+        var config = new EmulationConfig() {
+            DirsBase = _emulationBaseDirs,
+            FfmpegPath = _ffmpegPath,
+            MainDisplay = _mainDisplay,
+            StreamBaseUrl = _emulationStreamBaseUrl,
+            WebcamDevice = _webcamDevice,
+            EaasTargetDrive = _eaasDrive
+        };
         var process = new Process(
             package.Id,
             _serviceScopeFactory,
-            _emulationBaseDirs,
-            _ffmpegPath,
-            _mainDisplay,
-            _emulationStreamBaseUrl);
+            config
+        );
         _processManager.StartProcess(process);
         return Ok(EmulationState.FromProcess(process));
     }

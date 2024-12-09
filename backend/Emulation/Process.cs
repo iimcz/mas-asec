@@ -14,6 +14,17 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace asec.Emulation;
 
+public class EmulationConfig
+{
+    public string DirsBase;
+    public string FfmpegPath;
+    public string MainDisplay;
+    public string WebcamDevice;
+    public string EaasTargetDrive;
+    public string StreamBaseUrl;
+}
+
+
 public class Process : IProcess<EmulationResult>
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
@@ -47,20 +58,16 @@ public class Process : IProcess<EmulationResult>
 
     public bool IsUsbPassthrough { get; private set; }
 
-    private IServiceScopeFactory _serviceScopeFactory;
-    private string _ffmpegPath;
-    private string _mainDisplay;
-    private string _streamBaseUrl;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly EmulationConfig _config;
 
-    public Process(Guid packageId, IServiceScopeFactory serviceScopeFactory, string dirsBase, string ffmpegPath, string mainDisplay, string streamBaseUrl)
+    public Process(Guid packageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config)
     {
         PackageId = packageId;
         _serviceScopeFactory = serviceScopeFactory;
-        _ffmpegPath = ffmpegPath;
-        _mainDisplay = mainDisplay;
-        _streamBaseUrl = streamBaseUrl;
+        _config = config;
 
-        BaseDir = Path.Combine(dirsBase, Id.ToString());
+        BaseDir = Path.Combine(_config.DirsBase, Id.ToString());
         LogPath = Path.Combine(BaseDir, "log.txt");
         SubprocessLogsDir = Path.Combine(BaseDir, "sublogs");
         RecordingsDir = Path.Combine(BaseDir, "recordings");
@@ -107,16 +114,16 @@ public class Process : IProcess<EmulationResult>
         var runningComponent = await componentsClient.StartComponent(new MachineComponentRequest(
             package.Environment.EaasId,
             new List<Drive>() {
-                
-                new Drive("1", new ObjectDataSource(package.Id.ToString()))
+                new Drive(_config.EaasTargetDrive, new ObjectDataSource(package.Id.ToString()))
             }
             ));
         var cachedState = await componentsClient.GetComponentState(runningComponent.id);
         Status = ProcessStatus.Running;
 
         var subTasks = new List<Task>() {
-            Task.Run(() => AutoPassthroughUSB(runningComponent.id, Path.Combine(SubprocessLogsDir, "usbpassthrough.txt"), _mainDisplay), cancellationToken),
-            Task.Run(() => PassthroughAndRecordScreen(Path.Combine(SubprocessLogsDir, "ffmpeg-screen.txt"), Path.Combine(RecordingsDir, "screen"), ".mp4"), cancellationToken)
+            Task.Run(() => AutoPassthroughUSB(runningComponent.id, Path.Combine(SubprocessLogsDir, "usbpassthrough.txt"), _config.MainDisplay), cancellationToken),
+            Task.Run(() => PassthroughAndRecordScreen(Path.Combine(SubprocessLogsDir, "ffmpeg-screen.txt"), Path.Combine(RecordingsDir, "screen"), ".mp4"), cancellationToken),
+            Task.Run(() => RecordWebcam(Path.Combine(SubprocessLogsDir, "ffmpeg-webcam.txt"), Path.Combine(RecordingsDir, "webcam.mp4"), _config.WebcamDevice), cancellationToken)
         };
 
         bool saveMachineState = true;
@@ -159,11 +166,54 @@ public class Process : IProcess<EmulationResult>
         List<VideoFile> recordings = new();
         if (largestScreenRecording != null)
             recordings.Add(new(largestScreenRecording, RecordingType.Screen));
+        
+        // Add webcam recording if it exists.
+        var webcamRecordingPath = Path.Combine(RecordingsDir, "webcam.mp4");
+        if (File.Exists(webcamRecordingPath))
+            recordings.Add(new(webcamRecordingPath, RecordingType.Webcam));
 
         // TODO: return actual values
         return new EmulationResult(
             recordings, ""
         );
+    }
+
+    private async Task RecordWebcam(string logPath, string recordingFile, string inputDevice)
+    {
+        using var logWriter = new StreamWriter(logPath);
+        void outputCallback(object sender, DataReceivedEventArgs e)
+        {
+            if (e.Data != null)
+                logWriter.WriteLine(e.Data);
+        };
+
+        ProcessStartInfo ffmpegInfo = new(_config.FfmpegPath);
+        ffmpegInfo.ArgumentList.Add("-i");
+        ffmpegInfo.ArgumentList.Add(inputDevice);
+
+        // Recording config
+        ffmpegInfo.ArgumentList.Add("-c:v");
+        ffmpegInfo.ArgumentList.Add("h264");
+        ffmpegInfo.ArgumentList.Add("-y");
+        ffmpegInfo.ArgumentList.Add(recordingFile);
+
+        ffmpegInfo.RedirectStandardOutput = true;
+        ffmpegInfo.RedirectStandardError = true;
+
+        var ffmpegProcess = System.Diagnostics.Process.Start(ffmpegInfo);
+        if (ffmpegProcess == null)
+            return; // TODO: error handling
+        ffmpegProcess.OutputDataReceived += outputCallback;
+        ffmpegProcess.ErrorDataReceived += outputCallback;
+        ffmpegProcess.BeginOutputReadLine();
+        ffmpegProcess.BeginErrorReadLine();
+
+        while (Status == ProcessStatus.Running)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+        }
+        ffmpegProcess.Kill(Signum.SIGINT);
+        await ffmpegProcess.WaitForExitAsync();
     }
 
     private async Task PassthroughAndRecordScreen(string logPath, string recordingPath, string recordingExt)
@@ -176,9 +226,9 @@ public class Process : IProcess<EmulationResult>
         };
 
         int ffmpegRetry = 0;
-        string outputUrl = _streamBaseUrl + Id.ToString();
+        string outputUrl = _config.StreamBaseUrl + Id.ToString();
 
-        ProcessStartInfo ffmpegInfo = new(_ffmpegPath);
+        ProcessStartInfo ffmpegInfo = new(_config.FfmpegPath);
         ffmpegInfo.ArgumentList.Add("-f");
         ffmpegInfo.ArgumentList.Add("decklink");
         ffmpegInfo.ArgumentList.Add("-i");
@@ -229,7 +279,7 @@ public class Process : IProcess<EmulationResult>
         }
         if (!ffmpegProcess.HasExited)
         {
-            Linux.Kill(ffmpegProcess, Signum.SIGINT);
+            ffmpegProcess.Kill(Signum.SIGINT);
         }
 
         await ffmpegProcess.WaitForExitAsync();
