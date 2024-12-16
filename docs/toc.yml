@@ -1,0 +1,5 @@
+items:
+  - name: C# Api documentation
+    href: api/generated/
+  - name: OpenAPI documentation
+    href: redoc/redoc-static.html
