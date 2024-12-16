@@ -11,6 +11,10 @@ using Minio.DataModel.Args;
 
 namespace asec.Controllers;
 
+/// <summary>
+/// Controller dealing with running emulations. Does not actually start an emulation process - that happens
+/// in the GamePackage controller as emulation is started from an existing GamePackage.
+/// </summary>
 [ApiController]
 [Route("/api/v1/emulation")]
 public class EmulationController : ControllerBase
@@ -30,6 +34,12 @@ public class EmulationController : ControllerBase
         _paratextBucket = configuration.GetSection("ObjectStorage").GetValue<string>("ParatextBucket");
     }
 
+    /// <summary>
+    /// Ping a running emulation to ensure it is not deleted for inactivity. Also returns the current
+    /// state of the emulation process.
+    /// </summary>
+    /// <param name="emulationId">ID of the emulation process</param>
+    /// <returns>Details of the emulation process</returns>
     [HttpGet("{emulationId}/ping")]
     public async Task<IActionResult> PingRunningEmulation(string emulationId)
     {
@@ -41,6 +51,12 @@ public class EmulationController : ControllerBase
         return Ok(EmulationState.FromProcess(process));
     }
 
+    /// <summary>
+    /// End a running emulation, optionally saving recordings.
+    /// </summary>
+    /// <param name="emulationId">ID of the emulation to finish</param>
+    /// <param name="finishRequest">Details on what to save from the finished emulation</param>
+    /// <returns>Nothing</returns>
     [HttpPost("{emulationId}/finish")]
     public async Task<IActionResult> FinishEmulation(string emulationId, [FromBody] EmulationFinishRequest finishRequest)
     {
@@ -114,6 +130,12 @@ public class EmulationController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Get an URL that can be used to watch the video stream of a running emulation process.
+    /// Useful for including via an iframe.
+    /// </summary>
+    /// <param name="emulationId">ID of the emulation</param>
+    /// <returns>URL of the video stream</returns>
     [HttpGet("{emulationId}/video")]
     public IActionResult GetVideoStreamFrame(string emulationId)
     {

@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace asec.Controllers;
 
+/// <summary>
+/// Controller handling working with existing <see cref="GamePackage"/>s and starting emulations using them.
+/// </summary>
 [ApiController]
 [Route("/api/v1/packages")]
 public class GamePackageController : ControllerBase
@@ -39,6 +42,11 @@ public class GamePackageController : ControllerBase
         _eaasDrive = section.GetValue<string>("EaasDrive");
     }
 
+    /// <summary>
+    /// Get the details of the specified GamePackage.
+    /// </summary>
+    /// <param name="packageId">ID of the GamePackage</param>
+    /// <returns>Details of the GamePackage</returns>
     [HttpGet("{packageId}")]
     [Produces(typeof(GamePackage))]
     public async Task<IActionResult> GetGamePackage(string packageId)
@@ -54,6 +62,12 @@ public class GamePackageController : ControllerBase
         return Ok(GamePackage.FromGamePackage(package));
     }
 
+    /// <summary>
+    /// Update GamePackage metadata.
+    /// </summary>
+    /// <param name="packageId">ID of the GamePackage to update</param>
+    /// <param name="inPackage">Metadata to update</param>
+    /// <returns>The updated GamePackage</returns>
     [HttpPost("{packageId}")]
     [Produces(typeof(GamePackage))]
     public async Task<IActionResult> UpdateGamePackage(string packageId, [FromBody] GamePackage inPackage)
@@ -72,7 +86,13 @@ public class GamePackageController : ControllerBase
         return Ok(GamePackage.FromGamePackage(package));
     }
 
+    /// <summary>
+    /// Start emulation for the specified game package. Makes the appropriate setup using EaaS.
+    /// </summary>
+    /// <param name="packageId">ID of the package to start</param>
+    /// <returns>State of the emulation</returns>
     [HttpPost("{packageId}/emulate")]
+    [Produces(typeof(EmulationState))]
     public async Task<IActionResult> EmulateGamePackage(string packageId)
     {
         var id = Guid.Parse(packageId);
@@ -97,7 +117,13 @@ public class GamePackageController : ControllerBase
         return Ok(EmulationState.FromProcess(process));
     }
 
+    /// <summary>
+    /// Get paratexts for the specified game package.
+    /// </summary>
+    /// <param name="packageId">ID of the game package</param>
+    /// <returns>Enumerable of available paratexts</returns>
     [HttpGet("{packageId}/paratexts")]
+    [Produces(typeof(IEnumerable<Paratext>))]
     public async Task<IActionResult> GetPackageParatexts(string packageId)
     {
         var id = Guid.Parse(packageId);

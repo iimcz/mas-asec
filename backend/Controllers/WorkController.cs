@@ -1,10 +1,14 @@
 using asec.Models;
 using asec.Models.Archive;
+using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace asec.Controllers;
 
+/// <summary>
+/// Controller managing works, their creation, updating and their paratexts.
+/// </summary>
 [ApiController]
 [Route("/api/v1/works")]
 public class WorkController : ControllerBase
@@ -17,8 +21,12 @@ public class WorkController : ControllerBase
         _dbContext = dbContext;
     }
 
-
+    /// <summary>
+    /// Get all works in the database.
+    /// </summary>
+    /// <returns>Enumerable of all works</returns>
     [HttpGet]
+    [Produces(typeof(IEnumerable<ViewModels.Work>))]
     public async Task<IActionResult> GetWorks()
     {
         var result = (await _dbContext.Works
@@ -32,7 +40,13 @@ public class WorkController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Add a new work to the database.
+    /// </summary>
+    /// <param name="work">Details of the work to add</param>
+    /// <returns>The newly added work</returns>
     [HttpPut]
+    [Produces(typeof(ViewModels.Work))]
     public async Task<IActionResult> AddWork([FromBody] ViewModels.Work work)
     {
         // Ignore incoming Id, we will generate a new one anyway.
@@ -47,7 +61,13 @@ public class WorkController : ControllerBase
         return Ok(ViewModels.Work.FromDbEntity(dbWork));
     }
 
+    /// <summary>
+    /// Get the details of the specified work.
+    /// </summary>
+    /// <param name="workId">ID of the work</param>
+    /// <returns>Details of the work</returns>
     [HttpGet("{workId}")]
+    [Produces(typeof(ViewModels.Work))]
     public async Task<IActionResult> GetWork(string workId)
     {
         var id = Guid.Parse(workId);
@@ -66,7 +86,14 @@ public class WorkController : ControllerBase
         return Ok(ViewModels.Work.FromDbEntity(result));
     }
 
+    /// <summary>
+    /// Update the details of the specified work.
+    /// </summary>
+    /// <param name="workId">ID of the work</param>
+    /// <param name="work">New details of the work</param>
+    /// <returns>The newly updated work</returns>
     [HttpPost("{workId}")]
+    [Produces(typeof(ViewModels.Work))]
     public async Task<IActionResult> UpdateWork(string workId, [FromBody] ViewModels.Work work)
     {
         var id = Guid.Parse(workId);
@@ -81,7 +108,13 @@ public class WorkController : ControllerBase
         return Ok(ViewModels.Work.FromDbEntity(dbWork));
     }
 
+    /// <summary>
+    /// Get all versions of the specified work.
+    /// </summary>
+    /// <param name="workId">ID of the work</param>
+    /// <returns>Enumerable of the work's versions</returns>
     [HttpGet("{workId}/versions")]
+    [Produces(typeof(IEnumerable<ViewModels.Version>))]
     public async Task<IActionResult> GetWorkVersions(string workId)
     {
         var work = await _dbContext.Works
@@ -98,7 +131,14 @@ public class WorkController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Add a new paratext to the specified work.
+    /// </summary>
+    /// <param name="workId">ID of the work</param>
+    /// <param name="paratext">Details of the new paratext</param>
+    /// <returns>The newly created paratext</returns>
     [HttpPut("{workId}/paratexts")]
+    [Produces(typeof(ViewModels.Paratext))]
     public async Task<IActionResult> AddWorkParatext(string workId, [FromBody] ViewModels.Paratext paratext)
     {
         var id = Guid.Parse(workId);
@@ -121,7 +161,13 @@ public class WorkController : ControllerBase
         return Ok(ViewModels.Paratext.FromDBParatext(newParatext));
     }
 
+    /// <summary>
+    /// Get all paratexts of the specified work.
+    /// </summary>
+    /// <param name="workId">ID of the work</param>
+    /// <returns>Enumerable of the work's paratexts</returns>
     [HttpGet("{workId}/paratexts")]
+    [Produces(typeof(IEnumerable<ViewModels.Paratext>))]
     public async Task<IActionResult> GetWorkParatexts(string workId)
     {
         var id = Guid.Parse(workId);

@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace asec.Compatibility.EaasApi.Models;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming rule violation", "IDE1006")]
 public record MachineComponentRequest(
     string environment,
     // HACK: the commented out properties are optional, right now we don't need them.

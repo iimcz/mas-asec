@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using asec.Models.Archive;
 using asec.Models.Digitalization;
 using asec.Platforms;
 
@@ -140,6 +141,7 @@ public class FfmpegRecordingTool : IDigitalizationTool
         await ffProcess.WaitForExitAsync(cancellationToken);
         if (!ffProcess.HasExited)
             throw new Exception("Failed to exit!");
+        process.Status = LongRunning.ProcessStatus.Success;
 
         return new(outputFile, ArtefactType.WavAudio);
     }

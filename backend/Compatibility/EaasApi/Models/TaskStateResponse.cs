@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace asec.Compatibility.EaasApi.Models;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming rule violation", "IDE1006")]
 public record TaskStateResponse(
     string status,
     string message,

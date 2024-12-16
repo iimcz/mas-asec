@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace asec.Controllers;
 
+/// <summary>
+/// Controller concerned platforms and their available emulators.
+/// </summary>
 [ApiController]
 [Route("/api/v1/platforms")]
 public class PlatformController : ControllerBase
@@ -18,7 +21,12 @@ public class PlatformController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Get all available (configured) platforms.
+    /// </summary>
+    /// <returns>Enumerable of available platforms</returns>
     [HttpGet]
+    [Produces(typeof(IEnumerable<Platform>))]
     public async Task<IActionResult> GetPlatforms()
     {
         var platformList = await _dbContext.Platforms.ToListAsync();
@@ -32,7 +40,13 @@ public class PlatformController : ControllerBase
         ));
     }
 
+    /// <summary>
+    /// Get all emulators for the specified platform.
+    /// </summary>
+    /// <param name="platformName">Name of the platform</param>
+    /// <returns>Enumerable of available emulators</returns>
     [HttpGet("{platformName}/emulators")]
+    [Produces(typeof(IEnumerable<Emulator>))]
     public async Task<IActionResult> GetEmulatorsForPlatform(string platformName)
     {
         var platform = await _dbContext.Platforms.FindAsync(platformName);

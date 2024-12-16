@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace asec.Controllers;
 
+/// <summary>
+/// Controller handling tasks regarding available emulators.
+/// </summary>
 [ApiController]
 [Route("/api/v1/emulators")]
 public class EmulatorController : ControllerBase
@@ -18,7 +21,12 @@ public class EmulatorController : ControllerBase
         _dbContext = dbContext;
     }
 
+    /// <summary>
+    /// Get the configured available emulators.
+    /// </summary>
+    /// <returns>List of available emulators</returns>
     [HttpGet()]
+    [Produces(typeof(IEnumerable<Emulator>))]
     public async Task<IActionResult> GetEmulators()
     {
         return Ok(

@@ -7,6 +7,9 @@ using Minio.DataModel.Args;
 
 namespace asec.Controllers;
 
+/// <summary>
+/// Controller providing information about paratexts and allowing their modification.
+/// </summary>
 [ApiController]
 [Route("/api/v1/paratexts")]
 public class ParatextController : ControllerBase
@@ -24,7 +27,13 @@ public class ParatextController : ControllerBase
         _bucketName = configuration.GetSection("ObjectStorage").GetValue<string>("ParatextBucket");
     }
     
+    /// <summary>
+    /// Get the details of the specified paratext.
+    /// </summary>
+    /// <param name="paratextId">ID of the paratext</param>
+    /// <returns>Details of the paratext</returns>
     [HttpGet("{paratextId}")]
+    [Produces(typeof(Paratext))]
     public async Task<IActionResult> GetParatext(string paratextId)
     {
         var id = Guid.Parse(paratextId);
@@ -38,7 +47,14 @@ public class ParatextController : ControllerBase
         return Ok(Paratext.FromDBParatext(dbParatext));
     }
 
+    /// <summary>
+    /// Update the details of the specified paratext.
+    /// </summary>
+    /// <param name="paratextId">ID of the paratext to update</param>
+    /// <param name="paratext">New details of the paratext</param>
+    /// <returns>The updated paratext</returns>
     [HttpPost("{paratextId}")]
+    [Produces(typeof(Paratext))]
     public async Task<IActionResult> UpdateParatext(string paratextId, [FromBody] Paratext paratext)
     {
         var id = Guid.Parse(paratextId);
@@ -59,7 +75,15 @@ public class ParatextController : ControllerBase
         return Ok(Paratext.FromDBParatext(dbParatext));
     }
 
+    /// <summary>
+    /// Add a file to the paratext. This file will then be available for download.
+    /// </summary>
+    /// <param name="paratextId">ID of the paratext</param>
+    /// <param name="filename">Name of the uploaded file</param>
+    /// <param name="file">The uploaded file</param>
+    /// <returns>The updated (now downloadable) paratext</returns>
     [HttpPost("{paratextId}/upload/{filename}")]
+    [Produces(typeof(Paratext))]
     public async Task<IActionResult> UploadParatextFile(string paratextId, string filename, [FromForm] IFormFile file)
     {
         var id = Guid.Parse(paratextId);
@@ -86,6 +110,11 @@ public class ParatextController : ControllerBase
         return Ok(Paratext.FromDBParatext(dbParatext));
     }
 
+    /// <summary>
+    /// Download the file of the specified paratext.
+    /// </summary>
+    /// <param name="paratextId">ID of the paratext to download the file of</param>
+    /// <returns>Stream of the paratext's file as application/octet-stream</returns>
     [HttpGet("{paratextId}/download")]
     public async Task<IActionResult> DownloadParatextFile(string paratextId)
     {

@@ -11,6 +11,10 @@ using asec.Models.Digitalization;
 
 namespace asec.Controllers;
 
+/// <summary>
+/// Controller handling the process of converting an artefact (or a set of artefacts) to a format
+/// which the target intended emulator can consume.
+/// </summary>
 [ApiController]
 [Route("/api/v1/conversion")]
 public class ConversionController : ControllerBase
@@ -18,15 +22,15 @@ public class ConversionController : ControllerBase
     private readonly string _conversionDirsBase;
     private readonly string _artefactBucket;
     private readonly string _unzipBinary;
-    private ILogger<ConversionController> _logger;
-    private AsecDBContext _dbContext;
-    private IProcessManager<DataConversion.Process, ConversionResult> _processManager;
-    private IEmulatorRepository _emulatorRepository;
-    private IServiceScopeFactory _serviceScopeFactory;
+    private readonly ILogger<ConversionController> _logger;
+    private readonly AsecDBContext _dbContext;
+    private readonly IProcessManager<DataConversion.Process, ConversionResult> _processManager;
+    private readonly IEmulatorRepository _emulatorRepository;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     // EaaS clients
-    private ObjectRepositoryClient _eaasObjectRepoClient;
-    private EaasUploadClient _eaasUploadClient;
+    private readonly ObjectRepositoryClient _eaasObjectRepoClient;
+    private readonly EaasUploadClient _eaasUploadClient;
 
     public ConversionController(
         ILogger<ConversionController> logger,
@@ -53,6 +57,13 @@ public class ConversionController : ControllerBase
         _artefactBucket = config.GetSection("ObjectStorage").GetValue<string>("ArtefactBucket");
     }
 
+    /// <summary>
+    /// Request that a conversion for the specified emulator be started, using the specified artefacts.
+    /// This will create a process that can later be checked for status and progress, and needs to be
+    /// explicitly finished for the results to persist.
+    /// </summary>
+    /// <param name="conversionRequest">Conversion request details, including the target emulator and used artefacts</param>
+    /// <returns>Details of the newly created process</returns>
     [HttpPut("start")]
     [Produces(typeof(ConversionProcess))]
     public async Task<IActionResult> StartConversionForEmulator([FromBody] ConversionRequest conversionRequest)
@@ -74,6 +85,14 @@ public class ConversionController : ControllerBase
         return Ok(ConversionProcess.FromProcess(process));
     }
 
+    /// <summary>
+    /// Finalize the conversion process, taking the resulting files and uploading them to EaaS in preparation to
+    /// attach them to an emulator environment/VM. The finalized process is expected to be in the <see cref="ProcessStatus.Success"/> state.
+    /// </summary>
+    /// <param name="processId">ID of the process to finalize</param>
+    /// <param name="package">Properties to apply to the resulting GamePackage</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The resulting GamePackage</returns>
     [HttpPost("{processId}/finalize")]
     [Produces(typeof(GamePackage))]
     public async Task<IActionResult> FinalizeConversionProcess(string processId, [FromBody] GamePackage package, CancellationToken cancellationToken = default)
@@ -127,6 +146,12 @@ public class ConversionController : ControllerBase
         return Ok(GamePackage.FromGamePackage(dbGamePackage));
     }
 
+    /// <summary>
+    /// Provide a text input to the digitalization process.
+    /// </summary>
+    /// <param name="processId">ID of the process</param>
+    /// <param name="input">Input data</param>
+    /// <returns>Nothing</returns>
     [HttpPost("{processId}/input")]
     [Produces(typeof(ConversionProcess))]
     public async Task<IActionResult> ProvideConversionInput(string processId, [FromBody] ConversionInput input)
@@ -139,6 +164,11 @@ public class ConversionController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Fetches the text log of a running process.
+    /// </summary>
+    /// <param name="processId">ID of the process</param>
+    /// <returns>The process' log file as text/plain</returns>
     [HttpGet("{processId}/log")]
     public IActionResult GetConversionProcessLog(string processId)
     {
@@ -148,6 +178,12 @@ public class ConversionController : ControllerBase
         return PhysicalFile(process.LogPath, "text/plain");
     }
 
+    /// <summary>
+    /// Request that an existing conversion process is restarted. The system will stop the current process and
+    /// create a new one with the same parameters as the original.
+    /// </summary>
+    /// <param name="processId">ID of the process to restart</param>
+    /// <returns>Information about the new process</returns>
     [HttpPost("{processId}/restart")]
     [Produces(typeof(ConversionProcess))]
     public async Task<IActionResult> RestartConversionProcess(string processId)
@@ -165,6 +201,11 @@ public class ConversionController : ControllerBase
         return Ok(ConversionProcess.FromProcess(newProcess));
     }
 
+    /// <summary>
+    /// Fetches the current status of the specified process.
+    /// </summary>
+    /// <param name="processId">ID of the conversion process</param>
+    /// <returns>Information about the specified process</returns>
     [HttpGet("{processId}/status")]
     [Produces(typeof(ConversionProcess))]
     public IActionResult GetConversionProcessStatus(string processId)
@@ -175,6 +216,12 @@ public class ConversionController : ControllerBase
         return Ok(ConversionProcess.FromProcess(process));
     }
 
+    /// <summary>
+    /// Request that the specified process be stopped. This will result in discarding any data created during
+    /// the process.
+    /// </summary>
+    /// <param name="processId">ID of the process to stop</param>
+    /// <returns>Status of the stopped process</returns>
     [HttpPost("{processId}/stop")]
     [Produces(typeof(ConversionProcess))]
     public async Task<IActionResult> StopConversionProcess(string processId)
