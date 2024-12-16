@@ -1,0 +1,15 @@
+[Unit]
+Description=Backend server for the Multisystem Acquisition Station
+After=syslog.target network.target
+
+[Service]
+User=asec
+WorkingDirectory=/opt/mas-asec
+ExecStart=/opt/mas-asec/asec --urls="http://0.0.0.0:5000"
+Restart=always
+RestartSec=2
+Environment='PULSE_SERVER=tcp:127.0.0.1:4713'
+
+
+[Install]
+WantedBy=multi-user.target

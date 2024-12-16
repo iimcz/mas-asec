@@ -1,0 +1,12 @@
+[Unit]
+Description=MediaMTX server instance for MAS
+After=syslog.target network.target
+
+[Service]
+User=asec
+ExecStart=/usr/local/bin/mediamtx
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
