@@ -150,7 +150,10 @@ public class Process : IProcess<EmulationResult>
             }
         }
 
-        // TODO: handle saving machine state
+        if (saveMachineState)
+        {
+            // TODO: handle saving machine state
+        }
         await componentsClient.StopComponent(runningComponent.id);
         Status = ProcessStatus.Success;
 
