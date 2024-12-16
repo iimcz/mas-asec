@@ -1,0 +1,5 @@
+# These, if anything, should be inside the code directory (backend)
+.vscode/
+
+# Created when generating documentation from here.
+_site/
