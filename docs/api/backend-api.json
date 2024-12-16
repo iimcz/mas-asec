@@ -2,14 +2,14 @@
   "openapi": "3.0.0",
   "info": {
     "version": "1",
-    "title": "OpenAPI3Definition 19",
+    "title": "ASEC OpanAPI definition",
     "description": ""
   },
   "paths": {
     "/api/v1/works": {
       "get": {
         "operationId": "GetWorks",
-        "description": "",
+        "description": "Get all works in the database.",
         "parameters": [],
         "responses": {
           "200": {
@@ -29,7 +29,7 @@
       },
       "put": {
         "operationId": "AddWork",
-        "description": "",
+        "description": "Add a new work to the database.",
         "parameters": [],
         "requestBody": {
           "content": {
@@ -57,7 +57,7 @@
     "/api/v1/digitalization/tools": {
       "get": {
         "operationId": "GetDigitalizationTools",
-        "description": "",
+        "description": "Acquire a list of available digitalization tools. This will depend on both configuration and actual availability of physical devices needed by the various tool implementations for digitalization.",
         "parameters": [],
         "responses": {
           "200": {
@@ -79,7 +79,7 @@
     "/api/v1/digitalization/tools/{toolId}": {
       "get": {
         "operationId": "GetDigitalizationTool",
-        "description": "",
+        "description": "Get a specific digitalization tool using its ID. To get a list of available IDs, see GetDigitalizationTools",
         "parameters": [
           {
             "in": "path",
@@ -107,7 +107,7 @@
     "/api/v1/digitalization/start": {
       "put": {
         "operationId": "StartDigitalizationWithToolForVersion",
-        "description": "",
+        "description": "Start the process of digitizing a physical media using the tool specified in the digitalization request. The request includes reference to a Version for which the media should be digitalized.",
         "parameters": [],
         "requestBody": {
           "content": {
@@ -135,7 +135,7 @@
     "/api/v1/digitalization/{processId}/status": {
       "get": {
         "operationId": "GetDigitalizationProcessStatus",
-        "description": "",
+        "description": "Get the status of the specified digitalization process.",
         "parameters": [
           {
             "in": "path",
@@ -163,7 +163,7 @@
     "/api/v1/works/{workId}": {
       "get": {
         "operationId": "GetWork",
-        "description": "",
+        "description": "Get the details of the specified work.",
         "parameters": [
           {
             "in": "path",
@@ -191,7 +191,7 @@
     "/api/v1/works/{workId}/versions": {
       "get": {
         "operationId": "GetWorkVersions",
-        "description": "",
+        "description": "Get all versions of the specified work.",
         "parameters": [
           {
             "in": "path",
@@ -222,7 +222,7 @@
     "/api/v1/works/{workId}/paratexts": {
       "get": {
         "operationId": "GetWorkParatexts",
-        "description": "",
+        "description": "Get all paratexts of the specified work.",
         "parameters": [
           {
             "in": "path",
@@ -251,7 +251,7 @@
       },
       "put": {
         "operationId": "AddWorkParatext",
-        "description": "",
+        "description": "Add a new paratext to the specified work.",
         "parameters": [
           {
             "in": "path",
@@ -288,7 +288,7 @@
     "/api/v1/emulators": {
       "get": {
         "operationId": "GetEmulators",
-        "description": "",
+        "description": "Get the configured available emulators.",
         "parameters": [],
         "responses": {
           "200": {
@@ -310,7 +310,7 @@
     "/api/v1/works/{workid}": {
       "post": {
         "operationId": "UpdateWork",
-        "description": "",
+        "description": "Update the details of the specified work.",
         "parameters": [
           {
             "in": "path",
@@ -347,7 +347,7 @@
     "/api/v1/digitalization/{processId}/restart": {
       "post": {
         "operationId": "RestartDigitalizationProcess",
-        "description": "",
+        "description": "Request that a digitalization process is restarted. This will result in the current process being cancelled and a new process being started with the same arguments.",
         "parameters": [
           {
             "in": "path",
@@ -375,7 +375,7 @@
     "/api/v1/versions": {
       "put": {
         "operationId": "AddWorkVersion",
-        "description": "",
+        "description": "Create a new work version with the specified details (a new ID will be generated).",
         "parameters": [],
         "requestBody": {
           "content": {
@@ -403,7 +403,7 @@
     "/api/v1/versions/{versionId}": {
       "get": {
         "operationId": "GetWorkVersion",
-        "description": "",
+        "description": "Get the details of the specified work version.",
         "parameters": [
           {
             "in": "path",
@@ -429,7 +429,7 @@
       },
       "post": {
         "operationId": "UpdateWorkVersion",
-        "description": "",
+        "description": "Update the specified version with new details.",
         "parameters": [
           {
             "in": "path",
@@ -466,7 +466,7 @@
     "/api/v1/versions/{versionId}/artefacts": {
       "get": {
         "operationId": "GetVersionArtefacts",
-        "description": "",
+        "description": "Get all artefacts tied to the specified work version.",
         "parameters": [
           {
             "in": "path",
@@ -494,7 +494,7 @@
     "/api/v1/versions/{versionId}/paratexts": {
       "get": {
         "operationId": "GetVersionParatexts",
-        "description": "",
+        "description": "Get all paratexts for the specified version.",
         "parameters": [
           {
             "in": "path",
@@ -523,7 +523,7 @@
       },
       "put": {
         "operationId": "AddVersionParatext",
-        "description": "",
+        "description": "Add a new paratext with the specified details to the specified version.",
         "parameters": [
           {
             "in": "path",
@@ -560,7 +560,7 @@
     "/api/v1/artefacts/{artefactId}": {
       "get": {
         "operationId": "GetVersionArtefact",
-        "description": "",
+        "description": "Gets the specified artefact's details.",
         "parameters": [
           {
             "in": "path",
@@ -586,7 +586,7 @@
       },
       "post": {
         "operationId": "UpdateVersionArtefact",
-        "description": "",
+        "description": "Update the details of the specified artefact.",
         "parameters": [
           {
             "in": "path",
@@ -623,7 +623,7 @@
     "/api/v1/digitalization/{processId}/input": {
       "post": {
         "operationId": "ProvideDigitalizationInput",
-        "description": "",
+        "description": "If a digitalization process is in the WaitingForInput state, provide the input it is waiting for in the form of a string.",
         "parameters": [
           {
             "in": "path",
@@ -660,7 +660,7 @@
     "/api/v1/digitalization/{processId}/log": {
       "get": {
         "operationId": "GetProcessLog",
-        "description": "",
+        "description": "Get the text log file of a running digitalization process",
         "parameters": [
           {
             "in": "path",
@@ -688,7 +688,7 @@
     "/api/v1/digitalization/{processId}/finalize": {
       "post": {
         "operationId": "FinalizeVersionArtefact",
-        "description": "",
+        "description": "Finalize a successful digitalization process to persist the results and create the resulting Artefact.",
         "parameters": [
           {
             "in": "path",
@@ -725,7 +725,7 @@
     "/api/v1/digitalization/{processId}/stop": {
       "post": {
         "operationId": "StopDigitalizationProcess",
-        "description": "",
+        "description": "Start the process of digitizing a physical media using the tool specified in the digitalization request. The request includes reference to a Version for which the media should be digitalized.",
         "parameters": [
           {
             "in": "path",
@@ -762,7 +762,7 @@
     "/api/v1/conversion/start": {
       "put": {
         "operationId": "StartConversionForEmulator",
-        "description": "",
+        "description": "Request that a conversion for the specified emulator be started, using the specified artefacts. This will create a process that can later be checked for status and progress, and needs to be explicitly finished for the results to persist.",
         "parameters": [],
         "requestBody": {
           "content": {
@@ -790,7 +790,7 @@
     "/api/v1/conversion/{processId}/status": {
       "get": {
         "operationId": "GetConversionProcessStatus",
-        "description": "",
+        "description": "Fetches the current status of the specified process.",
         "parameters": [
           {
             "in": "path",
@@ -818,7 +818,7 @@
     "/api/v1/conversion/{processId}/stop": {
       "post": {
         "operationId": "StopConversionProcess",
-        "description": "",
+        "description": "Request that the specified process be stopped. This will result in discarding any data created during the process.",
         "parameters": [
           {
             "in": "path",
@@ -855,7 +855,7 @@
     "/api/v1/conversion/{processId}/log": {
       "get": {
         "operationId": "GetConversionProcessLog",
-        "description": "",
+        "description": "Fetches the text log of a running process.",
         "parameters": [
           {
             "in": "path",
@@ -883,7 +883,7 @@
     "/api/v1/conversion/{processId}/restart": {
       "post": {
         "operationId": "RestartConversionProcess",
-        "description": "",
+        "description": "Request that an existing conversion process is restarted. The system will stop the current process and create a new one with the same parameters as the original.",
         "parameters": [
           {
             "in": "path",
@@ -911,7 +911,7 @@
     "/api/v1/conversion/{processId}/finalize": {
       "post": {
         "operationId": "FinalizeConversionProcess",
-        "description": "",
+        "description": "Finalize the conversion process, taking the resulting files and uploading them to EaaS in preparation to attach them to an emulator environment/VM. The finalized process is expected to be in the Success state.",
         "parameters": [
           {
             "in": "path",
@@ -948,7 +948,7 @@
     "/api/v1/digitalization/{processId}/upload/{uploadId}": {
       "post": {
         "operationId": "UploadDigitalizationFile",
-        "description": "",
+        "description": "Upload a file if this is requested by the digitalization process.",
         "parameters": [
           {
             "in": "path",
@@ -993,7 +993,7 @@
     "/api/v1/versions/{versionId}/packages": {
       "get": {
         "operationId": "GetVersionGamePackages",
-        "description": "",
+        "description": "Get all game packages tied to the specified work version.",
         "parameters": [
           {
             "in": "path",
@@ -1024,7 +1024,7 @@
     "/api/v1/packages/{packageId}": {
       "get": {
         "operationId": "GetGamePackage",
-        "description": "",
+        "description": "Get the details of the specified GamePackage.",
         "parameters": [
           {
             "in": "path",
@@ -1050,7 +1050,7 @@
       },
       "post": {
         "operationId": "UpdateGamePackage",
-        "description": "",
+        "description": "Update GamePackage metadata.",
         "parameters": [
           {
             "in": "path",
@@ -1087,7 +1087,7 @@
     "/api/v1/packages/{packageId}/emulate": {
       "get": {
         "operationId": "EmulateGamePackage",
-        "description": "",
+        "description": "Start emulation for the specified game package. Makes the appropriate setup using EaaS.",
         "parameters": [
           {
             "in": "path",
@@ -1115,7 +1115,7 @@
     "/api/v1/packages/{packageId}/paratexts": {
       "get": {
         "operationId": "GetPackageParatexts",
-        "description": "",
+        "description": "Get paratexts for the specified game package.",
         "parameters": [
           {
             "in": "path",
@@ -1146,7 +1146,7 @@
     "/api/v1/emulation/{emulationId}/finish": {
       "post": {
         "operationId": "FinishEmulation",
-        "description": "",
+        "description": "End a running emulation, optionally saving recordings.",
         "parameters": [
           {
             "in": "path",
@@ -1183,7 +1183,7 @@
     "/api/v1/emulation/{emulationId}/video": {
       "get": {
         "operationId": "GetVideoStreamFrame",
-        "description": "",
+        "description": "Get an URL that can be used to watch the video stream of a running emulation process. Useful for including via an iframe.",
         "parameters": [
           {
             "in": "path",
@@ -1211,7 +1211,7 @@
     "/api/v1/emulation/{emulationId}/ping": {
       "get": {
         "operationId": "PingRunningEmulation",
-        "description": "",
+        "description": "Ping a running emulation to ensure it is not deleted for inactivity. Also returns the current state of the emulation process.",
         "parameters": [
           {
             "in": "path",
@@ -1239,7 +1239,7 @@
     "/api/v1/conversion/{processId}/input": {
       "post": {
         "operationId": "ProvideConversionInput",
-        "description": "",
+        "description": "Provide a text input to the digitalization process.",
         "parameters": [
           {
             "in": "path",
@@ -1276,7 +1276,7 @@
     "/api/v1/platforms": {
       "get": {
         "operationId": "GetPlatforms",
-        "description": "",
+        "description": "Get all available (configured) platforms.",
         "parameters": [],
         "responses": {
           "200": {
@@ -1298,7 +1298,7 @@
     "/api/v1/platforms/{platformName}/emulators": {
       "get": {
         "operationId": "GetEmulatorsForPlatform",
-        "description": "",
+        "description": "Get all emulators for the specified platform.",
         "parameters": [
           {
             "in": "path",
@@ -1329,7 +1329,7 @@
     "/api/v1/paratexts/{paratextId}": {
       "get": {
         "operationId": "GetParatext",
-        "description": "",
+        "description": "Get the details of the specified paratext.",
         "parameters": [
           {
             "in": "path",
@@ -1355,7 +1355,7 @@
       },
       "post": {
         "operationId": "UpdateParatext",
-        "description": "",
+        "description": "Update the details of the specified paratext.",
         "parameters": [
           {
             "in": "path",
@@ -1392,7 +1392,7 @@
     "/api/v1/paratexts/{paratextId}/upload/{filename}": {
       "post": {
         "operationId": "UploadParatextFile",
-        "description": "",
+        "description": "Add a file to the paratext. This file will then be available for download.",
         "parameters": [
           {
             "in": "path",
@@ -1438,7 +1438,7 @@
     "/api/v1/paratexts/{paratextId}/download": {
       "get": {
         "operationId": "DownloadParatextFile",
-        "description": "",
+        "description": "Download the file of the specified paratext.",
         "parameters": [
           {
             "in": "path",
