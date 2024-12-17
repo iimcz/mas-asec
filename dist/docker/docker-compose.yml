@@ -1,0 +1,39 @@
+volumes:
+  minio-data:
+  mongo-data:
+  resolver-cache:
+
+services:
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9001:9001"
+      - "9000:9000"
+
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  nginx:
+    image: nginx:stable
+    restart: unless-stopped
+    volumes:
+      - ./resolver.conf:/etc/nginx/nginx.conf
+      - resolver-cache:/var/cache/nginx
+    ports:
+      - "8082:8080"
+
+# Not required for our purpose
+#  guacd:
+#    build: ../guacamole-server-eaas
+#    restart: unless-stopped
+#    ports:
+#      - "4822:4822"

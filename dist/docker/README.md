@@ -1,0 +1,1 @@
+The NGINX configuration here (resolver.conf) is adapted from the [EaaS Ansible role repository](https://github.com/emulation-as-a-service/eaas-ansible).
