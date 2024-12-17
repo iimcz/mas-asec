@@ -1,0 +1,140 @@
+/opt/eaas/data/
+├── classification-cache
+├── emil-environments
+├── export
+├── image-archive
+│   ├── emulators
+│   │   ├── images
+│   │   │   ├── base
+│   │   │   ├── checkpoints
+│   │   │   ├── containers
+│   │   │   ├── derivate
+│   │   │   ├── object
+│   │   │   ├── roms
+│   │   │   ├── runtime
+│   │   │   ├── sessions
+│   │   │   ├── system
+│   │   │   ├── template
+│   │   │   ├── tmp
+│   │   │   └── user
+│   │   ├── meta-data
+│   │   │   ├── base
+│   │   │   ├── checkpoints
+│   │   │   ├── containers
+│   │   │   ├── derivate
+│   │   │   ├── object
+│   │   │   ├── roms
+│   │   │   ├── runtime
+│   │   │   ├── sessions
+│   │   │   ├── system
+│   │   │   ├── template
+│   │   │   ├── tmp
+│   │   │   └── user
+│   │   └── recordings
+│   ├── images
+│   │   ├── base
+│   │   ├── checkpoints
+│   │   ├── containers
+│   │   ├── derivate
+│   │   ├── object
+│   │   ├── roms
+│   │   ├── runtime
+│   │   ├── sessions
+│   │   ├── system
+│   │   ├── template
+│   │   ├── tmp
+│   │   └── user
+│   ├── meta-data
+│   │   ├── base
+│   │   ├── checkpoints
+│   │   ├── containers
+│   │   ├── derivate
+│   │   ├── object
+│   │   ├── roms
+│   │   ├── runtime
+│   │   ├── sessions
+│   │   ├── system
+│   │   ├── template
+│   │   ├── tmp
+│   │   └── user
+│   ├── public
+│   │   ├── images
+│   │   │   ├── base
+│   │   │   ├── checkpoints
+│   │   │   ├── containers
+│   │   │   ├── derivate
+│   │   │   ├── object
+│   │   │   ├── roms
+│   │   │   ├── runtime
+│   │   │   ├── sessions
+│   │   │   ├── system
+│   │   │   ├── template
+│   │   │   ├── tmp
+│   │   │   └── user
+│   │   ├── meta-data
+│   │   │   ├── base
+│   │   │   ├── checkpoints
+│   │   │   ├── containers
+│   │   │   ├── derivate
+│   │   │   ├── object
+│   │   │   ├── roms
+│   │   │   ├── runtime
+│   │   │   ├── sessions
+│   │   │   ├── system
+│   │   │   ├── template
+│   │   │   ├── tmp
+│   │   │   └── user
+│   │   └── recordings
+│   ├── recordings
+│   └── remote
+│       ├── images
+│       │   ├── base
+│       │   ├── checkpoints
+│       │   ├── containers
+│       │   ├── derivate
+│       │   ├── object
+│       │   ├── roms
+│       │   ├── runtime
+│       │   ├── sessions
+│       │   ├── system
+│       │   ├── template
+│       │   ├── tmp
+│       │   └── user
+│       ├── meta-data
+│       │   ├── base
+│       │   ├── checkpoints
+│       │   ├── containers
+│       │   ├── derivate
+│       │   ├── object
+│       │   ├── roms
+│       │   ├── runtime
+│       │   ├── sessions
+│       │   ├── system
+│       │   ├── template
+│       │   ├── tmp
+│       │   └── user
+│       └── recordings
+├── import
+├── nameindices
+│   ├── default
+│   ├── emulators
+│   ├── public
+│   └── remote
+├── object-archives
+├── objects
+├── server-data
+│   ├── harvesters.json
+│   ├── metsRemoteMetadata
+│   ├── migrations
+│   ├── operating-systems.json
+│   ├── sessions.csv
+│   ├── software-archive
+│   └── users
+├── software-archive
+├── tmp
+│   ├── eaas-imagebuilder
+│   └── imports
+└── tmp-storage
+    ├── bindings
+    ├── blobstore
+    └── imagemounter

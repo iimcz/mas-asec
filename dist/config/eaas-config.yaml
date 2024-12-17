@@ -1,0 +1,141 @@
+clustermanager:
+    name: default
+    providers:
+        - name: default
+          type: blades
+          protocol: "http://"
+          node_allocator:
+              node_capacity:
+                  cpu: 12
+                  memory: 24000 MB
+              node_addresses:
+                  - eaas_node:8080
+              healthcheck:
+                  url_template: "{{address}}/emucomp/health"
+          poolscaler:
+              min_poolsize: 1
+              max_poolsize: 1
+
+commonconf:
+    serverdatadir: /opt/eaas/data/server-data
+    mongodb:
+        address: "mongodb://localhost:27017"
+        dbname: eaas
+
+imagearchive:
+    backends:
+        - name: public
+          type: filesystem
+          basepath: /opt/eaas/data/image-archive/public
+          http_prefix: "http://172.17.0.1:8080/imagearchive/public"
+          nameindex_config_path: /opt/eaas/data/nameindices/public/
+          export_handles: false
+        - name: remote
+          type: filesystem
+          basepath: /opt/eaas/data/image-archive/remote
+          http_prefix: "http://172.17.0.1:8080/imagearchive/remote"
+          nameindex_config_path: /opt/eaas/data/nameindices/remote/
+          export_handles: false
+          order: 1
+        - name: emulators
+          type: filesystem
+          basepath: /opt/eaas/data/image-archive/emulators
+          http_prefix: "http://172.17.0.1:8080/imagearchive/emulators"
+          nameindex_config_path: /opt/eaas/data/nameindices/emulators/
+          export_handles: false
+        - name: default
+          type: filesystem
+          basepath: /opt/eaas/data/image-archive/
+          http_prefix: "http://172.17.0.1:8080/imagearchive/default"
+          nameindex_config_path: /opt/eaas/data/nameindices/default/
+          export_handles: false
+          order: 2
+    storage:
+        endpoints:
+            - name: "minio"
+              address: "http://172.17.0.1:9000"
+              credentials:
+                  access_key: ""
+                  secret_key: ""
+    importer:
+        num_workers: 4
+        gc_interval: 6 hours
+        max_record_age: 7 days
+        base_directory: "/opt/eaas/data/import"
+        temp_directory: "/opt/eaas/data/tmp/imports"
+
+    endpoint: "http://172.17.0.1:8080/image-archive"
+
+storage:
+    s3_user_access_key_id: ""
+    s3_user_access_key_secret: ""
+
+softwarearchive:
+    basedir: /opt/eaas/data/software-archive/
+
+objectarchive:
+    objectarchiveconfdir: /opt/eaas/data/object-archives
+    httpexport: http://172.18.0.1:8080/objectarchive/
+    default_local_file_path: /opt/eaas/data/objects
+    userarchive: /opt/eaas/data/server-data/users
+    user_archive_prefix: "user-"
+    user_archive_enabled: false
+    default_archive: "default"
+    temp_directory: /opt/eaas/data/tmp/imports
+imageclassifier:
+    fitshome: /opt/eaas/data/bw-fla/ext/fits
+    verbosemode: false
+    numtasksperrequest: 4
+imageproposer:
+    rebuildinterval: 60
+imagebuilder:
+    basedir: /opt/eaas/data/tmp/eaas-imagebuilder
+    blobstore: http://172.17.0.1:8080/
+imagemounter:
+    basedir: /opt/eaas/data/tmp-storage/imagemounter
+emil:
+    imageproposerservice: http://172.17.0.1:8080
+    classificationservice: http://172.17.0.1:8080
+    cachedclassificationpath: /opt/eaas/data/classification-cache/
+    emilenvironmentspath: /opt/eaas/data/emil-environments/
+    exportpath: /opt/eaas/data/export/
+emucomp:
+    blobstore_soap: http://172.17.0.1:8080
+    inactivitytimeout: MAX
+    localmode: false
+    resolver: http://172.17.0.1:8082
+generalization:
+    rest_url: http://172.17.0.1:8080/image-generalization
+
+ws:
+    blobstore: http://172.17.0.1:8080/
+    imagebuilder: http://172.17.0.1:8080/
+    imagearchive: http://172.17.0.1:8080/
+    eaasgw: http://172.17.0.1:8080/
+    embedgw: http://172.17.0.1:8080/
+    objectarchive: http://172.17.0.1:8080/
+    softwarearchive: http://172.17.0.1:8080/
+
+rest:
+    blobstore: http://172.17.0.1:8080/blobstore/api/v1/blobs
+    imagearchive: http://172.17.0.1:8080/image-archive
+
+blobstore:
+    gc_interval: 30 min
+    max_entry_age: 1 hour
+    backend:
+        type: fs
+        base_dir: /opt/eaas/data/tmp-storage/blobstore
+
+components:
+    emulator_containers:
+        enabled: true
+        uid: 1000
+        gid: 0
+    passthrough:
+        vfio_group: 14
+        devices: 01:00.0,multifunction=on,x-vga=on;01:00.1
+    binary:
+        vdeplug: /usr/bin/vde_plug
+        vdeslirp: /usr/bin/slirpvde
+        vdeswitch: /usr/bin/vde_switch
