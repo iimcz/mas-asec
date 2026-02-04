@@ -3,6 +3,7 @@ using asec.DataConversion;
 using asec.LongRunning;
 using asec.Emulation;
 using asec.Compatibility.EaasApi;
+using asec.Compatibility.CollectiveAccess;
 
 namespace asec.Extensions;
 
@@ -29,6 +30,9 @@ public static class IServiceCollectionExtensions
         services.AddScoped<EaasUploadClient>();
         services.AddScoped<ObjectRepositoryClient>();
         services.AddScoped<ComponentsClient>();
+
+        // CollectiveAccess clients
+        services.AddSingleton<CollectiveAccessAuth>();
         
         return services;
     }
