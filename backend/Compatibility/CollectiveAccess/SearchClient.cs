@@ -4,7 +4,7 @@ namespace asec.Compatibility.CollectiveAccess;
 
 public class SearchClient : BaseCollectiveAccessClient
 {
-    private const string SEARCH_WORKS_QUERY = "";
+    private const string SEARCH_WORKS_QUERY = "query search($jwt:String,$search:String,$table:String,$types:[String],$bundles:[String]){search(jwt:$jwt,search:$search,table:$table,restrictToTypes:$types,bundles:$bundles){result{id,idno,bundles{code,dataType,name,values{id,locale,value}}}}}";
     private const string ENDPOINT = "service.php/search";
 
     public SearchClient(IConfiguration configuration, IHttpClientFactory clientFactory, CollectiveAccessAuth auth) : base(configuration, clientFactory, auth)
@@ -18,20 +18,16 @@ public class SearchClient : BaseCollectiveAccessClient
             Query = SEARCH_WORKS_QUERY,
             Variables = new() {
                 Search = searchTerm ?? "*",
-                Table = "ca_occurrences",
-                Types = new() {"work"},
-                Bundles = new() {"ca_occurrences.preferred_labels", "ca_occurrences.occurrence_id"}
+                Table = Tables.Occurrences,
+                Types = new() { Types.Work },
+                Bundles = new() { BundleCodes.OccurrenceLabel, BundleCodes.OccurrenceId }
             }
         };
 
         var result = await PostAuthenticatedAsync<SearchVars,SearchRoot<Work>>(ENDPOINT, request, cancellationToken);
-        if (result == null || !result.Ok)
-        {
-            // TODO: better error handling and logging
-            throw new ApplicationException(result?.Errors?.ToString());
-        }
+        Console.WriteLine(System.Text.Json.JsonSerializer.SerializeToDocument(result).RootElement.ToString());
         
-        return result.Data.Search.Results;
+        return result.Data.Search.Result;
     }
 
     public class SearchVars : GraphQLAuthVars
@@ -46,7 +42,7 @@ public class SearchClient : BaseCollectiveAccessClient
     public class SearchResults<T>
     {
         public int Count {get; set;}
-        public IList<T> Results {get; set;}
+        public IList<T> Result {get; set;}
     }
 
     public class SearchRoot<T>

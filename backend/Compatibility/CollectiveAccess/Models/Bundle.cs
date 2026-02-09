@@ -1,7 +1,7 @@
 namespace asec.Compatibility.CollectiveAccess.Models;
 
 public record BundleValue(
-    int Id,
+    int? Id,
     string Locale,
     string Value
 );

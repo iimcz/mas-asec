@@ -33,6 +33,9 @@ public class CollectiveAccessAuth
         _username = section.GetValue<string>("Username");
         _password = section.GetValue<string>("Password");
         _tokenValidity = section.GetValue<TimeSpan>("TokenValidity");
+
+        // Ensure the initial null token is immediately invalid.
+        _tokenTimeStamp = DateTime.Now - _tokenValidity;
     }
 
     public async Task<string> GetValidTokenAsync(CancellationToken cancellationToken = default(CancellationToken))
@@ -40,7 +43,7 @@ public class CollectiveAccessAuth
         // Use a semaphore so that we don't try to refresh a token multiple times in parallel.
         await _semaphore.WaitAsync();
 
-        if (_tokenTimeStamp + _tokenValidity < DateTime.Now)
+        if (_tokenTimeStamp + _tokenValidity > DateTime.Now)
         {
             _semaphore.Release();
             return _token;
@@ -60,18 +63,15 @@ public class CollectiveAccessAuth
             };
 
             var response = await client.PostAsJsonAsync("service.php/auth", request, _jsonOptions, cancellationToken);
+            var data = await response.Content.ReadFromJsonAsync<GraphQLResponse<AuthData>>(_jsonOptions, cancellationToken);
 
             // TODO: proper handling / logging
-            response.EnsureSuccessStatusCode();
-
-            var data = await response.Content.ReadFromJsonAsync<GraphQLResponse<AuthData>>(_jsonOptions, cancellationToken);
-            if (data == null || !data.Ok)
+            if (!response.IsSuccessStatusCode || (data != null && !data.Ok))
             {
-                // TODO: also proper handling
-                throw new ApplicationException(data?.Errors?.ToString());
+                throw new HttpRequestException(data?.Errors?.ToString(), null, response.StatusCode);
             }
 
-            _token = data.Data.Jwt;
+            _token = data!.Data.Jwt;
             _tokenTimeStamp = DateTime.Now;
             return _token;
         }

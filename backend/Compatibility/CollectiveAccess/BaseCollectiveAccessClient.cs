@@ -33,9 +33,13 @@ public abstract class BaseCollectiveAccessClient
         request.Variables.Jwt = await _auth.GetValidTokenAsync(cancellationToken);
 
         var response = await client.PostAsJsonAsync(endpoint, request, _serializerOptions, cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<GraphQLResponse<TOutData>>();
         // TODO: proper error handling / logging
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode || (result != null && !result.Ok))
+        {
+            throw new HttpRequestException(result?.Errors?.ToString(), null, response.StatusCode);
+        }
 
-        return await response.Content.ReadFromJsonAsync<GraphQLResponse<TOutData>>();
+        return result;
     }
 }

@@ -19,10 +19,10 @@ public class ItemClient : BaseCollectiveAccessClient
             Query = RELATIONSHIPS_QUERY,
             Variables = new() {
                 Id = id,
-                Table = "ca_occurrences",
-                Target = "ca_occurrences",
-                RelTypes = new() {"work_manifestation_workversion"},
-                TgTypes = new() {"work_version"}
+                Table = Tables.Occurrences,
+                Target = Tables.Occurrences,
+                RelTypes = new() { RelationTypes.WorkManifestWorkVersion },
+                TgTypes = new() { Types.WorkVersion }
             }
         };
 
@@ -51,9 +51,9 @@ public class ItemClient : BaseCollectiveAccessClient
             Query = GET_QUERY,
             Variables = new() {
                 Id = id,
-                Table = "ca_occurrences",
+                Table = Tables.Occurrences,
                 Bundles = new() {
-                    "ca_occurrences.preferred_labels"
+                    BundleCodes.OccurrenceLabel
                 }
             }
         };
@@ -77,8 +77,8 @@ public class ItemClient : BaseCollectiveAccessClient
         var relDataRequest = new GraphQLRequest<GetArgs>() {
             Query = GET_QUERY,
             Variables = new() {
-                Table = "ca_occurrences_x_occurrences",
-                Bundles = new() {"ca_occurrences_x_occurrences.occurrence_left_id"}
+                Table = Tables.OccurrencesXOccurrences,
+                Bundles = new() { BundleCodes.OccurrenceRelLeftId }
             }
         };
 
@@ -87,13 +87,6 @@ public class ItemClient : BaseCollectiveAccessClient
         {
             relDataRequest.Variables.Id = rel.Id;
             var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Relationship>>(ENDPOINT, relDataRequest, cancellationToken);
-
-            // TODO: better error handling and logging
-            if (response == null || !response.Ok)
-            {
-                // skip for now
-                continue;
-            }
 
             if(!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
             {
@@ -108,7 +101,7 @@ public class ItemClient : BaseCollectiveAccessClient
         {
             Query = GET_QUERY,
             Variables = new() {
-                Table = "ca_occurrences",
+                Table = Tables.Occurrences,
                 Bundles = new() {
 
                 }
@@ -120,14 +113,6 @@ public class ItemClient : BaseCollectiveAccessClient
         {
             versionRequest.Variables.Id = verId;
             var response = await PostAuthenticatedAsync<GetArgs, GetRoot<WorkVersion>>(ENDPOINT, versionRequest, cancellationToken);
-
-            // TODO: better error handling and logging
-            if (response == null || !response.Ok)
-            {
-                // skip for now
-                continue;
-            }
-
             versions.Add(response.Data.Get);
         }
 
