@@ -1,4 +1,6 @@
 using asec.ViewModels;
+using asec.Compatibility.CollectiveAccess;
+using asec.Compatibility.CollectiveAccess.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace asec.Controllers;
@@ -7,31 +9,33 @@ namespace asec.Controllers;
 [Route("/api/v1/import")]
 public class ImportController : ControllerBase
 {
-    public ImportController()
-    {
+    private readonly SearchClient _searchClient;
+    private readonly ItemClient _itemClient;
 
+    public ImportController(SearchClient searchClient, ItemClient itemClient)
+    {
+        _searchClient = searchClient;
+        _itemClient = itemClient;
     }
 
     [HttpGet("available")]
-    public async Task<IActionResult> GetAvailableWorks([FromQuery] string q)
+    public async Task<IActionResult> GetAvailableWorks([FromQuery] string q = null, CancellationToken cancellationToken = default(CancellationToken))
     {
-        // TODO: return actual results
-        return Ok(new List<ImportableWork> {
-                new ImportableWork {
-                    Id = 0,
-                    Idno = "testament",
-                    Label = "Testament",
-                    NumVersions = 1,
-                    IsAlreadyImported = false
-                },
-                new ImportableWork {
-                    Id = 1,
-                    Idno = "vlak",
-                    Label = "Vlak",
-                    NumVersions = 1,
-                    IsAlreadyImported = true
-                }
-                });
+        var works = await _searchClient.GetWorks(q, cancellationToken);
+
+        var result = new List<ImportableWork>();
+        foreach (var work in works)
+        {
+            result.Add(new() {
+                Id = work.Id,
+                Idno = work.Idno,
+                Label = work.Bundles.Where(b => b.Code == BundleCodes.OccurrenceLabel).FirstOrDefault()?.Values[0].Value,
+                NumVersions = await _itemClient.GetVersionCountForWork(work, cancellationToken),
+                IsAlreadyImported = false // TODO: implement check
+            });
+        }
+
+        return Ok(result);
     }
 
     [HttpPost]

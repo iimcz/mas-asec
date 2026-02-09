@@ -33,6 +33,8 @@ public static class IServiceCollectionExtensions
 
         // CollectiveAccess clients
         services.AddSingleton<CollectiveAccessAuth>();
+        services.AddScoped<SearchClient>();
+        services.AddScoped<ItemClient>();
         
         return services;
     }
