@@ -2,7 +2,6 @@
 
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using asec.Models.Archive;
 using asec.Models.Digitalization;
 using asec.Platforms;
 
@@ -79,9 +78,9 @@ public class FfmpegRecordingTool : IDigitalizationTool
             Version = $"{versionMatch.Groups[1]}.{versionMatch.Groups[2]}.{versionMatch.Groups[3]}";
 
             bool haveDevice = false;
-            while (!ffProcess.StandardOutput.EndOfStream)
+            string line;
+            while ((line = await ffProcess.StandardOutput.ReadLineAsync()) is not null)
             {
-                string line = ffProcess.StandardOutput.ReadLine() ?? "";
                 var deviceMatch = DeviceRegex.Match(line);
                 if (!deviceMatch.Success)
                     continue;

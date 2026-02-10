@@ -3,7 +3,6 @@ using asec.Digitalization.Tools;
 using asec.Models;
 using asec.Models.Digitalization;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Writers;
 
 namespace asec.Digitalization;
 

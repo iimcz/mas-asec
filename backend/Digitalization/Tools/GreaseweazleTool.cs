@@ -73,9 +73,9 @@ public class GreaseweazleTool : IDigitalizationTool
                 return;
 
             bool haveHostVersion = false;
-            while (!gwProcess.StandardError.EndOfStream)
+            string line = null;
+            while ((line = await gwProcess.StandardError.ReadLineAsync()) is not null)
             {
-                var line = gwProcess.StandardError.ReadLine() ?? "";
                 if (!haveHostVersion)
                 {
                     var match = ToolVersionRegex.Match(line);
