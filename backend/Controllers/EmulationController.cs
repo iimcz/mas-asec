@@ -70,6 +70,8 @@ public class EmulationController : ControllerBase
         var result = await _processManager.FinishProcessAsync(id);
         
         // TODO: do something with result.SnapshotId...
+        // TODO: reimplement saving paratexts due to db model changes...
+        /*
         Response.OnCompleted(async () => {
             var gamePackage = await _dbContext.GamePackages.Include(p => p.Version).ThenInclude(v => v.Work).FirstAsync(p => p.Id == process.PackageId);
             foreach (var videoFile in result.VideoFiles)
@@ -126,6 +128,7 @@ public class EmulationController : ControllerBase
                 }
             }
         });
+        */
 
         return Ok();
     }

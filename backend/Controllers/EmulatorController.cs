@@ -1,5 +1,3 @@
-using System.Data.Common;
-using asec.Compatibility.EaasApi;
 using asec.Models;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;

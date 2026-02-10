@@ -38,9 +38,8 @@ public class ParatextController : ControllerBase
     {
         var id = Guid.Parse(paratextId);
         var dbParatext = await _dbContext.Paratexts
-            .Include(p => p.Work)
-            .Include(p => p.Version)
-            .Include(p => p.GamePackage)
+            .Include(p => p.PhysicalObject)
+            .Include(p => p.DigitalObject)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (dbParatext == null)
             return NotFound();
@@ -57,22 +56,8 @@ public class ParatextController : ControllerBase
     [Produces(typeof(Paratext))]
     public async Task<IActionResult> UpdateParatext(string paratextId, [FromBody] Paratext paratext)
     {
-        var id = Guid.Parse(paratextId);
-        var dbParatext = await _dbContext.Paratexts
-            .Include(p => p.Work)
-            .Include(p => p.Version)
-            .Include(p => p.GamePackage)
-            .FirstOrDefaultAsync(p => p.Id == id);
-        if (dbParatext == null)
-            return NotFound();
-
-        dbParatext.Name = paratext.Name;
-        dbParatext.Description = paratext.Description;
-        dbParatext.Source = paratext.Source;
-        dbParatext.SourceUrl = paratext.SourceUrl;
-        await _dbContext.SaveChangesAsync();
-
-        return Ok(Paratext.FromDBParatext(dbParatext));
+        // TODO: implement with new paratexts
+        return NotFound();
     }
 
     /// <summary>
@@ -102,10 +87,12 @@ public class ParatextController : ControllerBase
             .WithFileName(tmpFile)
             .WithObject(dbParatext.Id.ToString());
         await _minioClient.PutObjectAsync(putObjectArgs);
-        dbParatext.Downloadable = true;
-        dbParatext.Filename = filename;
+        //dbParatext.Downloadable = true;
+        //dbParatext.Filename = filename;
         System.IO.File.Delete(tmpFile);
         await _dbContext.SaveChangesAsync();
+
+        // TODO: save properly with current database schema changes - likely to a new digital object
 
         return Ok(Paratext.FromDBParatext(dbParatext));
     }
@@ -123,9 +110,10 @@ public class ParatextController : ControllerBase
         if (dbParatext == null)
             return NotFound();
 
-        if (!dbParatext.Downloadable)
-            return BadRequest();
+        //if (!dbParatext.Downloadable)
+        return BadRequest(); // TODO: currently always a bad request, support pending due to database model changes.
 
+        /*
         // TODO: use some kind of proxy for direct access instead of
         // caching the file ourselves.
         var tmpFile = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
@@ -141,5 +129,6 @@ public class ParatextController : ControllerBase
         });
         await _minioClient.GetObjectAsync(getObjectArgs);
         return PhysicalFile(tmpFile, "application/octet-stream", dbParatext.Filename, true);
+        */
     }
 }

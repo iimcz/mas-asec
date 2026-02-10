@@ -3,29 +3,31 @@ namespace asec.ViewModels;
 public record Paratext
 {
     public string Id { get; set; }
-    public string WorkId { get; set; }
-    public string VersionId { get; set; }
-    public string PackageId { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
-    public string Source { get; set; }
-    public string SourceUrl { get; set; }
-    public bool Downloadable { get; set; }
-    public string Thumbnail { get; set; }
+    public string Language { get; set; } 
+    public DateOnly Date { get; set; }
+    public string InternalNote { get; set; }
+    public string FilledOutBy { get; set; }
+    public Uri WebsiteUrl { get; set; }
+    public uint EmissionSize { get; set; }
+    public string IdentificationNumber { get; set; }
+    public string ParatextType { get; set; }
+    public DateTime ImportedAt { get; set; }
+    public DateTime ExportedAt { get; set; }
 
     public static Paratext FromDBParatext(Models.Archive.Paratext paratext)
     {
         return new Paratext() {
             Id = paratext.Id.ToString(),
-            WorkId = paratext.Work?.Id.ToString(),
-            VersionId = paratext.Version?.Id.ToString(),
-            PackageId = paratext.GamePackage?.Id.ToString(),
-            Name = paratext.Name,
-            Description = paratext.Description,
-            Source = paratext.Source,
-            SourceUrl = paratext.SourceUrl,
-            Downloadable = paratext.Downloadable,
-            Thumbnail = paratext.Thumbnail
+            Language = paratext.Language,
+            Date = paratext.Date,
+            InternalNote = paratext.InternalNote,
+            FilledOutBy = paratext.FilledOutBy,
+            WebsiteUrl = paratext.WebsiteUrl,
+            EmissionSize = paratext.EmissionSize,
+            IdentificationNumber = paratext.IdentificationNumber,
+            ParatextType = paratext.ParatextType,
+            ImportedAt = paratext.ImportedAt,
+            ExportedAt = paratext.ExportedAt
         };
     }
 }

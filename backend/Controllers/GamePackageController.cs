@@ -1,5 +1,3 @@
-using asec.Compatibility.EaasApi;
-using asec.Compatibility.EaasApi.Models;
 using asec.Emulation;
 using asec.LongRunning;
 using asec.Models;
@@ -115,26 +113,5 @@ public class GamePackageController : ControllerBase
         );
         _processManager.StartProcess(process);
         return Ok(EmulationState.FromProcess(process));
-    }
-
-    /// <summary>
-    /// Get paratexts for the specified game package.
-    /// </summary>
-    /// <param name="packageId">ID of the game package</param>
-    /// <returns>Enumerable of available paratexts</returns>
-    [HttpGet("{packageId}/paratexts")]
-    [Produces(typeof(IEnumerable<Paratext>))]
-    public async Task<IActionResult> GetPackageParatexts(string packageId)
-    {
-        var id = Guid.Parse(packageId);
-        var package = await _dbContext.GamePackages
-            .Include(p => p.Paratexts)
-            .ThenInclude(p => p.Work)
-            .Include(p => p.Paratexts)
-            .ThenInclude(p => p.Version)
-            .FirstOrDefaultAsync(p => p.Id == id);
-        if (package == null)
-            return NotFound();
-        return Ok(package.Paratexts.Select(p => Paratext.FromDBParatext(p)));
     }
 }

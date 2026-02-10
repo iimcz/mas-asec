@@ -1,26 +1,16 @@
-using asec.Extensions;
 using asec.Models.Archive;
 using asec.Models.Digitalization;
 using asec.Models.Emulation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace asec.Models;
 
 public class AsecDBContext : DbContext
 {
     public DbSet<Work> Works { get; set; }
-    public DbSet<Archive.Version> Versions { get; set; }
+    public DbSet<Archive.WorkVersion> WorkVersions { get; set; }
     public DbSet<Artefact> Artefacts { get; set; }
-
-    public DbSet<Classification> Classifications { get; set; }
-    public DbSet<TimeClassification> TimeClassifications { get; set; }
-    public DbSet<LocationClassification> LocationClassifications { get; set; }
-    public DbSet<Genre> Genres { get; set; }
-    public DbSet<Status> Statuses { get; set; }
-    public DbSet<Archive.System> Systems { get; set; }
-    public DbSet<Language> Languages { get; set; }
 
     public DbSet<DigitalizationTool> DigitalizationTools { get; set; }
 
@@ -41,19 +31,11 @@ public class AsecDBContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Work>().HasMany(w => w.Status).WithMany();
-        modelBuilder.Entity<Work>().HasMany(w => w.Classification).WithMany();
-        modelBuilder.Entity<Work>().HasMany(w => w.TimeClassification).WithMany();
-        modelBuilder.Entity<Work>().HasMany(w => w.LocationClassification).WithMany();
-        modelBuilder.Entity<Work>().HasMany(w => w.Genre).WithMany();
-
-        modelBuilder.Entity<Archive.Version>().HasMany(v => v.Status).WithMany();
-        modelBuilder.Entity<Archive.Version>().HasMany(v => v.System).WithMany();
+        modelBuilder.Entity<WorkVersion>().HasMany(w => w.DigitalObjects).WithMany();
+        modelBuilder.Entity<WorkVersion>().HasMany(w => w.PhysicalObjects).WithMany();
 
         modelBuilder.Entity<GamePackage>().HasMany(p => p.IncludedArtefacts).WithMany();
-
         modelBuilder.Entity<Emulator>().HasMany(e => e.Platforms).WithMany();
-
         modelBuilder.Entity<EmulationEnvironment>().HasMany(e => e.Converters).WithMany();
 
 

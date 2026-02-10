@@ -1,28 +1,32 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace asec.Models.Archive;
 
-public class Paratext
+using System.ComponentModel.DataAnnotations;
+
+public class PhysicalObject
 {
     [Key]
     public Guid Id { get; set; }
 
     // Imported / exported data
-    public string Language { get; set; } 
+    public string Description { get; set; }
     public DateOnly Date { get; set; }
     public string InternalNote { get; set; }
     public string FilledOutBy { get; set; }
+    public string PhysicalObjectType { get; set; }
+    public string CountryOfOrigin { get; set; }
     public Uri WebsiteUrl { get; set; }
-    public uint EmissionSize { get; set; }
-    public string IdentificationNumber { get; set; }
-    public string ParatextType { get; set; }
+    public string EAN { get; set; }
+    public string ISBN { get; set; }
+    public string Condition { get; set; }
+    public string Location { get; set; }
+    public string Size { get; set; }
+    public string Owner { get; set; }
 
     // Generated data
     public DateTime ImportedAt { get; set; } = DateTime.Now;
     public DateTime ExportedAt { get; set; } = DateTime.MinValue;
 
     // Relationships
-    public DigitalObject DigitalObject { get; set; }
-    public PhysicalObject PhysicalObject { get; set; }
     public IEnumerable<WorkVersion> Versions { get; set; }
+    public IEnumerable<Paratext> Paratexts { get; set; }
 }

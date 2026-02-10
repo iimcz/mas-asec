@@ -1,5 +1,4 @@
 using asec.Models;
-using asec.Models.Archive;
 using asec.Models.Digitalization;
 
 namespace asec.ViewModels;
@@ -20,9 +19,9 @@ public record Artefact
 
     public async Task<Models.Digitalization.Artefact> ToDBEntity(AsecDBContext context)
     {
-        Models.Archive.Version version = null;
+        Models.Archive.WorkVersion version = null;
         if (Guid.TryParse(VersionId, out var versionId))
-            version = await context.Versions.FindAsync(versionId);
+            version = await context.WorkVersions.FindAsync(versionId);
         Models.Digitalization.DigitalizationTool tool = null;
         if (Guid.TryParse(DigitalizationToolId, out var toolId))
             tool = await context.DigitalizationTools.FindAsync(toolId);
@@ -53,7 +52,7 @@ public record Artefact
     {
         return new() {
             Id = artefact.Id.ToString(),
-            VersionId = artefact.Version.Id.ToString(),
+            VersionId = artefact.Version?.Id.ToString(),
             Name = artefact.Name,
             PhysicalMediaState = artefact.PhysicalMediaState,
             ArchivationDate = artefact.ArchivationDate.ToString(),

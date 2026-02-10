@@ -6,7 +6,7 @@ public class Artefact
 {
     [Key]
     public Guid Id { get; set; }
-    public Archive.Version Version { get; set; }
+    public Archive.WorkVersion Version { get; set; }
     public string Name { get; set; }
     public string PhysicalMediaState { get; set; }
     public DateTime ArchivationDate { get; set; }

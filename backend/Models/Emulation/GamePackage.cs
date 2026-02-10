@@ -8,7 +8,7 @@ public class GamePackage
     public Guid Id { get; set; }
     public string Name { get; set; }
     public IEnumerable<Artefact> IncludedArtefacts { get; set; }
-    public Archive.Version Version { get; set; }
+    public Archive.WorkVersion Version { get; set; }
     public EmulationEnvironment Environment { get; set; }
     public Converter Converter { get; set; }
     public DateTime ConversionDate { get; set; }

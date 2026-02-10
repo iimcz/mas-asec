@@ -91,7 +91,7 @@ public class DigitalizationController : ControllerBase
         if (tool == null)
             return NotFound();
 
-        var version = await _dbContext.Versions.FindAsync(Guid.Parse(request.VersionId));
+        var version = await _dbContext.WorkVersions.FindAsync(Guid.Parse(request.VersionId));
         if (version == null)
             return NotFound();
 
@@ -190,7 +190,7 @@ public class DigitalizationController : ControllerBase
         if (process == null)
             return NotFound();
         var tool = process.DigitalizationTool;
-        var version = await _dbContext.Versions.FindAsync(process.VersionId);
+        var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);
         if (version == null)
             return NotFound();
         await _processManager.CancelProcessAsync(process.Id);
