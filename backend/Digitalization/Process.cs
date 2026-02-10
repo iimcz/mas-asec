@@ -29,7 +29,7 @@ public class Process : IProcess<DigitalizationResult>
         SingleWriter = false
     });
 
-    public Process(IDigitalizationTool digitalizationTool, Models.Archive.Version version, string dirsBase)
+    public Process(IDigitalizationTool digitalizationTool, Models.Archive.WorkVersion version, string dirsBase)
     {
         DigitalizationTool = digitalizationTool;
         VersionId = version.Id;
