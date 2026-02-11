@@ -10,24 +10,28 @@ namespace asec.Controllers;
 [Route("/api/v1/import")]
 public class ImportController : ControllerBase
 {
+    private readonly ILogger<ImportController> _logger;
     private readonly SearchClient _searchClient;
     private readonly ItemClient _itemClient;
     private readonly AsecDBContext _dbContext;
 
-    public ImportController(SearchClient searchClient, ItemClient itemClient, AsecDBContext dbContext)
+    public ImportController(SearchClient searchClient, ItemClient itemClient, AsecDBContext dbContext, ILogger<ImportController> logger)
     {
         _searchClient = searchClient;
         _itemClient = itemClient;
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet("available")]
     public async Task<IActionResult> GetAvailableWorks([FromQuery] string q = null, CancellationToken cancellationToken = default(CancellationToken))
     {
+        _logger.LogInformation("Querying CA for available works.");
         var works = await _searchClient.GetWorks(q, cancellationToken);
 
         var imported = _dbContext.Works.Select(w => w.RemoteId);
 
+        _logger.LogInformation("Have {0} works, querying their versions.", works.Count);
         var result = new List<ImportableWork>();
         foreach (var work in works)
         {
@@ -53,8 +57,12 @@ public class ImportController : ControllerBase
             return BadRequest();
         }
 
+        _logger.LogInformation("Importing new work, ID: {0}", iwork.Id);
+
         var work = await _itemClient.GetWork(iwork.Id);
         var versions = await _itemClient.GetVersionsForWork(work);
+
+        _logger.LogInformation("Found work including {0} versions.", versions.Count);
 
         var dbVersions = new List<Models.Archive.WorkVersion>();
         dbVersions.AddRange(
@@ -75,8 +83,7 @@ public class ImportController : ControllerBase
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // TODO: implement
-        return Ok();
+        return Ok(asec.ViewModels.Work.FromDbEntity(dbWork));
     }
 
     private string GetOptionalBundleValue(IList<Bundle> bundles, string bundleCode)

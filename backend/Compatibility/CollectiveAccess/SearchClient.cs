@@ -25,7 +25,6 @@ public class SearchClient : BaseCollectiveAccessClient
         };
 
         var result = await PostAuthenticatedAsync<SearchVars,SearchRoot<Work>>(ENDPOINT, request, cancellationToken);
-        Console.WriteLine(System.Text.Json.JsonSerializer.SerializeToDocument(result).RootElement.ToString());
         
         return result.Data.Search.Result;
     }
