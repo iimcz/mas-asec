@@ -53,7 +53,10 @@ public class ItemClient : BaseCollectiveAccessClient
                 Id = id,
                 Table = Tables.Occurrences,
                 Bundles = new() {
-                    BundleCodes.OccurrenceLabel
+                    BundleCodes.OccurrenceLabel,
+                    BundleCodes.OccurrenceCuratorialDescription,
+                    BundleCodes.OccurrenceInternalNote,
+                    BundleCodes.OccurrenceTypeOfWork
                 }
             }
         };
@@ -103,7 +106,13 @@ public class ItemClient : BaseCollectiveAccessClient
             Variables = new() {
                 Table = Tables.Occurrences,
                 Bundles = new() {
-
+                    BundleCodes.OccurrenceLabel,
+                    BundleCodes.OccurrenceDescription,
+                    BundleCodes.OccurrenceSubtitle,
+                    BundleCodes.OccurrenceSystem,
+                    BundleCodes.OccurrenceCopyProtection,
+                    BundleCodes.OccurrenceCuratorialDescription,
+                    BundleCodes.OccurrenceInternalNote
                 }
             }
         };
