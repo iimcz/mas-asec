@@ -7,7 +7,8 @@ public class PhysicalObject
     [Key]
     public Guid Id { get; set; }
 
-    // Imported / exported data
+    // Imported data
+    public int RemoteId { get; set; }
     public string Description { get; set; }
     public DateOnly Date { get; set; }
     public string InternalNote { get; set; }
@@ -24,7 +25,7 @@ public class PhysicalObject
 
     // Generated data
     public DateTime ImportedAt { get; set; } = DateTime.Now;
-    public DateTime ExportedAt { get; set; } = DateTime.MinValue;
+    public bool Deleted { get; set; } = false;
 
     // Relationships
     public IEnumerable<WorkVersion> Versions { get; set; }

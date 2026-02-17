@@ -13,10 +13,12 @@ public class Work
     public int RemoteId { get; set; }
     public string Label { get; set; }
     public string TypeOfWork { get; set; }
+    public string CuratorialDescription { get; set; }
     public string InternalNote { get; set; }
 
     // Generated data
     public DateTime ImportedAt { get; set; } = DateTime.Now;
+    public bool Deleted { get; set; } = false;
 
     // Relationships
     public IEnumerable<WorkVersion> Versions { get; set; }

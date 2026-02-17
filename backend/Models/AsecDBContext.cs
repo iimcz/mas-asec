@@ -10,6 +10,8 @@ public class AsecDBContext : DbContext
 {
     public DbSet<Work> Works { get; set; }
     public DbSet<Archive.WorkVersion> WorkVersions { get; set; }
+    public DbSet<PhysicalObject> PhysicalObjects { get; set; }
+    public DbSet<DigitalObject> DigitalObjects { get; set; }
     public DbSet<Artefact> Artefacts { get; set; }
 
     public DbSet<DigitalizationTool> DigitalizationTools { get; set; }

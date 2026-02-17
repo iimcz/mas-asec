@@ -10,6 +10,7 @@ public record WorkVersion
     public string System { get; set; }
     public string CopyProtection { get; set; }
     public string CuratorialDescription { get; set; }
+    public string InternalNote { get; set; }
     public DateTime ImportedAt { get; set; }
 
     public static WorkVersion FromDBEntity(Models.Archive.WorkVersion dbVersion)
@@ -23,6 +24,7 @@ public record WorkVersion
             System = dbVersion.System,
             CopyProtection = dbVersion.CopyProtection,
             CuratorialDescription = dbVersion.CuratorialDescription,
+            InternalNote = dbVersion.InternalNote,
             ImportedAt = dbVersion.ImportedAt
         };
     }

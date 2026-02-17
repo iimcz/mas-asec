@@ -8,6 +8,7 @@ public class DigitalObject
     public Guid Id { get; set; }
 
     // Imported / saved data
+    public int RemoteId { get; set; }
     public string InternalNote { get; set; }
     public Uri WebsiteUrl { get; set; }
     public string DigitalObjectType { get; set; }
