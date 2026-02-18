@@ -20,7 +20,7 @@ public class SearchClient : BaseCollectiveAccessClient
                 Search = searchTerm ?? "*",
                 Table = Tables.Occurrences,
                 Types = new() { Types.Work },
-                Bundles = new() { BundleCodes.OccurrenceLabel, BundleCodes.OccurrenceId }
+                Bundles = new() { BundleCodes.OccurrenceLabel, BundleCodes.OccurrenceId, BundleCodes.OccurrenceCuratorialDescription }
             }
         };
 

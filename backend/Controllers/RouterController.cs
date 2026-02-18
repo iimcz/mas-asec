@@ -30,6 +30,12 @@ public class RouterController : ControllerBase
         _dbContext = dbContext;
     }
 
+    [HttpGet("ca/home")]
+    public IActionResult CAGoHome()
+    {
+        return Redirect($"{_caUiBaseUrl}index.php");
+    }
+
     [HttpGet("ca/work/add")]
     public IActionResult CAAddWork()
     {

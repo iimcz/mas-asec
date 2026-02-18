@@ -41,7 +41,8 @@ public class ImportController : ControllerBase
             result.Add(new() {
                 Id = work.Id,
                 Idno = work.Idno,
-                Label = work.Bundles.Where(b => b.Code == BundleCodes.OccurrenceLabel).FirstOrDefault()?.Values[0].Value,
+                Label = GetOptionalBundleValue(work.Bundles, BundleCodes.OccurrenceLabel),
+                CuratorialDescription = GetOptionalBundleValue(work.Bundles, BundleCodes.OccurrenceCuratorialDescription),
                 NumVersions = await _itemClient.GetVersionCountForWork(work, cancellationToken),
                 IsAlreadyImported = imported.Contains(work.Id)
             });
