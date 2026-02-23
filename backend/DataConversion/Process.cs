@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Threading.Channels;
 using asec.DataConversion.Converters;
 using asec.LongRunning;
@@ -12,6 +11,7 @@ public class Process : IProcess<ConversionResult>
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Guid EnvironmentId { get; private set; }
+    public Guid VersionId { get; private set; }
 
     public CancellationToken CancellationToken { get; private set; }
 
@@ -42,7 +42,7 @@ public class Process : IProcess<ConversionResult>
     private readonly string _unzipBinary;
     private readonly string _artefactBucket;
 
-    public Process(Guid environmentId, IConverter converter, List<Artefact> artefacts, IServiceScopeFactory serviceScopeFactory, string dirsBase, string artefactBucket, string unzipBin)
+    public Process(Guid environmentId, IConverter converter, List<Artefact> artefacts, Models.Archive.WorkVersion version, IServiceScopeFactory serviceScopeFactory, string dirsBase, string artefactBucket, string unzipBin)
     {
         Converter = converter;
         _serviceScopeFactory = serviceScopeFactory;
@@ -50,6 +50,7 @@ public class Process : IProcess<ConversionResult>
         _artefactBucket = artefactBucket;
         Artefacts = artefacts;
         EnvironmentId = environmentId;
+        VersionId = version.Id;
 
         BaseDir = Path.Combine(dirsBase, Id.ToString());
         FetchDir = Path.Combine(BaseDir, "fetched");
@@ -89,8 +90,8 @@ public class Process : IProcess<ConversionResult>
             var minioClient = serviceScope.ServiceProvider.GetRequiredService<IMinioClient>();
             var args = new GetObjectArgs()
                 .WithBucket(_artefactBucket)
-                .WithObject(artefact.Id.ToString())
-                .WithFile(Path.Combine(artefactFetchDir, artefact.OriginalFilename));
+                .WithObject(artefact.ObjectId.ToString())
+                .WithFile(Path.Combine(artefactFetchDir, artefact.FileName));
             
             await minioClient.GetObjectAsync(args, cancellationToken);
         }
@@ -99,10 +100,10 @@ public class Process : IProcess<ConversionResult>
         {
             if (artefact.Type != ArtefactType.ZipArchive)
                 throw new InvalidOperationException("Can only extract ZIP archives!");
-            string extractionDir = Path.Combine(artefactFetchDir, artefact.OriginalFilename + "_extracted");
+            string extractionDir = Path.Combine(artefactFetchDir, artefact.FileName + "_extracted");
             
             var extractionProcess = System.Diagnostics.Process.Start(_unzipBinary, new List<string>() {
-                Path.Combine(artefactFetchDir, artefact.OriginalFilename),
+                Path.Combine(artefactFetchDir, artefact.FileName),
                 "-d", extractionDir
             });
             await extractionProcess.WaitForExitAsync(cancellationToken);
@@ -110,7 +111,7 @@ public class Process : IProcess<ConversionResult>
         }
         else
         {
-            return Path.Combine(artefactFetchDir, artefact.OriginalFilename);
+            return Path.Combine(artefactFetchDir, artefact.FileName);
         }
     }
 

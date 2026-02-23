@@ -7,8 +7,9 @@ public class DigitalObject
     [Key]
     public Guid Id { get; set; }
 
-    // Imported / saved data
+    // Imported / exported data
     public int RemoteId { get; set; }
+    public string FileName { get; set; }
     public string InternalNote { get; set; }
     public Uri WebsiteUrl { get; set; }
     public string DigitalObjectType { get; set; }
@@ -16,7 +17,6 @@ public class DigitalObject
     public uint FileSize { get; set; }
     public string Quality { get; set; }
     public string FedoraUrl { get; set; }
-    public string FileName { get; set; }
 
     // Generated
     public DateTime ImportedAt { get; set; } = DateTime.Now;
@@ -25,4 +25,5 @@ public class DigitalObject
     // Relationships
     public IEnumerable<WorkVersion> Versions { get; set; }
     public IEnumerable<Paratext> Paratexts { get; set; }
+    public PhysicalObject PhysicalObject { get; set; }
 }

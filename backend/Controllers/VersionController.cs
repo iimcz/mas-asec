@@ -69,7 +69,7 @@ public class VersionController : ControllerBase
         var id = Guid.Parse(versionId);
         var version = await _dbContext.WorkVersions
             .Include(v => v.GamePackages)
-            .ThenInclude(p => p.IncludedArtefacts)
+            .ThenInclude(p => p.IncludedDigitalObjects)
             .Include(v => v.GamePackages)
             .ThenInclude(p => p.Environment)
             .FirstOrDefaultAsync(v => v.Id == id);

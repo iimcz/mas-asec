@@ -69,17 +69,23 @@ public class ConversionController : ControllerBase
     public async Task<IActionResult> StartConversionForEmulator([FromBody] ConversionRequest conversionRequest)
     {
         var environmentId = Guid.Parse(conversionRequest.EmulatorId);
-        var artefactIds = conversionRequest.ArtefactIds.Select(id => Guid.Parse(id));
-        var artefacts = await _dbContext.Artefacts.Where(a => artefactIds.Contains(a.Id)).ToListAsync();
+        var digiObjectIds = conversionRequest.DigitalObjectIds.Select(id => Guid.Parse(id));
+        var digiObjects = _dbContext.DigitalObjects.Where(o => digiObjectIds.Contains(o.Id));
+        var artefacts = digiObjects.OfType<Models.Digitalization.Artefact>();
+        var firstArtefact = artefacts.FirstOrDefault();
 
-        var artefactType = artefacts[0].Type;
-        if (!artefacts.All(a => a.Type == artefactType))
+        var versionId = Guid.Parse(conversionRequest.VersionId);
+        var version = await _dbContext.WorkVersions.FirstOrDefaultAsync(v => v.Id == versionId);
+        if (version is null)
+            return NotFound();
+
+        if (firstArtefact is null || await artefacts.AnyAsync(a => firstArtefact.Type != a.Type))
             return BadRequest();
-        var converter = await _emulatorRepository.GetEnvironmentConverterAsync(environmentId, artefactType);
+        var converter = await _emulatorRepository.GetEnvironmentConverterAsync(environmentId, firstArtefact.Type);
         if (converter == null)
             return NotFound();
 
-        var process = new DataConversion.Process(environmentId, converter, artefacts, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
+        var process = new DataConversion.Process(environmentId, converter, await artefacts.ToListAsync(), version, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
         _processManager.StartProcess(process);
         
         return Ok(ConversionProcess.FromProcess(process));
@@ -128,17 +134,14 @@ public class ConversionController : ControllerBase
         ), cancellationToken);
 
         var artefactIds = process.Artefacts.Select(a => a.Id).ToList();
-        var version = (await _dbContext.Artefacts
-            .Include(a => a.Version)
-            .FirstOrDefaultAsync(a => a.Id == artefactIds[0], cancellationToken))?.Version;
         var dbGamePackage = new Models.Emulation.GamePackage() {
             Id = Guid.Parse(eaasObjectId),
             Name = package.Name,
             ConversionDate = process.StartTime,
             Converter = await _dbContext.Converters.FindAsync(process.Converter.Id),
             Environment = await _dbContext.Environments.FindAsync(process.EnvironmentId),
-            IncludedArtefacts = await _dbContext.Artefacts.Where(a => artefactIds.Contains(a.Id)).ToListAsync(cancellationToken),
-            Version = version
+            IncludedDigitalObjects = await _dbContext.DigitalObjects.Where(a => artefactIds.Contains(a.Id)).ToListAsync(cancellationToken),
+            Version = await _dbContext.WorkVersions.FindAsync(process.VersionId)
         };
         _dbContext.GamePackages.Add(dbGamePackage);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -189,13 +192,16 @@ public class ConversionController : ControllerBase
     public async Task<IActionResult> RestartConversionProcess(string processId)
     {
         var process = _processManager.GetProcess(Guid.Parse(processId));
-        if (process == null)
+        if (process is null)
+            return NotFound();
+        var version = await _dbContext.WorkVersions.FirstOrDefaultAsync(v => v.Id == process.VersionId);
+        if (version is null)
             return NotFound();
         
         await _processManager.CancelProcessAsync(process.Id);
         _processManager.RemoveProcess(process);
 
-        var newProcess = new DataConversion.Process(process.EnvironmentId, process.Converter, process.Artefacts, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
+        var newProcess = new DataConversion.Process(process.EnvironmentId, process.Converter, process.Artefacts, version, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
         _processManager.StartProcess(newProcess);
 
         return Ok(ConversionProcess.FromProcess(newProcess));

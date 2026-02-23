@@ -31,7 +31,8 @@ public class ArtefactController : ControllerBase
     {
         var id = Guid.Parse(artefactId);
         var artefact = await _dbContext.Artefacts
-            .Include(a => a.Version)
+            .Include(a => a.Versions)
+            .Include(a => a.Paratexts)
             .Include(a => a.DigitalizationTool)
             .FirstOrDefaultAsync<Artefact>(a => a.Id == id);
         if (artefact == null)
@@ -51,15 +52,16 @@ public class ArtefactController : ControllerBase
     {
         var id = Guid.Parse(artefactId);
         var artefact = await _dbContext.Artefacts
-            .Include(a => a.Version)
+            .Include(a => a.Versions)
+            .Include(a => a.Paratexts)
             .Include(a => a.DigitalizationTool)
             .FirstOrDefaultAsync<Artefact>(a => a.Id == id);
         if (artefact == null)
             return NotFound();
-        artefact.Name = iartefact.Name;
-        artefact.Note = iartefact.Note;
-        artefact.Archiver = iartefact.Archiver;
-        artefact.PhysicalMediaState = iartefact.PhysicalMediaState;
+        // TODO: move to viewmodel? also fixup according to CA management
+        artefact.InternalNote = iartefact.InternalNote;
+        artefact.Quality = iartefact.Quality;
+        artefact.Format = iartefact.Format;
         await _dbContext.SaveChangesAsync();
 
         return Ok(ViewModels.Artefact.FromDBEntity(artefact));

@@ -51,7 +51,7 @@ public class GamePackageController : ControllerBase
     {
         var id = Guid.Parse(packageId);
         var package = await _dbContext.GamePackages
-            .Include(p => p.IncludedArtefacts)
+            .Include(p => p.IncludedDigitalObjects)
             .Include(p => p.Environment)
             .Include(p => p.Version)
             .FirstOrDefaultAsync(p => p.Id == id);
@@ -72,7 +72,7 @@ public class GamePackageController : ControllerBase
     {
         var id = Guid.Parse(packageId);
         var package = await _dbContext.GamePackages
-            .Include(p => p.IncludedArtefacts)
+            .Include(p => p.IncludedDigitalObjects)
             .Include(p => p.Environment)
             .Include(p => p.Version)
             .FirstOrDefaultAsync(p => p.Id == id);

@@ -96,7 +96,7 @@ public class FloppyConverter : IConverter
 
         foreach (Artefact a in process.Artefacts)
         {
-            logWriter.WriteLine($"Converting artefact: {a.Id} (name: {a.Name})");
+            logWriter.WriteLine($"Converting artefact: {a.Id} (note: {a.InternalNote})");
             string sfmFile = await process.FetchArtefact(a, false, cancellationToken);
             string outFile = Path.Combine(process.OutputDir, Path.GetFileNameWithoutExtension(sfmFile) + _config.ConversionSuffix);
 

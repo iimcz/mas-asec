@@ -30,4 +30,5 @@ public class PhysicalObject
     // Relationships
     public IEnumerable<WorkVersion> Versions { get; set; }
     public IEnumerable<Paratext> Paratexts { get; set; }
+    public IEnumerable<DigitalObject> DigitalObjects { get; set; }
 }

@@ -7,7 +7,10 @@ namespace asec.Digitalization;
 public class Process : IProcess<DigitalizationResult>
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
-    public Guid VersionId { get; private set; }
+
+    public Guid VersionId { get; private set; } = Guid.Empty;
+    public Guid ParatextId { get; private set; } = Guid.Empty;
+
     public IDigitalizationTool DigitalizationTool { get; private set; }
     public CancellationToken CancellationToken { get; private set; }
     public DateTime StartTime { get; private set; }
@@ -29,10 +32,13 @@ public class Process : IProcess<DigitalizationResult>
         SingleWriter = false
     });
 
-    public Process(IDigitalizationTool digitalizationTool, Models.Archive.WorkVersion version, string dirsBase)
+    public Process(IDigitalizationTool digitalizationTool, Models.Archive.WorkVersion version, Models.Archive.Paratext paratext, string dirsBase)
     {
         DigitalizationTool = digitalizationTool;
+
         VersionId = version.Id;
+        ParatextId = paratext.Id;
+
         BaseDir = Path.Combine(dirsBase, Id.ToString());
         WorkDir = Path.Combine(BaseDir, "work");
         UploadDir = Path.Combine(BaseDir, "upload");

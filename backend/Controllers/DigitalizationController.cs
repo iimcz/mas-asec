@@ -92,10 +92,11 @@ public class DigitalizationController : ControllerBase
             return NotFound();
 
         var version = await _dbContext.WorkVersions.FindAsync(Guid.Parse(request.VersionId));
-        if (version == null)
+        var paratext = await _dbContext.Paratexts.FindAsync(Guid.Parse(request.ParatextId));
+        if (version == null && paratext == null)
             return NotFound();
 
-        var process = new Process(tool, version, _digitalizationDirsBase);
+        var process = new Process(tool, version, paratext, _digitalizationDirsBase);
         _processManager.StartProcess(process);
         return base.Ok(DigitalizationProcess.FromProcess(process));
     }
@@ -119,20 +120,29 @@ public class DigitalizationController : ControllerBase
         var objectId = Guid.NewGuid();
         var args = new PutObjectArgs()
             .WithFileName(processResult.Filename)
-            .WithBucket(_minioArtefactBucket)
+            .WithBucket(_minioArtefactBucket) // TODO: add digitalization metadata tags
             .WithObject(objectId.ToString());
         // TODO: check for success (or maybe exception?)
         var artefactObject = await _minioClient.PutObjectAsync(args);
 
-        artefact.VersionId = process.VersionId.ToString();
         var dbArtefact = await artefact.ToDBEntity(_dbContext);
-        dbArtefact.Id = objectId;
+        dbArtefact.ObjectId = objectId;
         dbArtefact.Type = processResult.Type;
-        dbArtefact.OriginalFilename = Path.GetFileName(processResult.Filename);
+        dbArtefact.FileName = Path.GetFileName(processResult.Filename);
         dbArtefact.ArchivationDate = process.StartTime;
         dbArtefact.PhysicalMediaType = process.DigitalizationTool.PhysicalMedia;
         dbArtefact.DigitalizationTool = await _dbContext.DigitalizationTools.FindAsync(process.DigitalizationTool.Id);
         // TODO: overwrite other info with the process equivalents
+        
+        var paratext = await _dbContext.Paratexts.FindAsync(process.ParatextId);
+        var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);
+        dbArtefact.Paratexts = new List<asec.Models.Archive.Paratext>();
+        dbArtefact.Versions = new List<asec.Models.Archive.WorkVersion>();
+
+        if (paratext is not null)
+            dbArtefact.Paratexts.Append(paratext);
+        if (version is not null)
+            dbArtefact.Versions.Append(version);
         
         await _dbContext.Artefacts.AddAsync(dbArtefact);
         await _dbContext.SaveChangesAsync();
@@ -191,11 +201,12 @@ public class DigitalizationController : ControllerBase
             return NotFound();
         var tool = process.DigitalizationTool;
         var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);
-        if (version == null)
+        var paratext = await _dbContext.Paratexts.FindAsync(process.ParatextId);
+        if (version is null && paratext is null)
             return NotFound();
         await _processManager.CancelProcessAsync(process.Id);
         _processManager.RemoveProcess(process);
-        var newProcess = new Process(tool, version, _digitalizationDirsBase);
+        var newProcess = new Process(tool, version, paratext, _digitalizationDirsBase);
         _processManager.StartProcess(newProcess);
         return Ok(DigitalizationProcess.FromProcess(newProcess));
     }
