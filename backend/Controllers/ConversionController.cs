@@ -143,7 +143,7 @@ public class ConversionController : ControllerBase
             IncludedDigitalObjects = await _dbContext.DigitalObjects.Where(a => artefactIds.Contains(a.Id)).ToListAsync(cancellationToken),
             Version = await _dbContext.WorkVersions.FindAsync(process.VersionId)
         };
-        _dbContext.GamePackages.Add(dbGamePackage);
+        _dbContext.DigitalObjects.Add(dbGamePackage);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return Ok(GamePackage.FromGamePackage(dbGamePackage));

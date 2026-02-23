@@ -91,8 +91,9 @@ public class DigitalizationController : ControllerBase
         if (tool == null)
             return NotFound();
 
-        var version = await _dbContext.WorkVersions.FindAsync(Guid.Parse(request.VersionId));
-        var paratext = await _dbContext.Paratexts.FindAsync(Guid.Parse(request.ParatextId));
+        // TODO: write this a bit nicer maybe
+        var version = request.VersionId is null ? null : await _dbContext.WorkVersions.FindAsync(Guid.Parse(request.VersionId));
+        var paratext = request.ParatextId is null ? null : await _dbContext.Paratexts.FindAsync(Guid.Parse(request.ParatextId));
         if (version == null && paratext == null)
             return NotFound();
 
@@ -144,7 +145,7 @@ public class DigitalizationController : ControllerBase
         if (version is not null)
             dbArtefact.Versions.Append(version);
         
-        await _dbContext.Artefacts.AddAsync(dbArtefact);
+        await _dbContext.DigitalObjects.AddAsync(dbArtefact);
         await _dbContext.SaveChangesAsync();
         _processManager.RemoveProcess(process);
 

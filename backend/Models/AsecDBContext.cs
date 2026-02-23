@@ -12,7 +12,6 @@ public class AsecDBContext : DbContext
     public DbSet<Archive.WorkVersion> WorkVersions { get; set; }
     public DbSet<PhysicalObject> PhysicalObjects { get; set; }
     public DbSet<DigitalObject> DigitalObjects { get; set; }
-    public DbSet<Artefact> Artefacts { get; set; }
 
     public DbSet<DigitalizationTool> DigitalizationTools { get; set; }
 
@@ -20,7 +19,6 @@ public class AsecDBContext : DbContext
     public DbSet<Emulator> Emulators { get; set; }
     public DbSet<EmulationEnvironment> Environments { get; set; }
     public DbSet<Converter> Converters { get; set; }
-    public DbSet<GamePackage> GamePackages { get; set; }
 
     public DbSet<Paratext> Paratexts { get; set; }
 

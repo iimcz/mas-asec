@@ -49,12 +49,11 @@ public class VersionController : ControllerBase
     {
         var id = Guid.Parse(versionId);
         var version = await _dbContext.WorkVersions
-            .Include(v => v.Artefacts)
-            .ThenInclude(a => a.DigitalizationTool)
+            .Include(v => v.DigitalObjects)
             .FirstOrDefaultAsync(v => v.Id == id);
         if (version == null)
             return NotFound();
-        return Ok(version.Artefacts.Select(a => ViewModels.Artefact.FromDBEntity(a)));
+        return Ok(version.DigitalObjects.OfType<Models.Digitalization.Artefact>().Select(a => ViewModels.Artefact.FromDBEntity(a)));
     }
 
     /// <summary>
@@ -68,14 +67,13 @@ public class VersionController : ControllerBase
     {
         var id = Guid.Parse(versionId);
         var version = await _dbContext.WorkVersions
-            .Include(v => v.GamePackages)
-            .ThenInclude(p => p.IncludedDigitalObjects)
-            .Include(v => v.GamePackages)
-            .ThenInclude(p => p.Environment)
+            .Include(v => v.DigitalObjects)
             .FirstOrDefaultAsync(v => v.Id == id);
         if (version == null)
             return NotFound();
-        var packages = version.GamePackages.Select(p => GamePackage.FromGamePackage(p));
-        return Ok(packages);
+        var packages = version.DigitalObjects.OfType<Models.Emulation.GamePackage>().ToList();
+        packages.ForEach(p => _dbContext.Entry(p).Collection(p => p.IncludedDigitalObjects).Load());
+        packages.ForEach(p => _dbContext.Entry(p).Reference(p => p.Environment).Load());
+        return Ok(packages.Select(p => GamePackage.FromGamePackage(p)));
     }
 }

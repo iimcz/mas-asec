@@ -50,7 +50,8 @@ public class GamePackageController : ControllerBase
     public async Task<IActionResult> GetGamePackage(string packageId)
     {
         var id = Guid.Parse(packageId);
-        var package = await _dbContext.GamePackages
+        var package = await _dbContext.DigitalObjects
+            .OfType<Models.Emulation.GamePackage>()
             .Include(p => p.IncludedDigitalObjects)
             .Include(p => p.Environment)
             .Include(p => p.Version)
@@ -71,7 +72,8 @@ public class GamePackageController : ControllerBase
     public async Task<IActionResult> UpdateGamePackage(string packageId, [FromBody] GamePackage inPackage)
     {
         var id = Guid.Parse(packageId);
-        var package = await _dbContext.GamePackages
+        var package = await _dbContext.DigitalObjects
+            .OfType<Models.Emulation.GamePackage>()
             .Include(p => p.IncludedDigitalObjects)
             .Include(p => p.Environment)
             .Include(p => p.Version)
@@ -94,7 +96,7 @@ public class GamePackageController : ControllerBase
     public async Task<IActionResult> EmulateGamePackage(string packageId)
     {
         var id = Guid.Parse(packageId);
-        var package = await _dbContext.GamePackages.Include(p => p.Environment).FirstOrDefaultAsync(p => p.Id == id);
+        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.GamePackage>().Include(p => p.Environment).FirstOrDefaultAsync(p => p.Id == id);
         if (package == null)
             return NotFound();
         

@@ -28,6 +28,4 @@ public class WorkVersion
     public IEnumerable<DigitalObject> DigitalObjects { get; set; }
     public IEnumerable<PhysicalObject> PhysicalObjects { get; set; }
     public IEnumerable<Paratext> Paratexts { get; set; }
-    public IEnumerable<Digitalization.Artefact> Artefacts { get; set; }
-    public IEnumerable<Emulation.GamePackage> GamePackages { get; set; }
 }

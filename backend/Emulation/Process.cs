@@ -8,6 +8,7 @@ using asec.Compatibility.EaasApi.ControlUrls;
 using asec.Compatibility.EaasApi.Models;
 using asec.LongRunning;
 using asec.Models;
+using asec.Models.Emulation;
 using asec.Platforms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -99,7 +100,8 @@ public class Process : IProcess<EmulationResult>
         var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
 
         logWriter.WriteLine($"Looking up package: {PackageId}");
-        var package = await dbContext.GamePackages
+        var package = await dbContext.DigitalObjects
+            .OfType<GamePackage>()
             .Include(p => p.Environment)
             .FirstOrDefaultAsync(p => p.Id == PackageId, cancellationToken);
         if (package == null)

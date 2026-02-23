@@ -36,8 +36,8 @@ public class Process : IProcess<DigitalizationResult>
     {
         DigitalizationTool = digitalizationTool;
 
-        VersionId = version.Id;
-        ParatextId = paratext.Id;
+        VersionId = version?.Id ?? Guid.Empty;
+        ParatextId = paratext?.Id ?? Guid.Empty;
 
         BaseDir = Path.Combine(dirsBase, Id.ToString());
         WorkDir = Path.Combine(BaseDir, "work");

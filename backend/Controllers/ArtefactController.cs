@@ -30,7 +30,8 @@ public class ArtefactController : ControllerBase
     public async Task<IActionResult> GetArtefact(string artefactId)
     {
         var id = Guid.Parse(artefactId);
-        var artefact = await _dbContext.Artefacts
+        var artefact = await _dbContext.DigitalObjects
+            .OfType<Models.Digitalization.Artefact>()
             .Include(a => a.Versions)
             .Include(a => a.Paratexts)
             .Include(a => a.DigitalizationTool)
@@ -51,7 +52,8 @@ public class ArtefactController : ControllerBase
     public async Task<IActionResult> UpdateArtefact(string artefactId, [FromBody] ViewModels.Artefact iartefact)
     {
         var id = Guid.Parse(artefactId);
-        var artefact = await _dbContext.Artefacts
+        var artefact = await _dbContext.DigitalObjects
+            .OfType<Models.Digitalization.Artefact>()
             .Include(a => a.Versions)
             .Include(a => a.Paratexts)
             .Include(a => a.DigitalizationTool)
