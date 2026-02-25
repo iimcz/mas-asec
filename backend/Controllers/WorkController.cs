@@ -64,13 +64,13 @@ public class WorkController : ControllerBase
     {
         var id = Guid.Parse(workId);
         var work = await _dbContext.Works
-            .Include(w => w.Versions)
+            .Include(w => w.WorkVersions)
             .FirstOrDefaultAsync(w => w.Id == id);
         if (work == null)
             return NotFound();
-        if (work.Versions == null)
+        if (work.WorkVersions == null)
             return Ok(new List<ViewModels.WorkVersion>());
-        var result = work.Versions.Select(ViewModels.WorkVersion.FromDBEntity);
+        var result = work.WorkVersions.Select(ViewModels.WorkVersion.FromDBEntity);
         return Ok(result);
     }
 }

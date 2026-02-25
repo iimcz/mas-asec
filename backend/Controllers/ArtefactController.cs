@@ -32,7 +32,7 @@ public class ArtefactController : ControllerBase
         var id = Guid.Parse(artefactId);
         var artefact = await _dbContext.DigitalObjects
             .OfType<Models.Digitalization.Artefact>()
-            .Include(a => a.Versions)
+            .Include(a => a.WorkVersions)
             .Include(a => a.Paratexts)
             .Include(a => a.DigitalizationTool)
             .FirstOrDefaultAsync<Artefact>(a => a.Id == id);
@@ -54,7 +54,7 @@ public class ArtefactController : ControllerBase
         var id = Guid.Parse(artefactId);
         var artefact = await _dbContext.DigitalObjects
             .OfType<Models.Digitalization.Artefact>()
-            .Include(a => a.Versions)
+            .Include(a => a.WorkVersions)
             .Include(a => a.Paratexts)
             .Include(a => a.DigitalizationTool)
             .FirstOrDefaultAsync<Artefact>(a => a.Id == id);

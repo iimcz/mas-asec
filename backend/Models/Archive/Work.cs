@@ -21,5 +21,5 @@ public class Work
     public bool Deleted { get; set; } = false;
 
     // Relationships
-    public IEnumerable<WorkVersion> Versions { get; set; }
+    public IEnumerable<WorkVersion> WorkVersions { get; set; }
 }

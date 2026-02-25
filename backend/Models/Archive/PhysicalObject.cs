@@ -28,7 +28,7 @@ public class PhysicalObject
     public bool Deleted { get; set; } = false;
 
     // Relationships
-    public IEnumerable<WorkVersion> Versions { get; set; }
+    public IEnumerable<WorkVersion> WorkVersions { get; set; }
     public IEnumerable<Paratext> Paratexts { get; set; }
     public IEnumerable<DigitalObject> DigitalObjects { get; set; }
 }

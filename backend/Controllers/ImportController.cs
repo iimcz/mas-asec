@@ -56,7 +56,7 @@ public class ImportController : ControllerBase
     {
         var work = await _itemClient.GetWork(iwork.Id);
         var versions = await _itemClient.GetVersionsForWork(work);
-        var alreadyImported = _dbContext.Works.Include(w => w.Versions).FirstOrDefault(w => w.RemoteId == iwork.Id);
+        var alreadyImported = _dbContext.Works.Include(w => w.WorkVersions).FirstOrDefault(w => w.RemoteId == iwork.Id);
 
         if (alreadyImported != null)
         {
@@ -73,7 +73,7 @@ public class ImportController : ControllerBase
     public async Task<IActionResult> SyncExistingWork(string id, CancellationToken cancellationToken = default(CancellationToken))
     {
         var guid = Guid.Parse(id);
-        var work = await _dbContext.Works.Include(w => w.Versions).FirstOrDefaultAsync(w => w.Id == guid);
+        var work = await _dbContext.Works.Include(w => w.WorkVersions).FirstOrDefaultAsync(w => w.Id == guid);
 
         if (work == null)
         {
@@ -95,9 +95,9 @@ public class ImportController : ControllerBase
         dbWork.TypeOfWork = GetOptionalBundleValue(work.Bundles, BundleCodes.OccurrenceTypeOfWork);
 
         var remoteIds = versions.Select(v => v.Id).ToHashSet();
-        var importedIds = dbWork.Versions.Select(wv => wv.RemoteId).ToHashSet();
+        var importedIds = dbWork.WorkVersions.Select(wv => wv.RemoteId).ToHashSet();
 
-        var deletedVersions = dbWork.Versions.Where(wv => !remoteIds.Contains(wv.RemoteId));
+        var deletedVersions = dbWork.WorkVersions.Where(wv => !remoteIds.Contains(wv.RemoteId));
         foreach (var workVersion in deletedVersions)
         {
             workVersion.Deleted = true;
@@ -106,7 +106,7 @@ public class ImportController : ControllerBase
         var newVersions = versions.Where(v => !importedIds.Contains(v.Id));
         foreach (var caWorkVersion in newVersions)
         {
-            dbWork.Versions.Append(
+            dbWork.WorkVersions.Append(
                 new() {
                     RemoteId = caWorkVersion.Id,
                     Label = GetOptionalBundleValue(caWorkVersion.Bundles, BundleCodes.OccurrenceLabel),
@@ -121,7 +121,7 @@ public class ImportController : ControllerBase
         }
 
         var updatedVersions = versions.Where(v => importedIds.Contains(v.Id)).ToDictionary(v => v.Id);
-        foreach (var workVersion in dbWork.Versions)
+        foreach (var workVersion in dbWork.WorkVersions)
         {
             var caVersion = updatedVersions.GetValueOrDefault(workVersion.RemoteId);
             if (caVersion == null)
@@ -165,7 +165,7 @@ public class ImportController : ControllerBase
             InternalNote = GetOptionalBundleValue(work.Bundles, BundleCodes.OccurrenceInternalNote),
             TypeOfWork = GetOptionalBundleValue(work.Bundles, BundleCodes.OccurrenceTypeOfWork),
             CuratorialDescription = GetOptionalBundleValue(work.Bundles, BundleCodes.OccurrenceCuratorialDescription),
-            Versions = dbVersions
+            WorkVersions = dbVersions
         };
         _dbContext.Works.Add(dbWork);
 

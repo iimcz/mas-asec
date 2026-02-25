@@ -49,12 +49,12 @@ public record Artefact
     {
         return new() {
             Id = artefact.Id.ToString(),
-            VersionIds = artefact.Versions.Select(v => v.Id.ToString()).ToList(),
-            ParatextIds = artefact.Paratexts.Select(p => p.Id.ToString()).ToList(),
+            VersionIds = artefact.WorkVersions?.Select(v => v.Id.ToString()).ToList(),
+            ParatextIds = artefact.Paratexts?.Select(p => p.Id.ToString()).ToList(),
 
             FileName = artefact.FileName,
             InternalNote = artefact.InternalNote,
-            WebsiteUrl = artefact.WebsiteUrl.ToString(),
+            WebsiteUrl = artefact.WebsiteUrl?.ToString(),
             DigitalObjectType = artefact.DigitalObjectType,
             Format = artefact.Format,
             FileSize = artefact.FileSize,

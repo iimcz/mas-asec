@@ -8,7 +8,7 @@ public class DigitalObject
     public Guid Id { get; set; }
 
     // Imported / exported data
-    public int RemoteId { get; set; }
+    public int RemoteId { get; set; } = -1;
     public string FileName { get; set; }
     public string InternalNote { get; set; }
     public Uri WebsiteUrl { get; set; }
@@ -23,7 +23,7 @@ public class DigitalObject
     public DateTime ExportedAt { get; set; } = DateTime.MinValue;
 
     // Relationships
-    public IEnumerable<WorkVersion> Versions { get; set; }
+    public IEnumerable<WorkVersion> WorkVersions { get; set; }
     public IEnumerable<Paratext> Paratexts { get; set; }
     public PhysicalObject PhysicalObject { get; set; }
 }

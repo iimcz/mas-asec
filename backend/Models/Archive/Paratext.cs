@@ -24,5 +24,5 @@ public class Paratext
     // Relationships
     public DigitalObject DigitalObject { get; set; }
     public PhysicalObject PhysicalObject { get; set; }
-    public IEnumerable<WorkVersion> Versions { get; set; }
+    public IEnumerable<WorkVersion> WorkVersions { get; set; }
 }

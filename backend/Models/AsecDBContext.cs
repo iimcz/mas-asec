@@ -31,8 +31,12 @@ public class AsecDBContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<WorkVersion>().HasMany(w => w.DigitalObjects).WithMany(o => o.Versions);
-        modelBuilder.Entity<WorkVersion>().HasMany(w => w.PhysicalObjects).WithMany(o => o.Versions);
+        modelBuilder.Entity<DigitalObject>();
+        modelBuilder.Entity<Artefact>();
+        modelBuilder.Entity<GamePackage>();
+
+        modelBuilder.Entity<WorkVersion>().HasMany(w => w.DigitalObjects).WithMany(o => o.WorkVersions);
+        modelBuilder.Entity<WorkVersion>().HasMany(w => w.PhysicalObjects).WithMany(o => o.WorkVersions);
 
         modelBuilder.Entity<Emulator>().HasMany(e => e.Platforms).WithMany();
         modelBuilder.Entity<EmulationEnvironment>().HasMany(e => e.Converters).WithMany();
