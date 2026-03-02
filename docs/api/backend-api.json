@@ -1,52 +1,401 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.4",
   "info": {
-    "version": "1",
-    "title": "ASEC OpanAPI definition",
-    "description": ""
+    "title": "ASEC OpenAPI definition",
+    "version": "1.0"
   },
   "paths": {
-    "/api/v1/works": {
+    "/api/v1/artefacts/{artefactId}": {
       "get": {
-        "operationId": "GetWorks",
-        "description": "Get all works in the database.",
-        "parameters": [],
+        "tags": [
+          "Artefact"
+        ],
+        "parameters": [
+          {
+            "name": "artefactId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Work"
-                  }
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
                 }
               }
             }
           }
         }
       },
-      "put": {
-        "operationId": "AddWork",
-        "description": "Add a new work to the database.",
-        "parameters": [],
+      "post": {
+        "tags": [
+          "Artefact"
+        ],
+        "parameters": [
+          {
+            "name": "artefactId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Work"
+                "$ref": "#/components/schemas/Artefact"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Artefact"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Artefact"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "The newly created work (with id)",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Work"
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/start": {
+      "put": {
+        "tags": [
+          "Conversion"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/finalize": {
+      "post": {
+        "tags": [
+          "Conversion"
+        ],
+        "parameters": [
+          {
+            "name": "processId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GamePackage"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GamePackage"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GamePackage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/input": {
+      "post": {
+        "tags": [
+          "Conversion"
+        ],
+        "parameters": [
+          {
+            "name": "processId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionInput"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionInput"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/log": {
+      "get": {
+        "tags": [
+          "Conversion"
+        ],
+        "parameters": [
+          {
+            "name": "processId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/restart": {
+      "post": {
+        "tags": [
+          "Conversion"
+        ],
+        "parameters": [
+          {
+            "name": "processId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/status": {
+      "get": {
+        "tags": [
+          "Conversion"
+        ],
+        "parameters": [
+          {
+            "name": "processId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversion/{processId}/stop": {
+      "post": {
+        "tags": [
+          "Conversion"
+        ],
+        "parameters": [
+          {
+            "name": "processId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProcess"
                 }
               }
             }
@@ -56,14 +405,30 @@
     },
     "/api/v1/digitalization/tools": {
       "get": {
-        "operationId": "GetDigitalizationTools",
-        "description": "Acquire a list of available digitalization tools. This will depend on both configuration and actual availability of physical devices needed by the various tool implementations for digitalization.",
-        "parameters": [],
+        "tags": [
+          "Digitalization"
+        ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DigitalizationTool"
+                  }
+                }
+              },
               "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DigitalizationTool"
+                  }
+                }
+              },
+              "text/json": {
                 "schema": {
                   "type": "array",
                   "items": {
@@ -78,12 +443,13 @@
     },
     "/api/v1/digitalization/tools/{toolId}": {
       "get": {
-        "operationId": "GetDigitalizationTool",
-        "description": "Get a specific digitalization tool using its ID. To get a list of available IDs, see GetDigitalizationTools",
+        "tags": [
+          "Digitalization"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "toolId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -92,9 +458,19 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationTool"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationTool"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DigitalizationTool"
                 }
@@ -106,12 +482,22 @@
     },
     "/api/v1/digitalization/start": {
       "put": {
-        "operationId": "StartDigitalizationWithToolForVersion",
-        "description": "Start the process of digitizing a physical media using the tool specified in the digitalization request. The request includes reference to a Version for which the media should be digitalized.",
-        "parameters": [],
+        "tags": [
+          "Digitalization"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DigitalizationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DigitalizationRequest"
+              }
+            },
+            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/DigitalizationRequest"
               }
@@ -120,9 +506,19 @@
         },
         "responses": {
           "200": {
-            "description": "The newly started digitalization process",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DigitalizationProcess"
                 }
@@ -132,465 +528,15 @@
         }
       }
     },
-    "/api/v1/digitalization/{processId}/status": {
-      "get": {
-        "operationId": "GetDigitalizationProcessStatus",
-        "description": "Get the status of the specified digitalization process.",
+    "/api/v1/digitalization/{processId}/finalize": {
+      "post": {
+        "tags": [
+          "Digitalization"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "processId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DigitalizationProcess"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/works/{workId}": {
-      "get": {
-        "operationId": "GetWork",
-        "description": "Get the details of the specified work.",
-        "parameters": [
-          {
             "in": "path",
-            "name": "workId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Work"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/works/{workId}/versions": {
-      "get": {
-        "operationId": "GetWorkVersions",
-        "description": "Get all versions of the specified work.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Version"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/works/{workId}/paratexts": {
-      "get": {
-        "operationId": "GetWorkParatexts",
-        "description": "Get all paratexts of the specified work.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Paratext"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "operationId": "AddWorkParatext",
-        "description": "Add a new paratext to the specified work.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Paratext"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Paratext"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/emulators": {
-      "get": {
-        "operationId": "GetEmulators",
-        "description": "Get the configured available emulators.",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Emulator"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/works/{workid}": {
-      "post": {
-        "operationId": "UpdateWork",
-        "description": "Update the details of the specified work.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workid",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Work"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The updated work",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Work"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/digitalization/{processId}/restart": {
-      "post": {
-        "operationId": "RestartDigitalizationProcess",
-        "description": "Request that a digitalization process is restarted. This will result in the current process being cancelled and a new process being started with the same arguments.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "processId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DigitalizationProcess"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/versions": {
-      "put": {
-        "operationId": "AddWorkVersion",
-        "description": "Create a new work version with the specified details (a new ID will be generated).",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Version"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Version"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/versions/{versionId}": {
-      "get": {
-        "operationId": "GetWorkVersion",
-        "description": "Get the details of the specified work version.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "versionId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Version"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "UpdateWorkVersion",
-        "description": "Update the specified version with new details.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "versionId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Version"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Version"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/versions/{versionId}/artefacts": {
-      "get": {
-        "operationId": "GetVersionArtefacts",
-        "description": "Get all artefacts tied to the specified work version.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "versionId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Artefact"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/versions/{versionId}/paratexts": {
-      "get": {
-        "operationId": "GetVersionParatexts",
-        "description": "Get all paratexts for the specified version.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "versionId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Paratext"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "operationId": "AddVersionParatext",
-        "description": "Add a new paratext with the specified details to the specified version.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "versionId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Paratext"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Paratext"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/artefacts/{artefactId}": {
-      "get": {
-        "operationId": "GetVersionArtefact",
-        "description": "Gets the specified artefact's details.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "artefactId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Artefact"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "UpdateVersionArtefact",
-        "description": "Update the details of the specified artefact.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "artefactId",
             "required": true,
             "schema": {
               "type": "string"
@@ -603,14 +549,34 @@
               "schema": {
                 "$ref": "#/components/schemas/Artefact"
               }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Artefact"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Artefact"
+              }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "The updated artefact.",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Artefact"
                 }
@@ -622,12 +588,13 @@
     },
     "/api/v1/digitalization/{processId}/input": {
       "post": {
-        "operationId": "ProvideDigitalizationInput",
-        "description": "If a digitalization process is in the WaitingForInput state, provide the input it is waiting for in the form of a string.",
+        "tags": [
+          "Digitalization"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "processId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -640,14 +607,34 @@
               "schema": {
                 "$ref": "#/components/schemas/DigitalizationInput"
               }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DigitalizationInput"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DigitalizationInput"
+              }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DigitalizationProcess"
                 }
@@ -659,12 +646,13 @@
     },
     "/api/v1/digitalization/{processId}/log": {
       "get": {
-        "operationId": "GetProcessLog",
-        "description": "Get the text log file of a running digitalization process",
+        "tags": [
+          "Digitalization"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "processId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -673,11 +661,43 @@
         ],
         "responses": {
           "200": {
-            "description": "Output log of the processing tool.",
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/digitalization/{processId}/restart": {
+      "post": {
+        "tags": [
+          "Digitalization"
+        ],
+        "parameters": [
+          {
+            "name": "processId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
                 }
               }
             }
@@ -685,36 +705,38 @@
         }
       }
     },
-    "/api/v1/digitalization/{processId}/finalize": {
-      "post": {
-        "operationId": "FinalizeVersionArtefact",
-        "description": "Finalize a successful digitalization process to persist the results and create the resulting Artefact.",
+    "/api/v1/digitalization/{processId}/status": {
+      "get": {
+        "tags": [
+          "Digitalization"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "processId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Artefact"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "The newly created artefact.",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Artefact"
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
                 }
               }
             }
@@ -724,220 +746,36 @@
     },
     "/api/v1/digitalization/{processId}/stop": {
       "post": {
-        "operationId": "StopDigitalizationProcess",
-        "description": "Start the process of digitizing a physical media using the tool specified in the digitalization request. The request includes reference to a Version for which the media should be digitalized.",
+        "tags": [
+          "Digitalization"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "processId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DigitalizationProcess"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "The stopped process",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DigitalizationProcess"
                 }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/conversion/start": {
-      "put": {
-        "operationId": "StartConversionForEmulator",
-        "description": "Request that a conversion for the specified emulator be started, using the specified artefacts. This will create a process that can later be checked for status and progress, and needs to be explicitly finished for the results to persist.",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConversionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The newly started conversion process",
-            "content": {
-              "application/json": {
+              },
+              "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConversionProcess"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/conversion/{processId}/status": {
-      "get": {
-        "operationId": "GetConversionProcessStatus",
-        "description": "Fetches the current status of the specified process.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "processId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConversionProcess"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/conversion/{processId}/stop": {
-      "post": {
-        "operationId": "StopConversionProcess",
-        "description": "Request that the specified process be stopped. This will result in discarding any data created during the process.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "processId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConversionProcess"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConversionProcess"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/conversion/{processId}/log": {
-      "get": {
-        "operationId": "GetConversionProcessLog",
-        "description": "Fetches the text log of a running process.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "processId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/conversion/{processId}/restart": {
-      "post": {
-        "operationId": "RestartConversionProcess",
-        "description": "Request that an existing conversion process is restarted. The system will stop the current process and create a new one with the same parameters as the original.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "processId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConversionProcess"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/conversion/{processId}/finalize": {
-      "post": {
-        "operationId": "FinalizeConversionProcess",
-        "description": "Finalize the conversion process, taking the resulting files and uploading them to EaaS in preparation to attach them to an emulator environment/VM. The finalized process is expected to be in the Success state.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "processId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GamePackage"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The newly created GamePackage ready for emulation.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GamePackage"
+                  "$ref": "#/components/schemas/DigitalizationProcess"
                 }
               }
             }
@@ -947,20 +785,21 @@
     },
     "/api/v1/digitalization/{processId}/upload/{uploadId}": {
       "post": {
-        "operationId": "UploadDigitalizationFile",
-        "description": "Upload a file if this is requested by the digitalization process.",
+        "tags": [
+          "Digitalization"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "processId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
             }
           },
           {
-            "in": "path",
             "name": "uploadId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -969,18 +808,39 @@
         ],
         "requestBody": {
           "content": {
-            "application/octet-stream": {
+            "multipart/form-data": {
               "schema": {
-                "type": "string"
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalizationProcess"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DigitalizationProcess"
                 }
@@ -990,14 +850,15 @@
         }
       }
     },
-    "/api/v1/versions/{versionId}/packages": {
+    "/api/v1/emulation/{emulationId}/ping": {
       "get": {
-        "operationId": "GetVersionGamePackages",
-        "description": "Get all game packages tied to the specified work version.",
+        "tags": [
+          "Emulation"
+        ],
         "parameters": [
           {
+            "name": "emulationId",
             "in": "path",
-            "name": "versionId",
             "required": true,
             "schema": {
               "type": "string"
@@ -1006,151 +867,20 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/GamePackage"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/packages/{packageId}": {
-      "get": {
-        "operationId": "GetGamePackage",
-        "description": "Get the details of the specified GamePackage.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "packageId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GamePackage"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "UpdateGamePackage",
-        "description": "Update GamePackage metadata.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "packageId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GamePackage"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GamePackage"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/packages/{packageId}/emulate": {
-      "get": {
-        "operationId": "EmulateGamePackage",
-        "description": "Start emulation for the specified game package. Makes the appropriate setup using EaaS.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "packageId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmulationState"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/packages/{packageId}/paratexts": {
-      "get": {
-        "operationId": "GetPackageParatexts",
-        "description": "Get paratexts for the specified game package.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "packageId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Paratext"
-                  }
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
     },
     "/api/v1/emulation/{emulationId}/finish": {
       "post": {
-        "operationId": "FinishEmulation",
-        "description": "End a running emulation, optionally saving recordings.",
+        "tags": [
+          "Emulation"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "emulationId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -1163,31 +893,35 @@
               "schema": {
                 "$ref": "#/components/schemas/EmulationFinishRequest"
               }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmulationFinishRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmulationFinishRequest"
+              }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EmulationState"
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
     },
     "/api/v1/emulation/{emulationId}/video": {
       "get": {
-        "operationId": "GetVideoStreamFrame",
-        "description": "Get an URL that can be used to watch the video stream of a running emulation process. Useful for including via an iframe.",
+        "tags": [
+          "Emulation"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "emulationId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -1196,39 +930,42 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
     },
-    "/api/v1/emulation/{emulationId}/ping": {
+    "/api/v1/emulators": {
       "get": {
-        "operationId": "PingRunningEmulation",
-        "description": "Ping a running emulation to ensure it is not deleted for inactivity. Also returns the current state of the emulation process.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "emulationId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+        "tags": [
+          "Emulator"
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Emulator"
+                  }
+                }
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EmulationState"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Emulator"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Emulator"
+                  }
                 }
               }
             }
@@ -1236,14 +973,52 @@
         }
       }
     },
-    "/api/v1/conversion/{processId}/input": {
-      "post": {
-        "operationId": "ProvideConversionInput",
-        "description": "Provide a text input to the digitalization process.",
+    "/api/v1/packages/{packageId}": {
+      "get": {
+        "tags": [
+          "GamePackage"
+        ],
         "parameters": [
           {
+            "name": "packageId",
             "in": "path",
-            "name": "processId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "GamePackage"
+        ],
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -1254,18 +1029,38 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ConversionInput"
+                "$ref": "#/components/schemas/GamePackage"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GamePackage"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GamePackage"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConversionProcess"
+                  "$ref": "#/components/schemas/GamePackage"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePackage"
                 }
               }
             }
@@ -1273,16 +1068,329 @@
         }
       }
     },
-    "/api/v1/platforms": {
-      "get": {
-        "operationId": "GetPlatforms",
-        "description": "Get all available (configured) platforms.",
-        "parameters": [],
+    "/api/v1/packages/{packageId}/emulate": {
+      "post": {
+        "tags": [
+          "GamePackage"
+        ],
+        "parameters": [
+          {
+            "name": "packageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmulationState"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmulationState"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmulationState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/import/available": {
+      "get": {
+        "tags": [
+          "Import"
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import": {
+      "post": {
+        "tags": [
+          "Import"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportableWork"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportableWork"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportableWork"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import/sync/{id}": {
+      "post": {
+        "tags": [
+          "Import"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/paratexts/{paratextId}": {
+      "get": {
+        "tags": [
+          "Paratext"
+        ],
+        "parameters": [
+          {
+            "name": "paratextId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Paratext"
+        ],
+        "parameters": [
+          {
+            "name": "paratextId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Paratext"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Paratext"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Paratext"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/paratexts/{paratextId}/upload/{filename}": {
+      "post": {
+        "tags": [
+          "Paratext"
+        ],
+        "parameters": [
+          {
+            "name": "paratextId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paratext"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/paratexts/{paratextId}/download": {
+      "get": {
+        "tags": [
+          "Paratext"
+        ],
+        "parameters": [
+          {
+            "name": "paratextId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platforms": {
+      "get": {
+        "tags": [
+          "Platform"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Platform"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Platform"
+                  }
+                }
+              },
+              "text/json": {
                 "schema": {
                   "type": "array",
                   "items": {
@@ -1297,12 +1405,13 @@
     },
     "/api/v1/platforms/{platformName}/emulators": {
       "get": {
-        "operationId": "GetEmulatorsForPlatform",
-        "description": "Get all emulators for the specified platform.",
+        "tags": [
+          "Platform"
+        ],
         "parameters": [
           {
-            "in": "path",
             "name": "platformName",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string"
@@ -1311,9 +1420,25 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Emulator"
+                  }
+                }
+              },
               "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Emulator"
+                  }
+                }
+              },
+              "text/json": {
                 "schema": {
                   "type": "array",
                   "items": {
@@ -1326,14 +1451,39 @@
         }
       }
     },
-    "/api/v1/paratexts/{paratextId}": {
+    "/api/v1/router/ca/home": {
       "get": {
-        "operationId": "GetParatext",
-        "description": "Get the details of the specified paratext.",
+        "tags": [
+          "Router"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/router/ca/work/add": {
+      "get": {
+        "tags": [
+          "Router"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/router/ca/work/edit/{id}": {
+      "get": {
+        "tags": [
+          "Router"
+        ],
         "parameters": [
           {
+            "name": "id",
             "in": "path",
-            "name": "paratextId",
             "required": true,
             "schema": {
               "type": "string"
@@ -1342,46 +1492,110 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Paratext"
-                }
-              }
-            }
+            "description": "OK"
           }
         }
-      },
-      "post": {
-        "operationId": "UpdateParatext",
-        "description": "Update the details of the specified paratext.",
+      }
+    },
+    "/api/v1/router/ca/workversion/add": {
+      "get": {
+        "tags": [
+          "Router"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/router/ca/workversion/edit/{id}": {
+      "get": {
+        "tags": [
+          "Router"
+        ],
         "parameters": [
           {
+            "name": "id",
             "in": "path",
-            "name": "paratextId",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/router/ca/physicalobject/add": {
+      "get": {
+        "tags": [
+          "Router"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/router/ca/physicalobject/edit/{id}": {
+      "get": {
+        "tags": [
+          "Router"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/upload/artefact": {
+      "post": {
+        "tags": [
+          "Upload"
+        ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Paratext"
+                "$ref": "#/components/schemas/Artefact"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Paratext"
+                  "$ref": "#/components/schemas/Artefact"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artefact"
                 }
               }
             }
@@ -1389,60 +1603,15 @@
         }
       }
     },
-    "/api/v1/paratexts/{paratextId}/upload/{filename}": {
-      "post": {
-        "operationId": "UploadParatextFile",
-        "description": "Add a file to the paratext. This file will then be available for download.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "paratextId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }, {
-            "in": "path",
-            "name": "filename",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Byte stream of the file being uploaded.",
-          "content": {
-            "application/octet-stream": {
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Paratext"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Returned when the Paratext already has an uploaded file - overwriting is not supported."
-          }
-        }
-      }
-    },
-    "/api/v1/paratexts/{paratextId}/download": {
+    "/api/v1/versions/{versionId}": {
       "get": {
-        "operationId": "DownloadParatextFile",
-        "description": "Download the file of the specified paratext.",
+        "tags": [
+          "Version"
+        ],
         "parameters": [
           {
+            "name": "versionId",
             "in": "path",
-            "name": "paratextId",
             "required": true,
             "schema": {
               "type": "string"
@@ -1451,9 +1620,243 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "OK",
             "content": {
-              "application/octet-stream": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkVersion"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkVersion"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkVersion"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versions/{versionId}/artefacts": {
+      "get": {
+        "tags": [
+          "Version"
+        ],
+        "parameters": [
+          {
+            "name": "versionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Artefact"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Artefact"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Artefact"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versions/{versionId}/packages": {
+      "get": {
+        "tags": [
+          "Version"
+        ],
+        "parameters": [
+          {
+            "name": "versionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GamePackage"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GamePackage"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GamePackage"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/works": {
+      "get": {
+        "tags": [
+          "Work"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Work"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Work"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Work"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/works/{workId}": {
+      "get": {
+        "tags": [
+          "Work"
+        ],
+        "parameters": [
+          {
+            "name": "workId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Work"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Work"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Work"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/works/{workId}/versions": {
+      "get": {
+        "tags": [
+          "Work"
+        ],
+        "parameters": [
+          {
+            "name": "workId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkVersion"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkVersion"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkVersion"
+                  }
+                }
               }
             }
           }
@@ -1462,566 +1865,541 @@
     }
   },
   "components": {
-    "securitySchemes": {},
     "schemas": {
-      "DigitalizationTool": {
-        "properties": {
-          "id": {
-            "description": "GUID of the digitalization tool.",
-            "nullable": false,
-            "type": "string"
-          },
-          "slug": {
-            "description": "Identifier useful for identifying the type of the tool for UI purposes."
-          },
-          "name": {
-            "description": "Name of the tool, possibly referencing the used hardware as well.",
-            "nullable": false,
-            "type": "string"
-          },
-          "version": {
-            "description": "Version of the digitalization tool. Can contain both software and hardware versions.",
-            "nullable": false,
-            "type": "string"
-          },
-          "physicalMediaType": {
-            "description": "Media type supported by this particular tool. If the used software/hardware supports multiple media types, these will be presented as separate digitalization tools.",
-            "nullable": false,
-            "type": "string"
-          },
-          "isAvailable": {
-            "description": "Whether the tool is available. If a tool is configured on the server side but missing required software or hardware components, it will be marked as not available.",
-            "nullable": false,
-            "type": "boolean"
-          }
-        }
-      },
-      "Work": {
-        "properties": {
-          "id": {
-            "readOnly": true,
-            "description": "GUID of the Work representing a single game.",
-            "nullable": false,
-            "type": "string"
-          },
-          "title": {
-            "description": "Main title of the Work.",
-            "nullable": false,
-            "type": "string"
-          },
-          "alternativeTitle": {
-            "description": "Alternative title of the Work.",
-            "nullable": true,
-            "type": "string"
-          },
-          "subheading": {
-            "description": "Subheading of the main title of the Work.",
-            "nullable": true,
-            "type": "string"
-          },
-          "description": {
-            "description": "Short description of the Work.",
-            "nullable": true,
-            "type": "string"
-          },
-          "yearOfPublication": {
-            "description": "Year of the Work's publication if available, broader time specification if a concrete year is not known.",
-            "nullable": true,
-            "type": "string"
-          },
-          "genre": {
-            "description": "List of genres this Work falls into.",
-            "nullable": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "classificationByTime": {
-            "description": "Work classification decided by its publication year.",
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "classificationByLocation": {
-            "description": "Work classification decided by its publication or development location.",
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "Version": {
-        "properties": {
-          "id": {
-            "readOnly": true,
-            "description": "GUID of the Version of a game.",
-            "nullable": false,
-            "type": "string"
-          },
-          "workId": {
-            "readOnly": true,
-            "description": "GUID of the associated Work.",
-            "nullable": false,
-            "type": "string"
-          },
-          "status": {
-            "description": "Current status of this particular Version (i.e. 'in publication', 'abandonware', etc.)",
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "title": {
-            "description": "Title of this particular version of the Work (can be identical).",
-            "nullable": true,
-            "type": "string"
-          },
-          "alternativeTitle": {
-            "description": "Alternative title of this particular version of the Work (can be identical).",
-            "nullable": true,
-            "type": "string"
-          },
-          "yearOfPublication": {
-            "description": "Year of publication for this Version.",
-            "nullable": true,
-            "type": "string"
-          },
-          "system": {
-            "description": "Systems which are supported by this Version of the Work.",
-            "nullable": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "systemRequirements": {
-            "description": "Minimum system requirements to run this Version.",
-            "nullable": true,
-            "type": "string"
-          },
-          "note": {
-            "description": "Generic note field.",
-            "nullable": true,
-            "type": "string"
-          }
-        }
-      },
-      "DigitalizationProcess": {
-        "properties": {
-          "processId": {
-            "description": "GUID of this created process.",
-            "nullable": false,
-            "type": "string"
-          },
-          "toolId": {
-            "description": "GUID of the tool used to create and start this process.",
-            "nullable": false,
-            "type": "string"
-          },
-          "status": {
-            "description": "Current status of the process.",
-            "enum": [
-              "Initialization",
-              "Running",
-              "WaitingForInput",
-              "WaitingForProcess",
-              "Failed",
-              "Success",
-              "Restarting"
-            ],
-            "nullable": false,
-            "type": "string"
-          },
-          "statusDetail": {
-            "description": "Tool-specific detail of the current process' status.",
-            "nullable": false,
-            "type": "string"
-          },
-          "startTime": {
-            "description": "Date and time when the process was started.",
-            "nullable": false,
-            "type": "string"
-          }
-        }
-      },
-      "Emulator": {
-        "properties": {
-          "id": {
-            "description": "GUID of the emulator.",
-            "nullable": false,
-            "type": "string"
-          },
-          "name": {
-            "description": "Name of the emulator.",
-            "nullable": false,
-            "type": "string"
-          },
-          "homepage": {
-            "description": "Home URL of the emulator.",
-            "nullable": false,
-            "type": "string"
-          },
-          "version": {
-            "description": "Version of this instance of the emulator.",
-            "nullable": false,
-            "type": "string"
-          },
-          "platforms": {
-            "description": "Platforms supported by this emulator.",
-            "nullable": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "DigitalizationInput": {
-        "properties": {
-          "data": {
-            "description": "Tool-specific input data.",
-            "nullable": false,
-            "type": "string"
-          }
-        }
-      },
       "Artefact": {
+        "type": "object",
         "properties": {
           "id": {
-            "readOnly": true,
-            "description": "Internally a GUID, generated by the backend. Should be left out for endpoints that require Artefact as input.",
-            "nullable": false,
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
-          "versionId": {
-            "readOnly": true,
-            "description": "GUID of the associated version. Should be left out for endpoints that require Artefact as input.",
-            "nullable": false,
-            "type": "string"
+          "fileName": {
+            "type": "string",
+            "nullable": true
           },
-          "name": {
-            "description": "Name of the artefact (can be identical to Version or Work name).",
-            "nullable": false,
-            "type": "string"
+          "internalNote": {
+            "type": "string",
+            "nullable": true
           },
-          "physicalMediaState": {
-            "description": "Assessment of the state of the physical source media. Up to the user.",
-            "nullable": false,
-            "type": "string"
+          "websiteUrl": {
+            "type": "string",
+            "nullable": true
           },
-          "archivationDate": {
-            "readOnly": true,
-            "description": "Date and time when the digitalization process took place. Should be left out for endpoints that require Artefact as input.",
-            "nullable": false,
-            "type": "string"
+          "digitalObjectType": {
+            "type": "string",
+            "nullable": true
           },
-          "archiver": {
-            "description": "Name or identifier of the person who performed digitalization of this Artefact.",
-            "nullable": false,
-            "type": "string"
+          "format": {
+            "type": "string",
+            "nullable": true
           },
-          "note": {
-            "description": "Any additional notes regarding the process, media or Artefact.",
-            "nullable": false,
-            "type": "string"
+          "fileSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quality": {
+            "type": "string",
+            "nullable": true
+          },
+          "fedoraUrl": {
+            "type": "string",
+            "nullable": true
           },
           "type": {
-            "readOnly": true,
-            "description": "What type of artefact this is (SFM floppy file, ZIP archive, etc.). Should be left out for endpoints that require Artefact as input.",
-            "nullable": false,
-            "type": "string"
+            "type": "string",
+            "nullable": true
+          },
+          "physicalMediaState": {
+            "type": "string",
+            "nullable": true
           },
           "physicalMediaType": {
-            "readOnly": true,
-            "description": "Type of the source media used for digitalization. Process metadata. Should be left out for endpoints that require Artefact as input.",
-            "nullable": false,
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
-          "originalFileName": {
-            "readOnly": true,
-            "description": "Filename of the digitalization file, as was created during the digitalization process.",
-            "nullable": false,
-            "type": "string"
-          },
-          "digitalizationToolId": {
-            "readOnly": true,
-            "description": "GUID of the tool used for digitalization. Should be left out for endpoints that require Artefact as input.",
-            "nullable": false,
-            "type": "string"
-          }
-        }
-      },
-      "DigitalizationRequest": {
-        "properties": {
-          "toolId": {
-            "description": "GUID of the tool to use for digitalization.",
-            "nullable": false,
-            "type": "string"
-          },
-          "versionId": {
-            "description": "GUID of the version with which the resulting Artefact will be associated.",
-            "nullable": false,
-            "type": "string"
-          }
-        }
-      },
-      "ConversionRequest": {
-        "properties": {
-          "emulatorId": {
-            "description": "GUID of the emulator for which the conversion is requested.",
-            "nullable": false,
-            "type": "string"
-          },
-          "artefactIds": {
-            "description": "Collection of GUIDs of Artefacts which should be included in this conversion. For example a single floppy disk or a collection of CDs for multi-CD titles.",
-            "nullable": false,
+          "paratextIds": {
             "type": "array",
             "items": {
               "type": "string"
-            }
-          }
-        }
-      },
-      "ConversionProcess": {
-        "properties": {
-          "processId": {
-            "description": "GUID of the created conversion process.",
-            "nullable": false,
-            "type": "string"
+            },
+            "nullable": true
           },
-          "emulatorId": {
-            "description": "GUID of the emulator for which conversion is being done.",
-            "nullable": false,
-            "type": "string"
-          },
-          "status": {
-            "description": "Current status of the process.",
-            "enum": [
-              "Initialization",
-              "Running",
-              "WaitingForInput",
-              "WaitingForProcess",
-              "Failed",
-              "Success",
-              "Restarting"
-            ],
-            "nullable": false,
-            "type": "string"
-          },
-          "statusDetail": {
-            "description": "Convertor-dependent detail string for the current process status.",
-            "nullable": false,
-            "type": "string"
-          },
-          "startTime": {
-            "description": "Date and time when the conversion process started.",
-            "nullable": false,
-            "type": "string"
-          },
-          "artefactIds": {
-            "description": "Collection of GUIDs representing the Artefacts which are being converted.",
-            "nullable": false,
+          "versionIds": {
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "nullable": true
           }
-        }
-      },
-      "GamePackage": {
-        "properties": {
-          "id": {
-            "readOnly": true,
-            "description": "GUID of this GamePackage.",
-            "nullable": false,
-            "type": "string"
-          },
-          "name": {
-            "description": "Name of this GamePackage",
-            "nullable": false,
-            "type": "string"
-          },
-          "includedArtefactIds": {
-            "readOnly": true,
-            "description": "GUIDs of all Artefacts included in this GamePackage.",
-            "nullable": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "versionId": {
-            "readOnly": true,
-            "description": "GUID of the Version of a Work from which this GamePackage was created.",
-            "nullable": false,
-            "type": "string"
-          },
-          "emulatorId": {
-            "readOnly": true,
-            "description": "GUID of the Emulator for which this game package was created and its Artefacts converted.",
-            "nullable": false,
-            "type": "string"
-          },
-          "conversionDate": {
-            "readOnly": true,
-            "description": "Date and time when conversion of Artefacts for this GamePackage took place.",
-            "nullable": false,
-            "type": "string"
-          }
-        }
-      },
-      "EmulationRequest": {
-        "properties": {
-          "packageId": {
-            "description": "GUID of GamePackage which should be started. All other info required for emulation is already included in the respective GamePackage.",
-            "nullable": false,
-            "type": "string"
-          }
-        }
-      },
-      "EmulationState": {
-        "properties": {
-          "id": {
-            "description": "GUID of the currently running emulation.",
-            "nullable": false,
-            "type": "string"
-          },
-          "packageId": {
-            "description": "GUID of the GamePackage used to start this emulation.",
-            "nullable": false,
-            "type": "string"
-          },
-          "status": {
-            "description": "Status of the emulation.",
-            "nullable": false,
-            "type": "string"
-          },
-          "statusDetail": {
-            "description": "Emulator-specific detail string for the current status.",
-            "nullable": false,
-            "type": "string"
-          },
-          "isGpuPassthrough": {
-            "description": "Whether the system's dedicated GPU is being passed through to the virtual machine.",
-            "nullable": false,
-            "type": "boolean"
-          },
-          "isUsbPassthrough": {
-            "description": "Whether USB devices are being passed through to the virtual machine.",
-            "nullable": false,
-            "type": "boolean"
-          }
-        }
+        },
+        "additionalProperties": false
       },
       "ConversionInput": {
+        "type": "object",
         "properties": {
           "data": {
-            "description": "Converter-specific input data.",
-            "nullable": false,
-            "type": "string"
+            "type": "string",
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
+      },
+      "ConversionProcess": {
+        "type": "object",
+        "properties": {
+          "processId": {
+            "type": "string",
+            "nullable": true
+          },
+          "emulatorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "statusDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "artefactIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConversionRequest": {
+        "type": "object",
+        "properties": {
+          "emulatorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "versionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "digitalObjectIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DigitalizationInput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DigitalizationProcess": {
+        "type": "object",
+        "properties": {
+          "processId": {
+            "type": "string",
+            "nullable": true
+          },
+          "toolId": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "statusDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DigitalizationRequest": {
+        "type": "object",
+        "properties": {
+          "toolId": {
+            "type": "string",
+            "nullable": true
+          },
+          "versionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "paratextId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DigitalizationTool": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "version": {
+            "type": "string",
+            "nullable": true
+          },
+          "physicalMediaType": {
+            "type": "string",
+            "nullable": true
+          },
+          "isAvailable": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
       },
       "EmulationFinishRequest": {
+        "type": "object",
         "properties": {
           "keepScreenRecording": {
-            "description": "Whether screen recording should be kept or (in case of false) permanently deleted.",
-            "nullable": false,
             "type": "boolean"
           },
           "keepWebcamRecording": {
-            "description": "Whether recording of the webcam stream should be kept or (in case of false) permanently deleted.",
-            "nullable": false,
             "type": "boolean"
           },
           "saveMachineState": {
-            "description": "Whether the current state of the emulated machine should be saved so that it can be continued at a later date.",
-            "nullable": false,
             "type": "boolean"
           }
-        }
+        },
+        "additionalProperties": false
       },
-      "Platform": {
+      "EmulationState": {
+        "type": "object",
         "properties": {
-          "name": {
-            "description": "Name of this gaming platform. Also serves as key instead of a separate ID.",
-            "nullable": false,
-            "type": "string"
+          "id": {
+            "type": "string",
+            "nullable": true
           },
-          "physicalMediaTypes": {
-            "description": "Types of physical media supported by this platform. Can be used to filter relevant Artefacts based on media type.",
-            "nullable": false,
+          "packageId": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "statusDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "isGpuPassthrough": {
+            "type": "boolean"
+          },
+          "isUsbPassthrough": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Emulator": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "homepage": {
+            "type": "string",
+            "nullable": true
+          },
+          "version": {
+            "type": "string",
+            "nullable": true
+          },
+          "platforms": {
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
-      "Paratext": {
+      "GamePackage": {
+        "type": "object",
         "properties": {
           "id": {
-            "readOnly": true,
-            "description": "GUID of the Paratext.",
-            "nullable": false,
-            "type": "string"
-          },
-          "workId": {
-            "readOnly": true,
-            "description": "GUID of the Work this Paratext belongs to. A paratext will always belong to at least a Work, but can belong to one of the sub objects as well (Version or Package).",
-            "nullable": false,
-            "type": "string"
-          },
-          "versionId": {
-            "readOnly": true,
-            "description": "GUID of the Version this Paratext belongs to. Will be null if this Paratext does not belong to a Version",
-            "nullable": true,
-            "type": "string"
-          },
-          "packageId": {
-            "readOnly": true,
-            "description": "GUID of the Package this Paratext belongs to. In this case the Paratext is a recording of some kind. If this Paratext does not belong to a Package, packageId will be null.",
-            "nullable": true,
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "name": {
-            "description": "Name of this Paratext.",
-            "nullable": false,
-            "type": "string"
+            "type": "string",
+            "nullable": true
+          },
+          "includedDigitalObjectIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "versionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "emulatorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "conversionDate": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImportableWork": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "idno": {
+            "type": "string",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "curatorialDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "numVersions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isAlreadyImported": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Paratext": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "language": {
+            "type": "string",
+            "nullable": true
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "internalNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "filledOutBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "websiteUrl": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "emissionSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "identificationNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "paratextType": {
+            "type": "string",
+            "nullable": true
+          },
+          "importedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "exportedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Platform": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "physicalMediaTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Work": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "typeOfWork": {
+            "type": "string",
+            "nullable": true
+          },
+          "curatorialDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "internalNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "importedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WorkVersion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "workId": {
+            "type": "string",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
           },
           "description": {
-            "description": "Description of this Paratext.",
-            "nullable": false,
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
-          "source": {
-            "description": "Source of this Paratext. Verbal description.",
-            "nullable": false,
-            "type": "string"
+          "subtitle": {
+            "type": "string",
+            "nullable": true
           },
-          "sourceUrl": {
-            "description": "Source Url of this Paratext, in case it was scraped/downloaded from somewhere or is available at this location.",
-            "nullable": true,
-            "type": "string"
+          "system": {
+            "type": "string",
+            "nullable": true
           },
-          "downloadable": {
-            "readOnly": true,
-            "description": "Information whether this Paratext can be downloaded through the /download endpoint.",
-            "type": "boolean"
+          "copyProtection": {
+            "type": "string",
+            "nullable": true
           },
-          "thumbnail": {
-            "description": "Thumbnail definition for this Paratext. Will start with 'url:' if the thumbnail should be fetched. Otherwise will start with 'template:' if a generic icon should be used. The following generic icons should be supported: link, document, archive, sound, image, video. Image and video will usually have a 'url:' thumbnail, but should be supported as well in case a real thumbnail couldn't be generated.",
-            "nullable": false,
-            "type": "string"
+          "curatorialDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "internalNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "importedAt": {
+            "type": "string",
+            "format": "date-time"
           }
-        }
+        },
+        "additionalProperties": false
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Artefact"
+    },
+    {
+      "name": "Conversion"
+    },
+    {
+      "name": "Digitalization"
+    },
+    {
+      "name": "Emulation"
+    },
+    {
+      "name": "Emulator"
+    },
+    {
+      "name": "GamePackage"
+    },
+    {
+      "name": "Import"
+    },
+    {
+      "name": "Paratext"
+    },
+    {
+      "name": "Platform"
+    },
+    {
+      "name": "Router"
+    },
+    {
+      "name": "Upload"
+    },
+    {
+      "name": "Version"
+    },
+    {
+      "name": "Work"
+    }
+  ]
 }
