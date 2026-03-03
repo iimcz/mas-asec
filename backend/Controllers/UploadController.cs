@@ -31,7 +31,7 @@ namespace asec.Controllers
         /// <returns>The uploaded artefact</returns>
         [HttpPost("artefact")]
         [Produces(typeof(ViewModels.Artefact))]
-        public async Task<IActionResult> UploadArtefact([FromBody] ViewModels.Artefact artefact, [FromForm] IFormFile file)
+        public async Task<IActionResult> UploadArtefact([FromForm] ViewModels.Artefact artefact, [FromForm] IFormFile file)
         {
             Guid objectId = Guid.NewGuid();
             string filePath = Path.Combine(_uploadPath, objectId.ToString());
