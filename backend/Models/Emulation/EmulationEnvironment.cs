@@ -6,5 +6,5 @@ public class EmulationEnvironment
     public Emulator Emulator { get; set; }
     public string EmulatorVersion { get; set; }
     public string EaasId { get; set; }
-    public IEnumerable<Converter> Converters { get; set; }
+    public IList<Converter> Converters { get; set; }
 }

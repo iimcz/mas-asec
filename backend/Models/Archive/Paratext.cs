@@ -8,6 +8,7 @@ public class Paratext
     public Guid Id { get; set; }
 
     // Imported / exported data
+    public string Label { get; set; }
     public string Language { get; set; } 
     public DateOnly Date { get; set; }
     public string InternalNote { get; set; }
@@ -24,5 +25,5 @@ public class Paratext
     // Relationships
     public DigitalObject DigitalObject { get; set; }
     public PhysicalObject PhysicalObject { get; set; }
-    public IEnumerable<WorkVersion> WorkVersions { get; set; }
+    public IList<WorkVersion> WorkVersions { get; set; }
 }

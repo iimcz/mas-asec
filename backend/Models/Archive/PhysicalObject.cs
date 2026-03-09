@@ -8,6 +8,7 @@ public class PhysicalObject
     public Guid Id { get; set; }
 
     // Imported data
+    public string Label { get; set; }
     public int RemoteId { get; set; }
     public string Description { get; set; }
     public DateOnly Date { get; set; }
@@ -28,7 +29,7 @@ public class PhysicalObject
     public bool Deleted { get; set; } = false;
 
     // Relationships
-    public IEnumerable<WorkVersion> WorkVersions { get; set; }
-    public IEnumerable<Paratext> Paratexts { get; set; }
-    public IEnumerable<DigitalObject> DigitalObjects { get; set; }
+    public IList<WorkVersion> WorkVersions { get; set; }
+    public IList<Paratext> Paratexts { get; set; }
+    public IList<DigitalObject> DigitalObjects { get; set; }
 }

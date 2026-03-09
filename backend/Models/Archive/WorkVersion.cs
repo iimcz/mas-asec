@@ -25,7 +25,7 @@ public class WorkVersion
 
     // Relationships
     public Work Work { get; set; }
-    public IEnumerable<DigitalObject> DigitalObjects { get; set; }
-    public IEnumerable<PhysicalObject> PhysicalObjects { get; set; }
-    public IEnumerable<Paratext> Paratexts { get; set; }
+    public IList<DigitalObject> DigitalObjects { get; set; }
+    public IList<PhysicalObject> PhysicalObjects { get; set; }
+    public IList<Paratext> Paratexts { get; set; }
 }
