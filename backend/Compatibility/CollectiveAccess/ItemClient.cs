@@ -4,13 +4,66 @@ namespace asec.Compatibility.CollectiveAccess;
 
 public class ItemClient : BaseCollectiveAccessClient
 {
-    private const string GET_QUERY = "query get_workversion_relations($jwt:String,$id:Int,$table:String,$bundles:[String]){get(jwt:$jwt,id:$id,table:$table,bundles:$bundles){id,idno,bundles{code,dataType,name,values{id,locale,value}}}}";
-    private const string RELATIONSHIPS_QUERY = "query get_rels($jwt:String,$table:String,$id:Int,$target:String,$tgTypes:[String],$relTypes:[String]){getRelationships(jwt:$jwt,id:$id,table:$table,target:$target,restrictToTypes:$tgTypes,restrictToRelationshipTypes:$relTypes){id,relationships{id}}}";
+    private const string GET_QUERY = """
+        query get_workversion_relations($jwt: String, $id: Int, $table: String, $bundles: [String])
+        {
+            get(jwt: $jwt, id: $id, table: $table, bundles: $bundles)
+            {
+                id
+                idno
+                bundles { code, dataType, name, values { id, locale, value } }
+            }
+        }
+    """;
+    private const string RELATIONSHIPS_QUERY = """
+        query get_rels($jwt: String, $table: String, $id: Int, $target: String, $tgTypes: [String], $relTypes: [String])
+        {
+            getRelationships(jwt: $jwt, id: $id, table: $table, target: $target, restrictToTypes: $tgTypes, restrictToRelationshipTypes: $relTypes)
+            {
+                id
+                relationships { id } 
+            }
+        }
+    """;
 
     private const string ENDPOINT = "service.php/item";
 
     public ItemClient(IConfiguration configuration, IHttpClientFactory clientFactory, CollectiveAccessAuth auth) : base(configuration, clientFactory, auth)
     {
+    }
+
+    private async Task<IList<MinRelationship>> GetParatextPhysicalObjectRelationships(int id, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var request = new GraphQLRequest<GetRelationshipsArgs>() {
+            Query = RELATIONSHIPS_QUERY,
+            Variables = new() {
+                Id = id,
+                Table = Tables.Occurrences,
+                Target = Tables.Objects,
+                RelTypes = new() { RelationTypes.ParatextManifestPhysicalObject },
+                TgTypes = new() { Types.PhysicalObject }
+            }
+        };
+
+        var result = await PostAuthenticatedAsync<GetRelationshipsArgs, GetRelationshipsRoot>(ENDPOINT, request, cancellationToken);
+        return result.Data.GetRelationships.Relationships;
+    }
+
+    private async Task<IList<MinRelationship>> GetVersionParatextRelationships(int id, string relationshipType, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var request = new GraphQLRequest<GetRelationshipsArgs>() {
+            Query = RELATIONSHIPS_QUERY,
+            Variables = new() {
+                Id = id,
+                Table = Tables.Occurrences,
+                Target = Tables.Occurrences,
+                RelTypes = new() { relationshipType },
+                TgTypes = new() { Types.Paratext }
+            }
+        };
+
+        var response = await PostAuthenticatedAsync<GetRelationshipsArgs, GetRelationshipsRoot>(ENDPOINT, request, cancellationToken);
+        return response.Data.GetRelationships.Relationships;
     }
 
     private async Task<IList<MinRelationship>> GetWorkVersionRelationships(int id, CancellationToken cancellationToken = default(CancellationToken))
@@ -27,12 +80,6 @@ public class ItemClient : BaseCollectiveAccessClient
         };
 
         var response = await PostAuthenticatedAsync<GetRelationshipsArgs, GetRelationshipsRoot>(ENDPOINT, request, cancellationToken);
-        if (response == null || !response.Ok)
-        {
-            // TODO: better error handling and logging
-            throw new ApplicationException(response?.Errors?.ToString());
-        }
-
         return response.Data.GetRelationships.Relationships;
     }
 

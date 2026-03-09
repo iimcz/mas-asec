@@ -6,11 +6,6 @@ public record Work(
     IList<Bundle> Bundles
 );
 
-public record Relationship(
-    int Id,
-    IList<Bundle> Bundles
-);
-
 public record WorkVersion(
     int Id,
     string Idno,

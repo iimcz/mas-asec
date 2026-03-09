@@ -13,3 +13,9 @@ public record Bundle(
     IList<BundleValue> Values
 );
 
+public record InputBundle(
+    string Locale,
+    string Name,
+    string Value,
+    bool Replace = true
+);

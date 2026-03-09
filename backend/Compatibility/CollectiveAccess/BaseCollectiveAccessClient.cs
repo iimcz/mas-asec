@@ -35,7 +35,7 @@ public abstract class BaseCollectiveAccessClient
         var response = await client.PostAsJsonAsync(endpoint, request, _serializerOptions, cancellationToken);
         var result = await response.Content.ReadFromJsonAsync<GraphQLResponse<TOutData>>();
         // TODO: proper error handling / logging
-        if (!response.IsSuccessStatusCode || (result != null && !result.Ok))
+        if (!response.IsSuccessStatusCode || (result != null && !result.Ok) || result == null)
         {
             throw new HttpRequestException(result?.Errors?.ToString(), null, response.StatusCode);
         }

@@ -35,6 +35,7 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<CollectiveAccessAuth>();
         services.AddScoped<SearchClient>();
         services.AddScoped<ItemClient>();
+        services.AddScoped<EditClient>();
         
         return services;
     }

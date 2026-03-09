@@ -4,7 +4,20 @@ namespace asec.Compatibility.CollectiveAccess;
 
 public class SearchClient : BaseCollectiveAccessClient
 {
-    private const string SEARCH_WORKS_QUERY = "query search($jwt:String,$search:String,$table:String,$types:[String],$bundles:[String]){search(jwt:$jwt,search:$search,table:$table,restrictToTypes:$types,bundles:$bundles){result{id,idno,bundles{code,dataType,name,values{id,locale,value}}}}}";
+    private const string SEARCH_WORKS_QUERY = """
+        query search($jwt: String, $search: String, $table: String, $types: [String], $bundles: [String])
+        {
+            search(jwt: $jwt, search: $search, table: $table, restrictToTypes: $types, bundles: $bundles)
+            {
+                result
+                {
+                    id
+                    idno
+                    bundles { code, dataType, name, values { id, locale, value} }
+                }
+            }
+        }
+    """;
     private const string ENDPOINT = "service.php/search";
 
     public SearchClient(IConfiguration configuration, IHttpClientFactory clientFactory, CollectiveAccessAuth auth) : base(configuration, clientFactory, auth)
