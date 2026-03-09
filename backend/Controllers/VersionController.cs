@@ -53,7 +53,10 @@ public class VersionController : ControllerBase
             .FirstOrDefaultAsync(v => v.Id == id);
         if (version == null)
             return NotFound();
-        return Ok(version.DigitalObjects.OfType<Models.Digitalization.Artefact>().Select(a => ViewModels.Artefact.FromDBEntity(a)));
+        var results = version.DigitalObjects
+            .OfType<Models.Digitalization.Artefact>()
+            .Select(a => ViewModels.Artefact.FromDBEntity(a));
+        return Ok(results);
     }
 
     /// <summary>

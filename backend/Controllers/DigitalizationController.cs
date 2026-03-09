@@ -141,9 +141,9 @@ public class DigitalizationController : ControllerBase
         dbArtefact.WorkVersions = new List<asec.Models.Archive.WorkVersion>();
 
         if (paratext is not null)
-            dbArtefact.Paratexts.Append(paratext);
+            dbArtefact.Paratexts.Add(paratext);
         if (version is not null)
-            dbArtefact.WorkVersions.Append(version);
+            dbArtefact.WorkVersions.Add(version);
         
         await _dbContext.DigitalObjects.AddAsync(dbArtefact);
         await _dbContext.SaveChangesAsync();
