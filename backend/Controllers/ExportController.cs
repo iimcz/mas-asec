@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using asec.Compatibility.CollectiveAccess;
 using asec.Models;
-using asec.Models.Archive;
 using asec.Models.Digitalization;
 
 namespace asec.Controllers;
@@ -30,7 +30,7 @@ public class ExportController : ControllerBase
     public async Task<IActionResult> ExportArtefact(string id, CancellationToken cancellationToken = default(CancellationToken))
     {
         var guid = Guid.Parse(id);
-        var artefact = _dbContext.DigitalObjects.OfType<Artefact>().FirstOrDefault(a => a.Id == guid);
+        var artefact = _dbContext.DigitalObjects.Include(d => d.WorkVersions).OfType<Artefact>().FirstOrDefault(a => a.Id == guid);
         if (artefact == null)
         {
             return NotFound();

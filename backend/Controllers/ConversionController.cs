@@ -132,17 +132,21 @@ public class ConversionController : ControllerBase
             $"converted[{process.Id}]",
             importObjects
         ), cancellationToken);
+        if (eaasObjectId == null)
+            throw new ApplicationException("Failed to import objects into EaaS.");
 
         var artefactIds = process.Artefacts.Select(a => a.Id).ToList();
+        var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);
         var dbGamePackage = new Models.Emulation.GamePackage() {
-            Id = Guid.Parse(eaasObjectId),
+            ObjectId = eaasObjectId,
             Name = package.Name,
             ConversionDate = process.StartTime,
             Converter = await _dbContext.Converters.FindAsync(process.Converter.Id),
             Environment = await _dbContext.Environments.FindAsync(process.EnvironmentId),
             IncludedDigitalObjects = await _dbContext.DigitalObjects.Where(a => artefactIds.Contains(a.Id)).ToListAsync(cancellationToken),
-            Version = await _dbContext.WorkVersions.FindAsync(process.VersionId)
+            Version = version
         };
+        version?.DigitalObjects.Add(dbGamePackage);
         _dbContext.DigitalObjects.Add(dbGamePackage);
         await _dbContext.SaveChangesAsync(cancellationToken);
 

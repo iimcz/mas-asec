@@ -52,7 +52,7 @@ public class ImportController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> ImportWorkWithVersions([FromBody] ImportableWork iwork, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<IActionResult> ImportFullWork([FromBody] ImportableWork iwork, CancellationToken cancellationToken = default(CancellationToken))
     {
         var work = await _itemClient.GetWork(iwork.Id);
         var versions = await _itemClient.GetVersionsForWork(work);
@@ -66,7 +66,6 @@ public class ImportController : ControllerBase
         {
             return await CreateNewWork(work, versions, cancellationToken);
         }
-
     }
 
     [HttpPost("sync/{id}")]
@@ -86,6 +85,8 @@ public class ImportController : ControllerBase
 
         return await UpdateExistingWork(work, caWork, caVersions, cancellationToken);
     }
+
+    //private async Task<IActionResult> CreateNewVersion()
 
     private async Task<IActionResult> UpdateExistingWork(Models.Archive.Work dbWork, CAWork work, IList<CAWorkVersion> versions, CancellationToken cancellationToken = default(CancellationToken))
     {

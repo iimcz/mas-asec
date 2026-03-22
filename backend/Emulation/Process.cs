@@ -116,7 +116,7 @@ public class Process : IProcess<EmulationResult>
         var runningComponent = await componentsClient.StartComponent(new MachineComponentRequest(
             package.Environment.EaasId,
             new List<Drive>() {
-                new Drive(_config.EaasTargetDrive, new ObjectDataSource(package.Id.ToString()))
+                new Drive(_config.EaasTargetDrive, new ObjectDataSource(package.ObjectId))
             }
             ));
         var cachedState = await componentsClient.GetComponentState(runningComponent.id);
