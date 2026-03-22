@@ -11,3 +11,21 @@ public record WorkVersion(
     string Idno,
     IList<Bundle> Bundles
 );
+
+public record Paratext(
+    int Id,
+    string Idno,
+    IList<Bundle> Bundles
+);
+
+public record DigitalObject(
+    int Id,
+    string Idno,
+    IList<Bundle> Bundles
+);
+
+public record PhysicalObject(
+    int Id,
+    string Idno,
+    IList<Bundle> Bundles
+);

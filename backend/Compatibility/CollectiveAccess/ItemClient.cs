@@ -175,6 +175,125 @@ public class ItemClient : BaseCollectiveAccessClient
         return versions;
     }
 
+    public async Task<IList<Paratext>> GetParatextsForVersion(WorkVersion version, CancellationToken cancellationToken = default(CancellationToken))
+        => await GetParatextsForVersion(version.Id, cancellationToken);
+    public async Task<IList<Paratext>> GetParatextsForVersion(int id, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var relationshipsContx = await GetVersionParatextRelationships(id, RelationTypes.WorkVersionContextualizeParatext, cancellationToken);
+        var relationshipsRepre = await GetVersionParatextRelationships(id, RelationTypes.WorkVersionRepresentParatext, cancellationToken);
+
+        var relDataRequest = new GraphQLRequest<GetArgs>() {
+            Query = GET_QUERY,
+            Variables = new() {
+                Table = Tables.OccurrencesXOccurrences,
+                Bundles = new() { BundleCodes.OccurrenceRelLeftId }
+            }
+        };
+
+        var paratextIds = new List<int>();
+        foreach (var rel in relationshipsContx.Concat(relationshipsRepre))
+        {
+            relDataRequest.Variables.Id = rel.Id;
+            var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Relationship>>(ENDPOINT, relDataRequest, cancellationToken);
+
+            if(!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
+            {
+                // invalid ID, skip
+                continue;
+            }
+
+            paratextIds.Add(otherId);
+        }
+
+        var paratextRequest = new GraphQLRequest<GetArgs>() {
+            Query = GET_QUERY,
+            Variables = new() {
+                Table = Tables.Occurrences,
+                Bundles = new() {
+                    BundleCodes.OccurrenceLabel,
+                    BundleCodes.OccurrenceLanguage,
+                    BundleCodes.OccurrenceDate,
+                    BundleCodes.OccurrenceFilledOutBy,
+                    BundleCodes.OccurrenceEmissionSize,
+                    BundleCodes.OccurrenceIdentificationNumber,
+                    BundleCodes.OccurrenceParatextType
+                }
+            }
+        };
+
+        var paratexts = new List<Paratext>();
+        foreach (var parId in paratextIds)
+        {
+            paratextRequest.Variables.Id = parId;
+            var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Paratext>>(ENDPOINT, paratextRequest, cancellationToken);
+            paratexts.Add(response.Data.Get);
+        }
+
+        return paratexts;
+    }
+
+    public async Task<IList<PhysicalObject>> GetPhysicalObjectsForParatext(Paratext paratext, CancellationToken cancellationToken = default(CancellationToken))
+        => await GetPhysicalObjectsForParatext(paratext.Id, cancellationToken);
+    public async Task<IList<PhysicalObject>> GetPhysicalObjectsForParatext(int id, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var relationships = await GetParatextPhysicalObjectRelationships(id, cancellationToken);
+
+        var relDataRequest = new GraphQLRequest<GetArgs>() {
+            Query = GET_QUERY,
+            Variables = new() {
+                Table = Tables.OccurrencesXOccurrences,
+                Bundles = new() { BundleCodes.OccurrenceRelLeftId }
+            }
+        };
+
+        var objectIds = new List<int>();
+        foreach (var rel in relationships)
+        {
+            relDataRequest.Variables.Id = rel.Id;
+            var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Relationship>>(ENDPOINT, relDataRequest, cancellationToken);
+
+            if(!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
+            {
+                // invalid ID, skip
+                continue;
+            }
+
+            objectIds.Add(otherId);
+        }
+
+        var objectRequest = new GraphQLRequest<GetArgs>() {
+            Query = GET_QUERY,
+            Variables = new() {
+                Table = Tables.Objects,
+                Bundles = new() {
+                    BundleCodes.ObjectOwner,
+                    BundleCodes.ObjectLocation,
+                    BundleCodes.ObjectCondition,
+                    BundleCodes.ObjectISBN,
+                    BundleCodes.ObjectEAN,
+                    BundleCodes.ObjectCountryOfOrigin,
+                    BundleCodes.ObjectDate,
+                    BundleCodes.ObjectDescription,
+                    BundleCodes.ObjectFilledOutBy,
+                    BundleCodes.ObjectInternalNote,
+                    BundleCodes.ObjectLabel,
+                    BundleCodes.ObjectPhysicalObjectType,
+                    BundleCodes.ObjectSize
+                }
+            }
+        };
+
+        var objects = new List<PhysicalObject>();
+        foreach (var objId in objectIds)
+        {
+            objectRequest.Variables.Id = objId;
+            var response = await PostAuthenticatedAsync<GetArgs, GetRoot<PhysicalObject>>(ENDPOINT, objectRequest, cancellationToken);
+            objects.Add(response.Data.Get);
+        }
+
+        return objects;
+    }
+
     public class GetRelationshipsArgs : GraphQLAuthVars
     {
         public string Table {get; set;}

@@ -1,4 +1,3 @@
-using asec.Models.Archive;
 using asec.Compatibility.CollectiveAccess.Models;
 using System.Text.Json.Nodes;
 using CSharpVitamins;
@@ -30,18 +29,16 @@ public class EditClient : BaseCollectiveAccessClient
         _logger = logger;
     }
 
-    public async Task<int> AddOrUpdateDigitalObject(DigitalObject digitalObject, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<int> AddOrUpdateDigitalObject(asec.Models.Archive.DigitalObject digitalObject, CancellationToken cancellationToken = default(CancellationToken))
     {
-        /*
-        var workVersionRelationships = digitalObject.WorkVersions.Select(
+       
+        var workVersionRelationships = digitalObject.WorkVersions?.Select(
             wv => new SubjectRelationship(
-                Tables.Occurrences,
                 SubjectRelationshipTypes.ManifestationOf,
+                Tables.Occurrences,
                 wv.RemoteId
             )
-        ).ToList();
-        */
-        var workVersionRelationships = new List<SubjectRelationship>();
+        ).ToList() ?? new List<SubjectRelationship>();
 
         // Since CollectiveAccess idno is only 30 chars long, modify our UUID to fit.
         var idno = new ShortGuid(digitalObject.Id).ToString();
