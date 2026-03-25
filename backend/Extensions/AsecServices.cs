@@ -4,6 +4,7 @@ using asec.LongRunning;
 using asec.Emulation;
 using asec.Compatibility.EaasApi;
 using asec.Compatibility.CollectiveAccess;
+using asec.Upload;
 
 namespace asec.Extensions;
 
@@ -25,6 +26,9 @@ public static class IServiceCollectionExtensions
 
         services.AddSingleton<IProcessManager<Emulation.Process, EmulationResult>, ProcessManager<Emulation.Process, EmulationResult>>();
         services.AddHostedService(provider => provider.GetService<IProcessManager<Emulation.Process, EmulationResult>>()!);
+
+        services.AddSingleton<IProcessManager<Upload.Process, UploadResult>, ProcessManager<Upload.Process, UploadResult>>();
+        services.AddHostedService(provider => provider.GetService<IProcessManager<Upload.Process, UploadResult>>()!);
 
         // EaaS clients
         services.AddScoped<EaasUploadClient>();
