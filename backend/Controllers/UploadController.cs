@@ -92,9 +92,9 @@ namespace asec.Controllers
             var paratext = await _dbContext.Paratexts.FindAsync(process.ParatextId);
             var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);
             dbArtefact.Paratexts = new List<Models.Archive.Paratext>();
-            dbArtefact.Versions = new List<Models.Archive.WorkVersion>();
+            dbArtefact.WorkVersions = new List<Models.Archive.WorkVersion>();
             if (paratext is not null) dbArtefact.Paratexts.Append(paratext);
-            if (version is not null) dbArtefact.Versions.Append(version);
+            if (version is not null) dbArtefact.WorkVersions.Append(version);
 
             await _dbContext.DigitalObjects.AddAsync(dbArtefact);
             await _dbContext.SaveChangesAsync();

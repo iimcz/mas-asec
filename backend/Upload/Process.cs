@@ -58,7 +58,7 @@ namespace asec.Upload
             );
 
             var reader = new MultipartReader(Boundary, FileStream);
-            MultipartSection? section;
+            MultipartSection section;
             long totalBytesRead = 0;
 
             while ((section = await reader.ReadNextSectionAsync(CancellationToken)) != null)
