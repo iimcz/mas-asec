@@ -2,6 +2,8 @@ using asec.Models;
 using asec.Models.Digitalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Minio;
+using Minio.DataModel.Args;
 
 namespace asec.Controllers;
 
@@ -14,10 +16,14 @@ namespace asec.Controllers;
 public class ArtefactController : ControllerBase
 {
     private readonly AsecDBContext _dbContext;
+    private readonly IMinioClient _minioClient;
+    private readonly string _minioArtefactBucket;
 
-    public ArtefactController(AsecDBContext dbContext)
+    public ArtefactController(AsecDBContext dbContext, IMinioClient minioClient, IConfiguration configuration)
     {
         _dbContext = dbContext;
+        _minioClient = minioClient;
+        _minioArtefactBucket = configuration.GetSection("ObjectStorage").GetValue<string>("ArtefactBucket");
     }
 
     /// <summary>
@@ -39,6 +45,35 @@ public class ArtefactController : ControllerBase
         if (artefact == null)
             return NotFound();
         return Ok(ViewModels.Artefact.FromDBEntity(artefact));
+    }
+
+    /// <summary>
+    /// Gets the specified artefact's file contents.
+    /// </summary>
+    /// <param name="artefactId">ID of the artefact to find</param>
+    /// <returns>Contents of the specified artefact if found, 404 otherwise</returns>
+    [HttpGet("{artefactId}/download")]
+    public async Task<IActionResult> DownloadArtefact(string artefactId)
+    {
+        var id = Guid.Parse(artefactId);
+        var artefact = await _dbContext.DigitalObjects
+            .OfType<Artefact>()
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        if (artefact == null)
+            return NotFound();
+
+        var filename = Path.Combine(Path.GetTempPath(), artefact.FileName);
+        var args = new GetObjectArgs()
+            .WithFile(filename)
+            .WithBucket(_minioArtefactBucket)
+            .WithObject(artefact.ObjectId.ToString());
+
+        var minioObject = await _minioClient.GetObjectAsync(args);
+        var fileStream = System.IO.File.OpenRead(filename);
+
+        // TODO: Cleanup file, the OS should clean it since it's in temp files but that might take a while
+        return File(fileStream, "application/octet-stream", artefact.FileName);
     }
 
     /// <summary>
