@@ -6,6 +6,7 @@ namespace asec.ViewModels;
 public record Artefact
 {
     public string Id { get; set; }
+    public string Label { get; set; }
     public string FileName { get; set; }
     public string InternalNote { get; set; }
     public string WebsiteUrl { get; set; }
@@ -42,6 +43,7 @@ public record Artefact
             PhysicalMediaType = mediaType,
             PhysicalMediaState = mediaState,
             FileName = FileName,
+            Label = Label
         };
     }
 
@@ -53,6 +55,7 @@ public record Artefact
             ParatextIds = artefact.Paratexts?.Select(p => p.Id.ToString()).ToList(),
 
             FileName = artefact.FileName,
+            Label = artefact.Label,
             InternalNote = artefact.InternalNote,
             WebsiteUrl = artefact.WebsiteUrl?.ToString(),
             DigitalObjectType = artefact.DigitalObjectType,
