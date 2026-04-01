@@ -136,7 +136,10 @@ public class ConversionController : ControllerBase
             throw new ApplicationException("Failed to import objects into EaaS.");
 
         var artefactIds = process.Artefacts.Select(a => a.Id).ToList();
-        var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);
+        var version = await _dbContext.WorkVersions
+            .Include(v => v.DigitalObjects)
+            .FirstOrDefaultAsync(v => v.Id == process.VersionId);
+
         var dbGamePackage = new Models.Emulation.GamePackage() {
             ObjectId = eaasObjectId,
             Name = package.Name,
