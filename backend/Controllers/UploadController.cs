@@ -1,5 +1,6 @@
 ﻿using asec.LongRunning;
 using asec.Models;
+using asec.Models.Digitalization;
 using asec.Upload;
 using asec.ViewModels;
 using Azure.Core;
@@ -41,6 +42,7 @@ namespace asec.Controllers
         /// <returns>Details of the started upload process</returns>
         [HttpPost("start")]
         [Produces(typeof(UploadProcess))]
+        [DisableRequestSizeLimit]
         public async Task<IActionResult> StartUploadProcess()
         {
             Request.Headers.TryGetValue("VersionId", out var versionId);
@@ -66,8 +68,8 @@ namespace asec.Controllers
         /// <param name="artefact">Details to include in the created artefact</param>
         /// <returns>The created artefact</returns>
         [HttpPost("{processId}/finalize")]
-        [Produces(typeof(Artefact))]
-        public async Task<IActionResult> FInalizeArtefactUpload(string processId, [FromBody] Artefact artefact)
+        [Produces(typeof(ViewModels.Artefact))]
+        public async Task<IActionResult> FInalizeArtefactUpload(string processId, [FromBody] ViewModels.Artefact artefact)
         {
             var id = Guid.Parse(processId);
             var process = _processManager.GetProcess(id);
@@ -84,7 +86,6 @@ namespace asec.Controllers
 
             var dbArtefact = await artefact.ToDBEntity(_dbContext);
             dbArtefact.ObjectId = objectId;
-            dbArtefact.Type = processResult.Type;
             dbArtefact.FileName = Path.GetFileName(processResult.Filename);
             dbArtefact.ArchivationDate = process.StartTime;
             dbArtefact.PhysicalMediaType = Models.Digitalization.PhysicalMediaType.None;
@@ -93,14 +94,14 @@ namespace asec.Controllers
             var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);
             dbArtefact.Paratexts = new List<Models.Archive.Paratext>();
             dbArtefact.WorkVersions = new List<Models.Archive.WorkVersion>();
-            if (paratext is not null) dbArtefact.Paratexts.Append(paratext);
-            if (version is not null) dbArtefact.WorkVersions.Append(version);
+            if (paratext is not null) dbArtefact.Paratexts.Add(paratext);
+            if (version is not null) dbArtefact.WorkVersions.Add(version);
 
             await _dbContext.DigitalObjects.AddAsync(dbArtefact);
             await _dbContext.SaveChangesAsync();
             _processManager.RemoveProcess(process);
 
-            return Ok(Artefact.FromDBEntity(dbArtefact));
+            return Ok(ViewModels.Artefact.FromDBEntity(dbArtefact));
         }
 
         private void CreateDirectory(string path)

@@ -27,7 +27,11 @@ namespace asec.Upload
             ParatextId = paratext?.Id ?? Guid.Empty;
 
             Boundary = boundary;
-            FileStream = fileStream;
+
+            var hackMem = new MemoryStream();
+            fileStream.CopyToAsync(hackMem).Wait();
+            hackMem.Position = 0;
+            FileStream = hackMem;
 
             BaseDir = Path.Combine(dirsBase, Id.ToString());
             LogPath = Path.Combine(BaseDir, "log.txt");
@@ -39,25 +43,18 @@ namespace asec.Upload
         {
             StartTime = DateTime.Now;
             CancellationToken = cancellationToken;
-            var path = Path.Combine(BaseDir, Guid.NewGuid().ToString());
             Status = ProcessStatus.Running;
-            await SaveMultipartStream(path);
+            var path = await SaveMultipartStream();
             Status = ProcessStatus.Success;
+
+            // TODO: The type is ignored for and set during finalize as it's user input
             return new(path, ArtefactType.ZipArchive);
         }
 
-        private async Task SaveMultipartStream(string path)
+        private async Task<string> SaveMultipartStream()
         {
-            using FileStream output = new FileStream(
-                path: path,
-                mode: FileMode.Create,
-                access: FileAccess.Write,
-                share: FileShare.None,
-                bufferSize: BufferSize,
-                useAsync: true
-            );
-
             var reader = new MultipartReader(Boundary, FileStream);
+            var path = "";
             MultipartSection section;
             long totalBytesRead = 0;
 
@@ -66,6 +63,17 @@ namespace asec.Upload
                 var contentDisposition = section.GetContentDispositionHeader();
                 if (contentDisposition != null && contentDisposition.IsFileDisposition())
                 {
+                    path = contentDisposition.FileName.ToString();
+                    // TODO: Splitting files in multiple is not common, if we want to do this for some reason we need to discuss it
+                    using FileStream output = new FileStream(
+                        path: path,
+                        mode: FileMode.Create,
+                        access: FileAccess.Write,
+                        share: FileShare.None,
+                        bufferSize: BufferSize,
+                        useAsync: true
+                    );
+
                     await section.Body.CopyToAsync(output, CancellationToken);
                     totalBytesRead += section.Body.Length;
                 }
@@ -76,6 +84,8 @@ namespace asec.Upload
                     string value = await streamReader.ReadToEndAsync(CancellationToken);
                 }
             }
+
+            return path;
         }
     }
 }
