@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Minio;
 using Minio.DataModel.Args;
+using Minio.DataModel.Tags;
 
 namespace asec.Controllers;
 
@@ -118,10 +119,16 @@ public class DigitalizationController : ControllerBase
             return NotFound();
 
         var processResult = await _processManager.FinishProcessAsync(id);
+        var tags = new Dictionary<string, string>()
+        {
+            { "Tag", "Artefact" },
+            { "DataType", "File" }
+        };
         var objectId = Guid.NewGuid();
         var args = new PutObjectArgs()
             .WithFileName(processResult.Filename)
-            .WithBucket(_minioArtefactBucket) // TODO: add digitalization metadata tags
+            .WithBucket(_minioArtefactBucket)
+            .WithTagging(new Tagging(tags, true))
             .WithObject(objectId.ToString());
         // TODO: check for success (or maybe exception?)
         var artefactObject = await _minioClient.PutObjectAsync(args);

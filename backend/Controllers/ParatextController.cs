@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Minio;
 using Minio.DataModel.Args;
+using Minio.DataModel.Tags;
 
 namespace asec.Controllers;
 
@@ -81,10 +82,15 @@ public class ParatextController : ControllerBase
         {
             await file.CopyToAsync(fileStream);
         }
-
+        var tags = new Dictionary<string, string>()
+        {
+            { "Tag", "Paratext" },
+            { "DataType", "File" }
+        };
         var putObjectArgs = new PutObjectArgs()
             .WithBucket(_bucketName)
             .WithFileName(tmpFile)
+            .WithTagging(new Tagging(tags, true))
             .WithObject(dbParatext.Id.ToString());
         await _minioClient.PutObjectAsync(putObjectArgs);
         //dbParatext.Downloadable = true;

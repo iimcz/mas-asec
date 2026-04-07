@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Minio;
 using Minio.DataModel.Args;
+using Minio.DataModel.Tags;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace asec.Controllers
@@ -75,10 +76,16 @@ namespace asec.Controllers
 
             var processResult = await _processManager.FinishProcessAsync(id);
 
+            var tags = new Dictionary<string, string>()
+            {
+                { "Tag", "Artefact" },
+                { "DataType", "File" }
+            };
             var objectId = Guid.NewGuid();
             var args = new PutObjectArgs()
                 .WithFileName(processResult.Filename)
                 .WithBucket(_minioArtefactBucket)
+                .WithTagging(new Tagging(tags, true))
                 .WithObject(objectId.ToString());
             var artefactObject = await _minioClient.PutObjectAsync(args);
 
