@@ -7,7 +7,7 @@ public record Paratext
     public DateOnly Date { get; set; }
     public string InternalNote { get; set; }
     public string FilledOutBy { get; set; }
-    public Uri WebsiteUrl { get; set; }
+    public string WebsiteUrl { get; set; }
     public uint EmissionSize { get; set; }
     public string IdentificationNumber { get; set; }
     public string ParatextType { get; set; }
