@@ -1,13 +1,16 @@
+using asec.Compatibility.CollectiveAccess.Models;
 using asec.Emulation;
 using asec.LongRunning;
 using asec.Models;
 using asec.Models.Archive;
+using asec.Models.Recording;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Minio;
 using Minio.DataModel.Args;
+using Minio.DataModel.Tags;
 
 namespace asec.Controllers;
 
@@ -68,6 +71,52 @@ public class EmulationController : ControllerBase
             finishRequest.SaveMachineState ? Process.EmulationMessage.SaveMachineState : Process.EmulationMessage.NoSaveMachineState);
         await process.ChannelWriter.WriteAsync(Process.EmulationMessage.Quit);
         var result = await _processManager.FinishProcessAsync(id);
+
+        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.GamePackage>().Include(p => p.Version).FirstOrDefaultAsync(p => p.Id == process.PackageId);
+        if (package == null)
+            return NotFound();
+        var version = package.Version;
+
+        foreach (var videoFile in result.VideoFiles)
+        {
+            if ((videoFile.Type == RecordingType.Screen && finishRequest.KeepScreenRecording) || (videoFile.Type == RecordingType.Webcam && finishRequest.KeepWebcamRecording))
+            {
+                var paratext = new Models.Archive.Paratext()
+                {
+                    Id = Guid.NewGuid(),
+                    ParatextType = "Video recording",
+                    Label = $"{videoFile.Type} recording for emulationId: {emulationId}"
+                };
+
+                var fileInfo = new FileInfo(videoFile.Path);
+
+                var videoRecording = new VideoRecording()
+                {
+                    Id = Guid.NewGuid(),
+                    FileName = $"{emulationId}-{fileInfo.Name}",
+                    Format = "mp4",
+                    FileSize = (uint)fileInfo.Length,
+                    RecordingType = videoFile.Type,
+                    Paratexts = [paratext]
+                };
+
+                var tags = new Dictionary<string, string>()
+                {
+                    { "Tag", "Paratext" },
+                    { "DataType", "MP4 File" }
+                };
+                var putObjectArgs = new PutObjectArgs()
+                    .WithBucket(_paratextBucket)
+                    .WithFileName(videoFile.Path)
+                    .WithTagging(new Tagging(tags, true))
+                    .WithObject(paratext.Id.ToString());
+                await _minioClient.PutObjectAsync(putObjectArgs);
+
+                version?.DigitalObjects.Add(videoRecording);
+                _dbContext.DigitalObjects.Add(videoRecording);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
         
         // TODO: do something with result.SnapshotId...
         // TODO: reimplement saving paratexts due to db model changes...
