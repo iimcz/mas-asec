@@ -2,85 +2,87 @@ namespace asec.Compatibility.CollectiveAccess.Models;
 
 public struct BundleCodes
 {
-    public static readonly string OccurrenceInternalNote          = "ca_occurrences.internal_notes";
-    public static readonly string OccurrenceTypeOfWork            = "ca_occurrences.type_of_work";
-    public static readonly string OccurrenceLabel                 = "ca_occurrences.preferred_labels";
-    public static readonly string OccurrenceId                    = "ca_occurrences.occurrence_id";
-    public static readonly string OccurrenceDescription           = "ca_occurrences.description";
-    public static readonly string OccurrenceSubtitle              = "ca_occurrences.subtitle";
-    public static readonly string OccurrenceSystem                = "ca_occurrences.system";
-    public static readonly string OccurrenceCopyProtection        = "ca_occurrences.copy_protection";
-    public static readonly string OccurrenceCuratorialDescription = "ca_occurrences.description_curatorial";
-    public static readonly string OccurrenceRelLeftId             = "ca_occurrences_x_occurrences.occurrence_left_id";
+    public static readonly string OccurrenceInternalNote           = "ca_occurrences.internal_notes";
+    public static readonly string OccurrenceTypeOfWork             = "ca_occurrences.type_of_work";
+    public static readonly string OccurrenceLabel                  = "ca_occurrences.preferred_labels";
+    public static readonly string OccurrenceId                     = "ca_occurrences.occurrence_id";
+    public static readonly string OccurrenceDescription            = "ca_occurrences.description";
+    public static readonly string OccurrenceSubtitle               = "ca_occurrences.subtitle";
+    public static readonly string OccurrenceSystem                 = "ca_occurrences.system";
+    public static readonly string OccurrenceCopyProtection         = "ca_occurrences.copy_protection";
+    public static readonly string OccurrenceCuratorialDescription  = "ca_occurrences.description_curatorial";
+    public static readonly string OccurrenceRelLeftId              = "ca_occurrences_x_occurrences.occurrence_left_id";
 
-    public static readonly string OccurrenceLanguage              = "ca_occurrences.language";
-    public static readonly string OccurrenceDate                  = "ca_occurrences.date";
-    public static readonly string OccurrenceFilledOutBy           = "ca_occurrences.filled_out_by";
-    public static readonly string OccurrenceEmissionSize          = "ca_occurrences.emission_size";
-    public static readonly string OccurrenceIdentificationNumber  = "ca_occurrences.identification_number_external";
-    public static readonly string OccurrenceParatextType          = "ca_occurrences.paratext_type";
+    public static readonly string OccurrenceLanguage               = "ca_occurrences.language";
+    public static readonly string OccurrenceDate                   = "ca_occurrences.date";
+    public static readonly string OccurrenceFilledOutBy            = "ca_occurrences.filled_out_by";
+    public static readonly string OccurrenceEmissionSize           = "ca_occurrences.emission_size";
+    public static readonly string OccurrenceIdentificationNumber   = "ca_occurrences.identification_number_external";
+    public static readonly string OccurrenceParatextType           = "ca_occurrences.paratext_type";
+    public static readonly string OccurrenceWebsiteUrl             = "ca_occurrences.website_url";
 
-    public static readonly string ObjectLabel                     = "ca_objects.preferred_labels";
-    public static readonly string ObjectDescription               = "ca_objects.description";
-    public static readonly string ObjectDate                      = "ca_objects.date";
-    public static readonly string ObjectInternalNote              = "ca_objects.internal_notes";
-    public static readonly string ObjectFilledOutBy               = "ca_objects.filled_out_by";
-    public static readonly string ObjectPhysicalObjectType        = "ca_objects.physical_object_type";
-    public static readonly string ObjectCountryOfOrigin           = "ca_objects.country_of_origin";
-    public static readonly string ObjectEAN                       = "ca_objects.ean";
-    public static readonly string ObjectISBN                      = "ca_objects.isbn";
-    public static readonly string ObjectCondition                 = "ca_objects.condition";
-    public static readonly string ObjectLocation                  = "ca_objects.location";
-    public static readonly string ObjectSize                      = "ca_objects.size";
-    public static readonly string ObjectOwner                     = "ca_objects.owner";
+    public static readonly string ObjectLabel                      = "ca_objects.preferred_labels";
+    public static readonly string ObjectDescription                = "ca_objects.description";
+    public static readonly string ObjectDate                       = "ca_objects.date";
+    public static readonly string ObjectInternalNote               = "ca_objects.internal_notes";
+    public static readonly string ObjectFilledOutBy                = "ca_objects.filled_out_by";
+    public static readonly string ObjectPhysicalObjectType         = "ca_objects.physical_object_type";
+    public static readonly string ObjectCountryOfOrigin            = "ca_objects.country_of_origin";
+    public static readonly string ObjectEAN                        = "ca_objects.ean";
+    public static readonly string ObjectISBN                       = "ca_objects.isbn";
+    public static readonly string ObjectCondition                  = "ca_objects.condition";
+    public static readonly string ObjectLocation                   = "ca_objects.location";
+    public static readonly string ObjectSize                       = "ca_objects.size";
+    public static readonly string ObjectOwner                      = "ca_objects.owner";
 
 }
 
 public struct BundleNames
 {
-    public static readonly string PreferredLabels = "preferred_labels";
-    public static readonly string DigitalObjectType = "digital_object_type";
-    public static readonly string Format = "format";
-    public static readonly string Quality = "quality";
-    public static readonly string File = "file";
-    public static readonly string FileName = "file_name";
-    public static readonly string FileSize = "file_size";
-    public static readonly string FedoraUrl = "fedora_url";
-    public static readonly string WebsiteUrl = "website_url";
-    public static readonly string InternalNotes = "internal_notes";
+    public static readonly string PreferredLabels                  = "preferred_labels";
+    public static readonly string DigitalObjectType                = "digital_object_type";
+    public static readonly string Format                           = "format";
+    public static readonly string Quality                          = "quality";
+    public static readonly string File                             = "file";
+    public static readonly string FileName                         = "file_name";
+    public static readonly string FileSize                         = "file_size";
+    public static readonly string FedoraUrl                        = "fedora_url";
+    public static readonly string WebsiteUrl                       = "website_url";
+    public static readonly string InternalNotes                    = "internal_notes";
 }
 
 public struct Tables
 {
-    public static readonly string Occurrences = "ca_occurrences";
-    public static readonly string OccurrencesXOccurrences = "ca_occurrences_x_occurrences";
-    public static readonly string Objects = "ca_objects";
+    public static readonly string Occurrences                      = "ca_occurrences";
+    public static readonly string OccurrencesXOccurrences          = "ca_occurrences_x_occurrences";
+    public static readonly string Objects                          = "ca_objects";
 }
 
 public struct Types
 {
-    public static readonly string Work = "work";
-    public static readonly string WorkVersion = "work_version";
-    public static readonly string DigitalObject = "digital_object";
-    public static readonly string PhysicalObject = "physical_object";
-    public static readonly string Paratext = "paratext";
+    public static readonly string Work                             = "work";
+    public static readonly string WorkVersion                      = "work_version";
+    public static readonly string DigitalObject                    = "digital_object";
+    public static readonly string PhysicalObject                   = "physical_object";
+    public static readonly string Paratext                         = "paratext";
 }
 
 public struct RelationTypes
 {
-    public static readonly string WorkManifestWorkVersion = "work_manifestation_workversion";
-    public static readonly string WorkVersionRepresentParatext = "represented_by";
+    public static readonly string WorkManifestWorkVersion          = "work_manifestation_workversion";
+    public static readonly string WorkVersionRepresentParatext     = "represented_by";
     public static readonly string WorkVersionContextualizeParatext = "contextualized_by";
-    public static readonly string ParatextManifestPhysicalObject = "manifestation_of";
+    public static readonly string ParatextManifestPhysicalObject   = "manifestation_of";
 }
 
 public struct SubjectRelationshipTypes
 {
     public static readonly string ManifestationOf = "manifestation_of";
+    public static readonly string Source = "source";
 }
 
 public struct Locales
 {
-    public static readonly string Czech = "cs_CZ";
+    public static readonly string Czech   = "cs_CZ";
     public static readonly string English = "en_US";
 }
