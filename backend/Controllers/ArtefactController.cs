@@ -70,9 +70,8 @@ public class ArtefactController : ControllerBase
             .WithObject(artefact.ObjectId.ToString());
 
         var minioObject = await _minioClient.GetObjectAsync(args);
-        var fileStream = System.IO.File.OpenRead(filename);
+        var fileStream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.DeleteOnClose);
 
-        // TODO: Cleanup file, the OS should clean it since it's in temp files but that might take a while
         return File(fileStream, "application/octet-stream", artefact.FileName);
     }
 
