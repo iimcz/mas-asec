@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 using CAWork = asec.Compatibility.CollectiveAccess.Models.Work;
 using CAWorkVersion = asec.Compatibility.CollectiveAccess.Models.WorkVersion;
+using CAParatext = asec.Compatibility.CollectiveAccess.Models.Paratext;
 
 namespace asec.Controllers;
 
@@ -86,7 +87,171 @@ public class ImportController : ControllerBase
         return await UpdateExistingWork(work, caWork, caVersions, cancellationToken);
     }
 
-    //private async Task<IActionResult> CreateNewVersion()
+    private async Task<Models.Archive.Paratext> CreateNewParatext(CAParatext paratext, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var physicalObject = (await _itemClient.GetPhysicalObjectsForParatext(paratext, cancellationToken)).FirstOrDefault();
+        // physical objects are the last layer, so we don't need another function to handle those.
+
+        return new() {
+            RemoteId = paratext.Id,
+            Label = GetOptionalBundleValue(paratext.Bundles, BundleCodes.ObjectLabel),
+            Language = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceLanguage),
+            Date = DateOnly.Parse(GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceDate)),
+            InternalNote = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceInternalNote),
+            FilledOutBy = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceFilledOutBy),
+            WebsiteUrl = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceWebsiteUrl),
+            EmissionSize = uint.Parse(GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceEmissionSize)),
+            IdentificationNumber = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceIdentificationNumber),
+            ParatextType = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceParatextType),
+
+            PhysicalObject = physicalObject != null ? new() {
+                RemoteId = physicalObject.Id,
+                Label = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectLabel),
+                Description = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectDescription),
+                Date = DateOnly.Parse(GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectDate)),
+                InternalNote = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectInternalNote),
+                FilledOutBy = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectFilledOutBy),
+                PhysicalObjectType = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectPhysicalObjectType),
+                CountryOfOrigin = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectCountryOfOrigin),
+                EAN = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectEAN),
+                ISBN = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectISBN),
+                Condition = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectCondition),
+                Location = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectLocation),
+                Size = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectSize),
+                Owner = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectOwner)
+            } : null
+        };
+    }
+
+    private async Task UpdateExistingParatext(Models.Archive.Paratext dbParatext, CAParatext paratext, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var physicalObject = (await _itemClient.GetPhysicalObjectsForParatext(paratext, cancellationToken)).FirstOrDefault();
+        if (dbParatext.PhysicalObject == null)
+            await _dbContext.Entry(dbParatext).Reference(p => p.PhysicalObject).LoadAsync();
+
+        
+        dbParatext.Label = GetOptionalBundleValue(paratext.Bundles, BundleCodes.ObjectLabel);
+        dbParatext.Language = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceLanguage);
+        dbParatext.Date = DateOnly.Parse(GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceDate));
+        dbParatext.InternalNote = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceInternalNote);
+        dbParatext.FilledOutBy = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceFilledOutBy);
+        dbParatext.WebsiteUrl = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceWebsiteUrl);
+        dbParatext.EmissionSize = uint.Parse(GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceEmissionSize));
+        dbParatext.IdentificationNumber = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceIdentificationNumber);
+        dbParatext.ParatextType = GetOptionalBundleValue(paratext.Bundles, BundleCodes.OccurrenceParatextType);
+        dbParatext.ImportedAt = DateTime.Now;
+
+
+        if (dbParatext.PhysicalObject == null && physicalObject != null)
+        {
+            dbParatext.PhysicalObject = new() {
+                RemoteId = physicalObject.Id,
+                Label = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectLabel),
+                Description = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectDescription),
+                Date = DateOnly.Parse(GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectDate)),
+                InternalNote = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectInternalNote),
+                FilledOutBy = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectFilledOutBy),
+                PhysicalObjectType = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectPhysicalObjectType),
+                CountryOfOrigin = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectCountryOfOrigin),
+                EAN = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectEAN),
+                ISBN = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectISBN),
+                Condition = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectCondition),
+                Location = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectLocation),
+                Size = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectSize),
+                Owner = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectOwner)
+            };
+        }
+        else if (dbParatext.PhysicalObject != null && physicalObject != null)
+        {
+            dbParatext.PhysicalObject.RemoteId = physicalObject.Id;
+            dbParatext.PhysicalObject.Label = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectLabel);
+            dbParatext.PhysicalObject.Description = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectDescription);
+            dbParatext.PhysicalObject.Date = DateOnly.Parse(GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectDate));
+            dbParatext.PhysicalObject.InternalNote = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectInternalNote);
+            dbParatext.PhysicalObject.FilledOutBy = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectFilledOutBy);
+            dbParatext.PhysicalObject.PhysicalObjectType = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectPhysicalObjectType);
+            dbParatext.PhysicalObject.CountryOfOrigin = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectCountryOfOrigin);
+            dbParatext.PhysicalObject.EAN = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectEAN);
+            dbParatext.PhysicalObject.ISBN = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectISBN);
+            dbParatext.PhysicalObject.Condition = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectCondition);
+            dbParatext.PhysicalObject.Location = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectLocation);
+            dbParatext.PhysicalObject.Size = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectSize);
+            dbParatext.PhysicalObject.Owner = GetOptionalBundleValue(physicalObject.Bundles, BundleCodes.ObjectOwner);
+        }
+        else if (dbParatext.PhysicalObject != null && physicalObject == null)
+        {
+            dbParatext.PhysicalObject.Deleted = true;
+        }
+    }
+
+    private async Task<Models.Archive.WorkVersion> CreateNewVersion(CAWorkVersion version, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var paratexts = await _itemClient.GetParatextsForVersion(version, cancellationToken);
+        var paratextTasks = paratexts.Select(async pt => await CreateNewParatext(pt, cancellationToken));
+        await Task.WhenAll(paratextTasks);
+
+        return new() {
+            RemoteId = version.Id,
+            Label = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceLabel),
+            Description = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceDescription),
+            Subtitle = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceSubtitle),
+            System = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceSystem),
+            CopyProtection = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceCopyProtection),
+            CuratorialDescription = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceCuratorialDescription),
+            InternalNote = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceInternalNote),
+
+            Paratexts = new List<Models.Archive.Paratext>(paratextTasks.Select(pt => pt.Result))
+        };
+    }
+
+    private async Task UpdateExistingVersion(Models.Archive.WorkVersion dbVersion, CAWorkVersion version, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (dbVersion.Paratexts == null)
+            await _dbContext.Entry(dbVersion).Collection(v => v.Paratexts).LoadAsync();
+        if (dbVersion.Paratexts == null)
+            dbVersion.Paratexts = new List<Models.Archive.Paratext>();
+
+        dbVersion.Label = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceLabel);
+        dbVersion.Description = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceDescription);
+        dbVersion.Subtitle = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceSubtitle);
+        dbVersion.System = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceSystem);
+        dbVersion.CopyProtection = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceCopyProtection);
+        dbVersion.CuratorialDescription = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceCuratorialDescription);
+        dbVersion.InternalNote = GetOptionalBundleValue(version.Bundles, BundleCodes.OccurrenceInternalNote);
+
+        dbVersion.ImportedAt = DateTime.Now;
+
+        var paratexts = await _itemClient.GetParatextsForVersion(version, cancellationToken);
+        
+        var remoteIds = paratexts.Select(p => p.Id).ToHashSet();
+        var importedIds = dbVersion.Paratexts.Select(p => p.RemoteId).ToHashSet();
+
+        var deletedParatexts = dbVersion.Paratexts.Where(p => !remoteIds.Contains(p.RemoteId));
+        foreach (var paratext in deletedParatexts)
+        {
+            // It is possible a paratext is created by us and not yet exported into CA.
+            // In that case, do not mark it as deleted - it was not in CA in the first place.
+            if (paratext.RemoteId < 0)
+                continue;
+            paratext.Deleted = true;
+        }
+
+        var newParatexts = paratexts.Where(p => !importedIds.Contains(p.Id));
+        foreach (var paratext in newParatexts)
+        {
+            dbVersion.Paratexts.Add(await CreateNewParatext(paratext, cancellationToken));
+        }
+
+        var updatedParatexts = paratexts.Where(p => importedIds.Contains(p.Id)).ToDictionary(p => p.Id);
+        foreach (var paratext in dbVersion.Paratexts)
+        {
+            var caParatext = updatedParatexts.GetValueOrDefault(paratext.RemoteId);
+            if (caParatext == null)
+                continue;
+
+            await UpdateExistingParatext(paratext, caParatext, cancellationToken);
+        }
+    }
 
     private async Task<IActionResult> UpdateExistingWork(Models.Archive.Work dbWork, CAWork work, IList<CAWorkVersion> versions, CancellationToken cancellationToken = default(CancellationToken))
     {
@@ -107,18 +272,7 @@ public class ImportController : ControllerBase
         var newVersions = versions.Where(v => !importedIds.Contains(v.Id));
         foreach (var caWorkVersion in newVersions)
         {
-            dbWork.WorkVersions.Append(
-                new() {
-                    RemoteId = caWorkVersion.Id,
-                    Label = GetOptionalBundleValue(caWorkVersion.Bundles, BundleCodes.OccurrenceLabel),
-                    Description = GetOptionalBundleValue(caWorkVersion.Bundles, BundleCodes.OccurrenceDescription),
-                    Subtitle = GetOptionalBundleValue(caWorkVersion.Bundles, BundleCodes.OccurrenceSubtitle),
-                    System = GetOptionalBundleValue(caWorkVersion.Bundles, BundleCodes.OccurrenceSystem),
-                    CopyProtection = GetOptionalBundleValue(caWorkVersion.Bundles, BundleCodes.OccurrenceCopyProtection),
-                    CuratorialDescription = GetOptionalBundleValue(caWorkVersion.Bundles, BundleCodes.OccurrenceCuratorialDescription),
-                    InternalNote = GetOptionalBundleValue(caWorkVersion.Bundles, BundleCodes.OccurrenceInternalNote)
-                }
-            );
+            dbWork.WorkVersions.Add(await CreateNewVersion(caWorkVersion));
         }
 
         var updatedVersions = versions.Where(v => importedIds.Contains(v.Id)).ToDictionary(v => v.Id);
@@ -128,13 +282,7 @@ public class ImportController : ControllerBase
             if (caVersion == null)
                 continue;
 
-            workVersion.Label = GetOptionalBundleValue(caVersion.Bundles, BundleCodes.OccurrenceLabel);
-            workVersion.Description = GetOptionalBundleValue(caVersion.Bundles, BundleCodes.OccurrenceDescription);
-            workVersion.Subtitle = GetOptionalBundleValue(caVersion.Bundles, BundleCodes.OccurrenceSubtitle);
-            workVersion.System = GetOptionalBundleValue(caVersion.Bundles, BundleCodes.OccurrenceSystem);
-            workVersion.CopyProtection = GetOptionalBundleValue(caVersion.Bundles, BundleCodes.OccurrenceCopyProtection);
-            workVersion.CuratorialDescription = GetOptionalBundleValue(caVersion.Bundles, BundleCodes.OccurrenceCuratorialDescription);
-            workVersion.InternalNote = GetOptionalBundleValue(caVersion.Bundles, BundleCodes.OccurrenceInternalNote);
+            await UpdateExistingVersion(workVersion, caVersion, cancellationToken);
         }
 
         await _dbContext.SaveChangesAsync();
@@ -147,18 +295,9 @@ public class ImportController : ControllerBase
         _logger.LogInformation("Importing new work, ID: {0}, including {1} versions.", work.Id, versions.Count);
 
         var dbVersions = new List<Models.Archive.WorkVersion>();
-        dbVersions.AddRange(
-        versions.Select(wv => new Models.Archive.WorkVersion() {
-                RemoteId = wv.Id,
-                Label = GetOptionalBundleValue(wv.Bundles, BundleCodes.OccurrenceLabel),
-                Description = GetOptionalBundleValue(wv.Bundles, BundleCodes.OccurrenceDescription),
-                Subtitle = GetOptionalBundleValue(wv.Bundles, BundleCodes.OccurrenceSubtitle),
-                System = GetOptionalBundleValue(wv.Bundles, BundleCodes.OccurrenceSystem),
-                CopyProtection = GetOptionalBundleValue(wv.Bundles, BundleCodes.OccurrenceCopyProtection),
-                CuratorialDescription = GetOptionalBundleValue(wv.Bundles, BundleCodes.OccurrenceCuratorialDescription),
-                InternalNote = GetOptionalBundleValue(wv.Bundles, BundleCodes.OccurrenceInternalNote)
-            })
-        );
+        var versionTasks = versions.Select(async wv => await CreateNewVersion(wv, cancellationToken));
+        await Task.WhenAll(versionTasks);
+        dbVersions.AddRange(versionTasks.Select(vt => vt.Result));
 
         var dbWork = new Models.Archive.Work() {
             RemoteId = work.Id,

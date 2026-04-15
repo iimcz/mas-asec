@@ -30,7 +30,11 @@ public class ExportController : ControllerBase
     public async Task<IActionResult> ExportArtefact(string id, CancellationToken cancellationToken = default(CancellationToken))
     {
         var guid = Guid.Parse(id);
-        var artefact = _dbContext.DigitalObjects.Include(d => d.WorkVersions).OfType<Artefact>().FirstOrDefault(a => a.Id == guid);
+        var artefact = _dbContext.DigitalObjects
+            .Include(d => d.WorkVersions)
+            .Include(d => d.PhysicalObject)
+            .OfType<Artefact>()
+            .FirstOrDefault(a => a.Id == guid);
         if (artefact == null)
         {
             return NotFound();
