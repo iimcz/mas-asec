@@ -3,7 +3,6 @@ using asec.Models;
 using asec.Models.Digitalization;
 using asec.Upload;
 using asec.ViewModels;
-using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
