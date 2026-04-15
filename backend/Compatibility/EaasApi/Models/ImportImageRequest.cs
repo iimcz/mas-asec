@@ -1,8 +1,8 @@
 namespace asec.Compatibility.EaasApi.Models;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming rule violation", "IDE1006")]
-public record Drive(
-    string id,
-    DriveDataSource data,
-    bool bootable = false
+public record ImportImageRequest(
+    string url,
+    string label,
+    string imageType = "USER"
 );
