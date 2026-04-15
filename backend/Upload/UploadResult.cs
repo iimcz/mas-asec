@@ -3,7 +3,6 @@
 namespace asec.Upload
 {
     public record UploadResult(
-        string Filename,
-        ArtefactType Type
+        string Filename
     );
 }

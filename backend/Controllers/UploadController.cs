@@ -11,7 +11,6 @@ using Microsoft.Net.Http.Headers;
 using Minio;
 using Minio.DataModel.Args;
 using Minio.DataModel.Tags;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace asec.Controllers
 {
@@ -56,7 +55,9 @@ namespace asec.Controllers
 
             var boundary = HeaderUtilities.RemoveQuotes(MediaTypeHeaderValue.Parse(Request.ContentType).Boundary).Value;
             var process = new Process(version, paratext, _uploadPath, boundary, Request.Body);
-            _processManager.StartProcess(process);
+
+            // This has to be here otherwise kestrel will dispose of the stream
+            await _processManager.StartProcessAsync(process);
 
             return Ok(UploadProcess.FromProcess(process));
         }
@@ -70,7 +71,7 @@ namespace asec.Controllers
         /// <returns>The created artefact</returns>
         [HttpPost("{processId}/finalize")]
         [Produces(typeof(ViewModels.Artefact))]
-        public async Task<IActionResult> FInalizeArtefactUpload(string processId, [FromBody] ViewModels.Artefact artefact)
+        public async Task<IActionResult> FinalizeArtefactUpload(string processId, [FromBody] ViewModels.Artefact artefact)
         {
             var id = Guid.Parse(processId);
             var process = _processManager.GetProcess(id);
@@ -106,6 +107,8 @@ namespace asec.Controllers
 
             await _dbContext.DigitalObjects.AddAsync(dbArtefact);
             await _dbContext.SaveChangesAsync();
+
+            await process.Cleanup();
             _processManager.RemoveProcess(process);
 
             return Ok(ViewModels.Artefact.FromDBEntity(dbArtefact));

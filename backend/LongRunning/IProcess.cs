@@ -1,6 +1,3 @@
-using System.Threading.Channels;
-using Microsoft.AspNetCore.Components.Web;
-
 namespace asec.LongRunning;
 
 public interface IProcess<TResult>
@@ -15,4 +12,5 @@ public interface IProcess<TResult>
     string StatusDetail { get; }
 
     Task<TResult> Start(CancellationToken cancellationToken);
+    Task Cleanup(CancellationToken cancellationToken = default);
 }

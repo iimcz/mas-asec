@@ -4,6 +4,7 @@ public interface IProcessManager<TProcess, TResult> : IHostedService where TProc
 {
     TProcess GetProcess(Guid processId);
     void StartProcess(TProcess process);
+    Task<TResult> StartProcessAsync(TProcess process);
     Task CancelProcessAsync(Guid processId);
     Task<TResult> FinishProcessAsync(Guid processId);
     void RemoveProcess(TProcess process);

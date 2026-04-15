@@ -1,7 +1,5 @@
 ﻿using asec.LongRunning;
-using asec.Models.Digitalization;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Net.Http.Headers;
 
 namespace asec.Upload
 {
@@ -27,11 +25,7 @@ namespace asec.Upload
             ParatextId = paratext?.Id ?? Guid.Empty;
 
             Boundary = boundary;
-
-            var hackMem = new MemoryStream();
-            fileStream.CopyToAsync(hackMem).Wait();
-            hackMem.Position = 0;
-            FileStream = hackMem;
+            FileStream = fileStream;
 
             BaseDir = Path.Combine(dirsBase, Id.ToString());
             LogPath = Path.Combine(BaseDir, "log.txt");
@@ -43,12 +37,12 @@ namespace asec.Upload
         {
             StartTime = DateTime.Now;
             CancellationToken = cancellationToken;
+
             Status = ProcessStatus.Running;
             var path = await SaveMultipartStream();
             Status = ProcessStatus.Success;
 
-            // TODO: The type is ignored for and set during finalize as it's user input
-            return new(path, ArtefactType.ZipArchive);
+            return new(path);
         }
 
         private async Task<string> SaveMultipartStream()
@@ -56,36 +50,33 @@ namespace asec.Upload
             var reader = new MultipartReader(Boundary, FileStream);
             var path = "";
             MultipartSection section;
-            long totalBytesRead = 0;
 
             while ((section = await reader.ReadNextSectionAsync(CancellationToken)) != null)
             {
-                var contentDisposition = section.GetContentDispositionHeader();
-                if (contentDisposition != null && contentDisposition.IsFileDisposition())
-                {
-                    path = contentDisposition.FileName.ToString();
-                    // TODO: Splitting files in multiple is not common, if we want to do this for some reason we need to discuss it
-                    using FileStream output = new FileStream(
-                        path: path,
-                        mode: FileMode.Create,
-                        access: FileAccess.Write,
-                        share: FileShare.None,
-                        bufferSize: BufferSize,
-                        useAsync: true
-                    );
+                var fileSection = section.AsFileSection();
+                if (fileSection == null) continue;
 
-                    await section.Body.CopyToAsync(output, CancellationToken);
-                    totalBytesRead += section.Body.Length;
-                }
-                else if (contentDisposition != null && contentDisposition.IsFormDisposition())
-                {
-                    string key = contentDisposition.Name.Value!;
-                    using var streamReader = new StreamReader(section.Body);
-                    string value = await streamReader.ReadToEndAsync(CancellationToken);
-                }
+                path = Path.Combine(BaseDir, fileSection.FileName);
+
+                using FileStream output = new(
+                    path: path,
+                    mode: FileMode.Create,
+                    access: FileAccess.Write,
+                    share: FileShare.None,
+                    bufferSize: BufferSize,
+                    useAsync: true
+                );
+
+                await section.Body.CopyToAsync(output, CancellationToken);
             }
 
             return path;
+        }
+
+        public Task Cleanup(CancellationToken cancellationToken = default)
+        {
+            Directory.Delete(BaseDir, true);
+            return Task.CompletedTask;
         }
     }
 }

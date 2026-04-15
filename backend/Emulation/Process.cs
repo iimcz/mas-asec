@@ -328,6 +328,11 @@ public class Process : IProcess<EmulationResult>
         }
     }
 
+    public Task Cleanup(CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
     // TODO: There might be a better way to handle the finish request
     // other than just sending four messages to set up the right situation in sequence.
     public enum EmulationMessage

@@ -43,6 +43,15 @@ public class ProcessManager<TProcess, TResult> : IProcessManager<TProcess, TResu
         _processes.Add(process.Id, new(process, tokenSource, processTask));
     }
 
+    public async Task<TResult> StartProcessAsync(TProcess process)
+    {
+        var tokenSource = new CancellationTokenSource();
+        var processTask = process.Start(tokenSource.Token);
+
+        _processes.Add(process.Id, new(process, tokenSource, processTask));
+        return await processTask;
+    }
+
     public void RemoveProcess(TProcess process)
     {
         if (!_processes.ContainsKey(process.Id))

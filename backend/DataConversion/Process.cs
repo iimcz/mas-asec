@@ -68,6 +68,11 @@ public class Process : IProcess<ConversionResult>
         return Converter.Start(this, cancellationToken);
     }
 
+    public Task Cleanup(CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
     private void CreateDirectoryStructure()
     {
         // Unnecessary in the current setup but for completeness

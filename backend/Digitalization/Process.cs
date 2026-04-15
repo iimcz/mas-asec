@@ -69,7 +69,12 @@ public class Process : IProcess<DigitalizationResult>
         CancellationToken = cancellationToken;
         return DigitalizationTool.Start(this, cancellationToken);
     }
-    
+
+    public Task Cleanup(CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
     private void CreateDirectoryStructure()
     {
         // Unnecessary in the current setup but for completeness
