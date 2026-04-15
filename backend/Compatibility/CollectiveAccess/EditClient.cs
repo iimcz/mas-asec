@@ -39,6 +39,16 @@ public class EditClient : BaseCollectiveAccessClient
                 wv.RemoteId
             )
         ).ToList() ?? new List<SubjectRelationship>();
+        var allRelationships = workVersionRelationships;
+        if (digitalObject.PhysicalObject != null)
+        {
+            var physicalObjectRelationship = new SubjectRelationship(
+                SubjectRelationshipTypes.Source,
+                Tables.Objects,
+                digitalObject.PhysicalObject.RemoteId
+            );
+            allRelationships.Add(physicalObjectRelationship);
+        }
 
         // Since CollectiveAccess idno is only 30 chars long, modify our UUID to fit.
         var idno = new ShortGuid(digitalObject.Id).ToString();
@@ -93,7 +103,7 @@ public class EditClient : BaseCollectiveAccessClient
                         digitalObject.FedoraUrl
                     )
                 },
-                Relationships = workVersionRelationships
+                Relationships = allRelationships
             }
         };
 
