@@ -72,6 +72,8 @@ public class FloppyConverter : IConverter
         ArtefactType.SfmFloppy
     };
 
+    public bool UseDiskImage => false;
+
     public async Task<ConversionResult> Start(Process process, CancellationToken cancellationToken)
     {
         if (process.Artefacts.Any(a => a.Type != ArtefactType.SfmFloppy))

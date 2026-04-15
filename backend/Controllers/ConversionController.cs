@@ -1,13 +1,14 @@
-using asec.LongRunning;
-using asec.DataConversion;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using asec.ViewModels;
-using asec.Emulation;
-using asec.Models;
 using Microsoft.EntityFrameworkCore;
 using asec.Compatibility.EaasApi;
 using asec.Compatibility.EaasApi.Models;
 using asec.Models.Digitalization;
+using asec.LongRunning;
+using asec.DataConversion;
+using asec.ViewModels;
+using asec.Emulation;
+using asec.Models;
 
 namespace asec.Controllers;
 
@@ -30,6 +31,7 @@ public class ConversionController : ControllerBase
 
     // EaaS clients
     private readonly ObjectRepositoryClient _eaasObjectRepoClient;
+    private readonly EnvironmentRepositoryClient _eaasEnvironmentRepoClient;
     private readonly EaasUploadClient _eaasUploadClient;
 
     public ConversionController(
@@ -40,7 +42,8 @@ public class ConversionController : ControllerBase
         IServiceScopeFactory serviceScopeFactory,
         IConfiguration config,
         EaasUploadClient eaasUploadClient,
-        ObjectRepositoryClient eaasObjectRepositoryClient)
+        ObjectRepositoryClient eaasObjectRepositoryClient,
+        EnvironmentRepositoryClient eaasEnvironmentRepoClient)
     {
         _logger = logger;
         _dbContext = dbContext;
@@ -50,6 +53,7 @@ public class ConversionController : ControllerBase
 
         _eaasUploadClient = eaasUploadClient;
         _eaasObjectRepoClient = eaasObjectRepositoryClient;
+        _eaasEnvironmentRepoClient = eaasEnvironmentRepoClient;
 
         var section = config.GetSection("Conversion");
         _unzipBinary = section.GetValue<string>("UnzipBinary");
@@ -110,30 +114,19 @@ public class ConversionController : ControllerBase
         var result = await _processManager.FinishProcessAsync(process.Id);
         _processManager.RemoveProcess(process);
 
-        // TODO: do better error checking
-        var eaasUploadTasks = result.Files.Select(f => _eaasUploadClient.Upload(f.Filename, cancellationToken));
-        var eaasUploadResponses = await Task.WhenAll(eaasUploadTasks);
-        if (!eaasUploadResponses.All(r => r.status == "0"))
+        string eaasId = null;
+        if (process.Converter.UseDiskImage)
         {
-            _logger.LogError("Failed to upload some objects to EaaS:");
-            foreach (var resp in eaasUploadResponses)
-                _logger.LogError("{}", resp);
+            var diskImagePath = await CreateDiskImageFromFiles(result.Files, package.Name, cancellationToken);
+            eaasId = await UploadImageToEaaS(diskImagePath, package.Name, cancellationToken);
+        }
+        else
+        {
+            eaasId = await UploadFilesToEaaS(result.Files, DeviceIdFromType(process.Artefacts[0].Type), package.Name, cancellationToken);
         }
 
-        // TODO: use a proper file format (ImportFileInfo.fileFmt)
-        var importObjects = eaasUploadResponses.SelectMany(
-            r => r.uploadedItemList
-        ).Select(
-            uploaded => new ImportFileInfo(uploaded.url, DeviceIdFromType(process.Artefacts[0].Type), string.Empty, uploaded.filename)
-        ).ToList();
-
-        // TODO: better label?
-        var eaasObjectId = await _eaasObjectRepoClient.ImportObjects(new(
-            $"converted[{process.Id}]",
-            importObjects
-        ), cancellationToken);
-        if (eaasObjectId == null)
-            throw new ApplicationException("Failed to import objects into EaaS.");
+        if (eaasId == null)
+            throw new ApplicationException("Failed to import objects or image into EaaS.");
 
         var artefactIds = process.Artefacts.Select(a => a.Id).ToList();
         var version = await _dbContext.WorkVersions
@@ -141,7 +134,8 @@ public class ConversionController : ControllerBase
             .FirstOrDefaultAsync(v => v.Id == process.VersionId);
 
         var dbGamePackage = new Models.Emulation.GamePackage() {
-            ObjectId = eaasObjectId,
+            ObjectId = eaasId,
+            IsDiskImage = process.Converter.UseDiskImage,
             Name = package.Name,
             ConversionDate = process.StartTime,
             Converter = await _dbContext.Converters.FindAsync(process.Converter.Id),
@@ -256,5 +250,92 @@ public class ConversionController : ControllerBase
         // is supported by QEMU and wouldn't allow differently formatted floppies
         // for different platforms/emulators.
         return DeviceID.Files;
+    }
+
+    private async Task<string> UploadImageToEaaS(string diskImagePath, string name, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var eaasUploadResponse = await _eaasUploadClient.Upload(diskImagePath, cancellationToken);
+        if (eaasUploadResponse.status != "0")
+        {
+            _logger.LogError("Failed to upload disk image to EaaS:");
+            _logger.LogError("{}", eaasUploadResponse);
+        }
+
+        var importImage = new ImportImageRequest(
+            eaasUploadResponse.uploadedItemList[0].url, name
+        );
+
+        var eaasImageId = await _eaasEnvironmentRepoClient.ImportImage(importImage, cancellationToken);
+        return eaasImageId;
+    }
+
+    private async Task<string> UploadFilesToEaaS(IList<ConvertedFile> files, string deviceId, string name, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        // TODO: do better error checking
+        var eaasUploadTasks = files.Select(f => _eaasUploadClient.Upload(f.Filename, cancellationToken));
+        var eaasUploadResponses = await Task.WhenAll(eaasUploadTasks);
+        if (!eaasUploadResponses.All(r => r.status == "0"))
+        {
+            _logger.LogError("Failed to upload some objects to EaaS:");
+            foreach (var resp in eaasUploadResponses)
+                _logger.LogError("{}", resp);
+        }
+
+        // TODO: use a proper file format (ImportFileInfo.fileFmt)
+        var importObjects = eaasUploadResponses.SelectMany(
+            r => r.uploadedItemList
+        ).Select(
+            uploaded => new ImportFileInfo(uploaded.url, deviceId, string.Empty, uploaded.filename)
+        ).ToList();
+
+        var eaasObjectId = await _eaasObjectRepoClient.ImportObjects(new(
+            name,
+            importObjects
+        ), cancellationToken);
+
+        return eaasObjectId;
+    }
+
+    private async Task<string> CreateDiskImageFromFiles(IList<ConvertedFile> files, string name, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        // TODO: for now, this will only work on linux due to the filesystem used and the availability of the tools.
+        // In the future, this could be extended to be at least configurable, maybe include some tool checks somewhere
+        // and maybe have a version for other platforms as well.
+        var imagePath = Path.Join(_conversionDirsBase, name + ".img");
+        var mountPath = Path.Join(_conversionDirsBase, name + "_mounted");
+        Directory.CreateDirectory(mountPath);
+
+        var imageSize = files.Select(f => new FileInfo(f.Filename).Length).Sum();
+        imageSize /= 1024;
+        imageSize += 50; // Padding. TODO: separate info configuration variable
+
+        await RunLoggedProcess("dd", $"if=/dev/zero of='{imagePath}' bs=1M count={imageSize}");
+        await RunLoggedProcess("mkfs", $"-f ext4 -F '{imagePath}'");
+        await RunLoggedProcess("fuse2fs", $"'{imagePath}' '{mountPath}'");
+
+        foreach (var file in files)
+        {
+            System.IO.File.Move(file.Filename, Path.Join(mountPath, Path.GetFileName(file.Filename)));
+        }
+
+        await RunLoggedProcess("fusermount", $"-u '{mountPath}'");
+        Directory.Delete(mountPath);
+
+        return imagePath;
+    }
+
+    private async Task RunLoggedProcess(string app, string arguments)
+    {
+        var process = System.Diagnostics.Process.Start(new ProcessStartInfo {
+            FileName = app,
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        });
+        if (process == null)
+            throw new ApplicationException($"Failed to run {app}!");
+        await process.WaitForExitAsync();
+        _logger.LogWarning(process.StandardError.ReadToEnd());
+        _logger.LogInformation(process.StandardOutput.ReadToEnd());
     }
 }

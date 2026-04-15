@@ -33,6 +33,8 @@ public class CopyConverter : IConverter
         ArtefactType.ZipArchive
     };
 
+    public bool UseDiskImage => true;
+
     private CopyConverterConfig _config;
 
     public CopyConverter(CopyConverterConfig config)

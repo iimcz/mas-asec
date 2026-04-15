@@ -39,6 +39,8 @@ public class AudioTapeConverter : IConverter
         ArtefactType.WavAudio
     };
 
+    public bool UseDiskImage => false;
+
     private AudioTapeConverterConfig _config;
 
     public AudioTapeConverter(AudioTapeConverterConfig config)

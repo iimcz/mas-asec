@@ -10,6 +10,7 @@ public interface IConverter
     string Version { get; }
     string Environment { get; }
     IList<ArtefactType> SupportedArtefactTypes { get; }
+    bool UseDiskImage { get; }
 
     Task<ConversionResult> Start(Process process, CancellationToken cancellationToken);
     bool EqualsToDB(Converter converter)
