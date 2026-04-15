@@ -23,7 +23,8 @@ public class GamePackageController : ControllerBase
     private readonly string _mainDisplay;
     private readonly string _emulationStreamBaseUrl;
     private readonly string _webcamDevice;
-    private readonly string _eaasDrive;
+    private readonly string _eaasOpticalDrive;
+    private readonly string _eaasDiskDrive;
 
     public GamePackageController(IConfiguration configuration, AsecDBContext dbContext, IServiceScopeFactory serviceScopeFactory, IProcessManager<Process, EmulationResult> processManager)
     {
@@ -37,7 +38,8 @@ public class GamePackageController : ControllerBase
         _mainDisplay = section.GetValue<string>("MainDisplay");
         _emulationStreamBaseUrl = section.GetValue<string>("StreamOutBaseUrl");
         _webcamDevice = section.GetValue<string>("WebcamDevice");
-        _eaasDrive = section.GetValue<string>("EaasDrive");
+        _eaasOpticalDrive = section.GetValue<string>("EaasOpticalDrive");
+        _eaasDiskDrive = section.GetValue<string>("EaasDiskDrive");
     }
 
     /// <summary>
@@ -106,7 +108,8 @@ public class GamePackageController : ControllerBase
             MainDisplay = _mainDisplay,
             StreamBaseUrl = _emulationStreamBaseUrl,
             WebcamDevice = _webcamDevice,
-            EaasTargetDrive = _eaasDrive
+            EaasTargetDrive = package.IsDiskImage ? _eaasDiskDrive : _eaasOpticalDrive,
+            IsDiskDrive = package.IsDiskImage
         };
         var process = new Process(
             package.Id,

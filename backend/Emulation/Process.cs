@@ -23,6 +23,7 @@ public class EmulationConfig
     public string WebcamDevice;
     public string EaasTargetDrive;
     public string StreamBaseUrl;
+    public bool IsDiskDrive;
 }
 
 
@@ -111,12 +112,14 @@ public class Process : IProcess<EmulationResult>
             return new EmulationResult(null, String.Empty);
         }
 
+        DriveDataSource dataSource = _config.IsDiskDrive ? new ImageDataSource(package.ObjectId) : new ObjectDataSource(package.ObjectId);
+
         logWriter.WriteLine($"Starting EaaS package ID: {package.Environment.EaasId}");
         var componentsClient = scope.ServiceProvider.GetRequiredService<ComponentsClient>();
         var runningComponent = await componentsClient.StartComponent(new MachineComponentRequest(
             package.Environment.EaasId,
             new List<Drive>() {
-                new Drive(_config.EaasTargetDrive, new ObjectDataSource(package.ObjectId))
+                new Drive(_config.EaasTargetDrive, dataSource)
             }
             ));
         var cachedState = await componentsClient.GetComponentState(runningComponent.id);
