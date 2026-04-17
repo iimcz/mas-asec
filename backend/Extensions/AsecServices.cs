@@ -33,6 +33,7 @@ public static class IServiceCollectionExtensions
         // EaaS clients
         services.AddScoped<EaasUploadClient>();
         services.AddScoped<ObjectRepositoryClient>();
+        services.AddScoped<EnvironmentRepositoryClient>();
         services.AddScoped<ComponentsClient>();
 
         // CollectiveAccess clients

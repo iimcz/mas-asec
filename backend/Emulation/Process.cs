@@ -112,7 +112,7 @@ public class Process : IProcess<EmulationResult>
             return new EmulationResult(null, String.Empty);
         }
 
-        DriveDataSource dataSource = _config.IsDiskDrive ? new ImageDataSource(package.ObjectId) : new ObjectDataSource(package.ObjectId);
+        object dataSource = _config.IsDiskDrive ? new ImageDataSource(package.ObjectId) : new ObjectDataSource(package.ObjectId);
 
         logWriter.WriteLine($"Starting EaaS package ID: {package.Environment.EaasId}");
         var componentsClient = scope.ServiceProvider.GetRequiredService<ComponentsClient>();

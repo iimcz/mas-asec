@@ -306,32 +306,35 @@ public class ConversionController : ControllerBase
         Directory.CreateDirectory(mountPath);
 
         var imageSize = files.Select(f => new FileInfo(f.Filename).Length).Sum();
-        imageSize /= 1024;
-        imageSize += 50; // Padding. TODO: separate info configuration variable
+        imageSize /= 1024 * 1024;
+        imageSize *= 2; // Padding. TODO: separate info configuration variable
 
-        await RunLoggedProcess("dd", $"if=/dev/zero of='{imagePath}' bs=1M count={imageSize}");
-        await RunLoggedProcess("mkfs", $"-f ext4 -F '{imagePath}'");
-        await RunLoggedProcess("fuse2fs", $"'{imagePath}' '{mountPath}'");
+        await RunLoggedProcess("dd", [ "if=/dev/zero", $"of={imagePath}", "bs=1M", $"count={imageSize}" ]);
+        await RunLoggedProcess("mkfs", [ "-t", "ext4", "-F", imagePath, "-E", "root_owner" ]);
+        await RunLoggedProcess("fuse2fs", [ imagePath, mountPath ]);
 
         foreach (var file in files)
         {
             System.IO.File.Move(file.Filename, Path.Join(mountPath, Path.GetFileName(file.Filename)));
         }
 
-        await RunLoggedProcess("fusermount", $"-u '{mountPath}'");
+        await RunLoggedProcess("fusermount", [ "-u", mountPath ]);
         Directory.Delete(mountPath);
 
         return imagePath;
     }
 
-    private async Task RunLoggedProcess(string app, string arguments)
+    private async Task RunLoggedProcess(string app, IList<string> arguments)
     {
-        var process = System.Diagnostics.Process.Start(new ProcessStartInfo {
+        var startInfo = new ProcessStartInfo() {
             FileName = app,
-            Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-        });
+        };
+        foreach (var arg in arguments)
+            startInfo.ArgumentList.Add(arg);
+
+        var process = System.Diagnostics.Process.Start(startInfo);
         if (process == null)
             throw new ApplicationException($"Failed to run {app}!");
         await process.WaitForExitAsync();

@@ -85,7 +85,8 @@ public class EmulationController : ControllerBase
                 {
                     Id = Guid.NewGuid(),
                     ParatextType = "Video recording",
-                    Label = $"{videoFile.Type} recording for emulationId: {emulationId}"
+                    Label = $"{videoFile.Type} recording for emulationId: {emulationId}",
+                    CanExport = true
                 };
 
                 var fileInfo = new FileInfo(videoFile.Path);
@@ -112,7 +113,7 @@ public class EmulationController : ControllerBase
                     .WithObject(paratext.Id.ToString());
                 await _minioClient.PutObjectAsync(putObjectArgs);
 
-                version?.DigitalObjects.Add(videoRecording);
+                _dbContext.Paratexts.Add(paratext);
                 _dbContext.DigitalObjects.Add(videoRecording);
                 await _dbContext.SaveChangesAsync();
             }
