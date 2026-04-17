@@ -79,4 +79,18 @@ public class VersionController : ControllerBase
         packages.ForEach(p => _dbContext.Entry(p).Reference(p => p.Environment).Load());
         return Ok(packages.Select(p => GamePackage.FromGamePackage(p)));
     }
+
+    [HttpGet("{versionId}/paratexts")]
+    [Produces(typeof(IEnumerable<Paratext>))]
+    public async Task<IActionResult> GetParatexts(string versionId)
+    {
+        var id = Guid.Parse(versionId);
+        var version = await _dbContext.WorkVersions
+            .Include(v => v.Paratexts)
+            .FirstOrDefaultAsync(v => v.Id == id);
+        if (version == null)
+            return NotFound();
+        var paratexts = version.Paratexts.Select(p => Paratext.FromDBEntity(p));
+        return Ok(paratexts);
+    }
 }

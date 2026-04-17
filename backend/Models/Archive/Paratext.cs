@@ -22,6 +22,7 @@ public class Paratext
     // Generated data
     public DateTime ImportedAt { get; set; } = DateTime.Now;
     public DateTime ExportedAt { get; set; } = DateTime.MinValue;
+    public bool CanExport { get; set; } = false;
     public bool Deleted { get; set; } = false;
 
     // Relationships

@@ -44,7 +44,7 @@ public class ParatextController : ControllerBase
             .FirstOrDefaultAsync(p => p.Id == id);
         if (dbParatext == null)
             return NotFound();
-        return Ok(Paratext.FromDBParatext(dbParatext));
+        return Ok(Paratext.FromDBEntity(dbParatext));
     }
 
     /// <summary>
@@ -100,7 +100,7 @@ public class ParatextController : ControllerBase
 
         // TODO: save properly with current database schema changes - likely to a new digital object
 
-        return Ok(Paratext.FromDBParatext(dbParatext));
+        return Ok(Paratext.FromDBEntity(dbParatext));
     }
 
     /// <summary>

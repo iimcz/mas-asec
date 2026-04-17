@@ -29,9 +29,57 @@ public class EditClient : BaseCollectiveAccessClient
         _logger = logger;
     }
 
+    public async Task<int> AddOrUpdateParatext(asec.Models.Archive.Paratext paratext, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        if (paratext.DigitalObject != null)
+        {
+            int digitalObjectId = await AddOrUpdateDigitalObject(paratext.DigitalObject, cancellationToken);
+        }
+
+        // We do not expect an exported paratext to have a physical object.
+        // An exported paratext should originate in our system which means it is
+        // some type of recording, etc. Paratexts with physical objects should
+        // be created directly in CA.
+
+        var idno = new ShortGuid(paratext.Id).ToString();
+
+        var request = new GraphQLRequest<AddArgs>() {
+            Query = ADD_QUERY,
+            Variables = new() {
+                Idno = idno,
+                Table = Tables.Occurrences,
+                Type = Types.Paratext,
+                Erp = "MERGE",
+                MatchOn = [ "idno" ],
+                Bundles = [
+                    //new(
+                    //
+                    //   )
+                ]
+            }
+        };
+
+
+        var response = await PostAuthenticatedAsync<AddArgs, AddRoot>(ENDPOINT, request, cancellationToken);
+
+        if (response.Data.Add.Info.Count > 0)
+        {
+            _logger.LogInformation(response.Data.Add.Info.ToString());
+        }
+        if (response.Data.Add.Warnings.Count > 0)
+        {
+            _logger.LogWarning(response.Data.Add.Warnings.ToString());
+        }
+        if (response.Data.Add.Errors.Count > 0)
+        {
+            _logger.LogError(response.Data.Add.Errors.ToString());
+        }
+
+        return response.Data.Add.Id.Single();
+    }
+
     public async Task<int> AddOrUpdateDigitalObject(asec.Models.Archive.DigitalObject digitalObject, CancellationToken cancellationToken = default(CancellationToken))
     {
-       
         var workVersionRelationships = digitalObject.WorkVersions?.Select(
             wv => new SubjectRelationship(
                 SubjectRelationshipTypes.ManifestationOf,
@@ -60,8 +108,8 @@ public class EditClient : BaseCollectiveAccessClient
                 Table = Tables.Objects,
                 Type = Types.DigitalObject,
                 Erp = "MERGE",
-                MatchOn = new() { "idno" },
-                Bundles = new() {
+                MatchOn = [ "idno" ],
+                Bundles = [
                     new(
                         Locales.Czech,
                         BundleNames.PreferredLabels,
@@ -102,7 +150,7 @@ public class EditClient : BaseCollectiveAccessClient
                         BundleNames.FedoraUrl,
                         digitalObject.FedoraUrl
                     )
-                },
+                ],
                 Relationships = allRelationships
             }
         };

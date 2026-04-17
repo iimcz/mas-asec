@@ -13,8 +13,9 @@ public record Paratext
     public string ParatextType { get; set; }
     public DateTime ImportedAt { get; set; }
     public DateTime ExportedAt { get; set; }
+    public bool CanExport { get; set; }
 
-    public static Paratext FromDBParatext(Models.Archive.Paratext paratext)
+    public static Paratext FromDBEntity(Models.Archive.Paratext paratext)
     {
         return new Paratext() {
             Id = paratext.Id.ToString(),
@@ -27,7 +28,8 @@ public record Paratext
             IdentificationNumber = paratext.IdentificationNumber,
             ParatextType = paratext.ParatextType,
             ImportedAt = paratext.ImportedAt,
-            ExportedAt = paratext.ExportedAt
+            ExportedAt = paratext.ExportedAt,
+            CanExport = paratext.CanExport
         };
     }
 }
