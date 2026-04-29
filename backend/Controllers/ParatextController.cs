@@ -1,3 +1,4 @@
+using asec.Emulation;
 using asec.Models;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -57,8 +58,23 @@ public class ParatextController : ControllerBase
     [Produces(typeof(Paratext))]
     public async Task<IActionResult> UpdateParatext(string paratextId, [FromBody] Paratext paratext)
     {
-        // TODO: implement with new paratexts
-        return NotFound();
+        var id = Guid.Parse(paratextId);
+        var dbParatext = await _dbContext.Paratexts.FindAsync(id);
+        if (dbParatext == null)
+            return NotFound();
+
+        dbParatext.Language = paratext.Language;
+        dbParatext.Date = paratext.Date;
+        dbParatext.InternalNote = paratext.InternalNote;
+        dbParatext.FilledOutBy = paratext.FilledOutBy;
+        dbParatext.WebsiteUrl = paratext.WebsiteUrl;
+        dbParatext.EmissionSize = paratext.EmissionSize;
+        dbParatext.IdentificationNumber = paratext.IdentificationNumber;
+        dbParatext.ParatextType = paratext.ParatextType;
+
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(Paratext.FromDBParatext(dbParatext));
     }
 
     /// <summary>
@@ -82,6 +98,20 @@ public class ParatextController : ControllerBase
         {
             await file.CopyToAsync(fileStream);
         }
+
+        var fileInfo = new FileInfo(tmpFile);
+
+        var digitalObject = new Models.Archive.DigitalObject()
+        {
+            Id = Guid.NewGuid(),
+            FileName = filename,
+            Format = fileInfo.Extension,
+            FileSize = (uint)fileInfo.Length,
+            Paratexts = [dbParatext]
+        };
+
+        dbParatext.DigitalObject = digitalObject;
+
         var tags = new Dictionary<string, string>()
         {
             { "Tag", "Paratext" },
@@ -96,9 +126,9 @@ public class ParatextController : ControllerBase
         //dbParatext.Downloadable = true;
         //dbParatext.Filename = filename;
         System.IO.File.Delete(tmpFile);
-        await _dbContext.SaveChangesAsync();
 
-        // TODO: save properly with current database schema changes - likely to a new digital object
+        _dbContext.DigitalObjects.Add(digitalObject);
+        await _dbContext.SaveChangesAsync();
 
         return Ok(Paratext.FromDBEntity(dbParatext));
     }
