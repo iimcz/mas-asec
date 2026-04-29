@@ -35,6 +35,8 @@ public static class IServiceCollectionExtensions
         services.AddScoped<ObjectRepositoryClient>();
         services.AddScoped<EnvironmentRepositoryClient>();
         services.AddScoped<ComponentsClient>();
+        services.AddScoped<NetworksClient>();
+        services.AddScoped<SessionsClient>();
 
         // CollectiveAccess clients
         services.AddSingleton<CollectiveAccessAuth>();

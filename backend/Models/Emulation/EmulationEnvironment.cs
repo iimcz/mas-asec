@@ -6,5 +6,6 @@ public class EmulationEnvironment
     public Emulator Emulator { get; set; }
     public string EmulatorVersion { get; set; }
     public string EaasId { get; set; }
+    public bool InternetConnected { get; set; }
     public IList<Converter> Converters { get; set; }
 }

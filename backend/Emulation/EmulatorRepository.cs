@@ -85,6 +85,7 @@ public class EmulatorRepository : IEmulatorRepository
                 await dbContext.AddAsync(environment, cancellationToken);
             }
             environment.EaasId = env.EaasId;
+            environment.InternetConnected = env.InternetConnected;
             
             await LoadConverters(dbContext, env, environment, cancellationToken);
         }

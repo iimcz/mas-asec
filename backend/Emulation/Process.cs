@@ -1,7 +1,4 @@
 using System.Diagnostics;
-using System.Net.NetworkInformation;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Threading.Channels;
 using asec.Compatibility.EaasApi;
 using asec.Compatibility.EaasApi.ControlUrls;
@@ -11,7 +8,6 @@ using asec.Models;
 using asec.Models.Emulation;
 using asec.Platforms;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace asec.Emulation;
 
@@ -112,6 +108,8 @@ public class Process : IProcess<EmulationResult>
             return new EmulationResult(null, String.Empty);
         }
 
+        List<Func<Task>> keepAlives = [];
+
         object dataSource = _config.IsDiskDrive ? new ImageDataSource(package.ObjectId) : new ObjectDataSource(package.ObjectId);
 
         logWriter.WriteLine($"Starting EaaS package ID: {package.Environment.EaasId}");
@@ -123,6 +121,44 @@ public class Process : IProcess<EmulationResult>
             }
             ));
         var cachedState = await componentsClient.GetComponentState(runningComponent.id);
+        keepAlives.Add(async () => await componentsClient.Keepalive(runningComponent.id));
+
+        if (package.Environment.InternetConnected)
+        {
+            logWriter.WriteLine($"Emulator environment wants internet, starting network for component ID: {runningComponent.id}");
+            var networkClient = scope.ServiceProvider.GetRequiredService<NetworksClient>();
+            // TODO: specify these in a better way to avoid the wave of nulls
+            var networkResponse = await networkClient.StartNetwork(
+                new(
+                    [
+                        new(
+                            runningComponent.id,
+                            "machine 0",
+                            null, null, null,
+                            "auto",
+                            true
+                        )
+                    ],
+                    true,
+                    true,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            );
+            if (networkResponse.id == null || networkResponse.id.Length <= 0)
+            {
+                logWriter.WriteLine("Failed to start network, ending emulation.");
+                Status = ProcessStatus.Failed;
+                return new([], null);
+            }
+
+            var sessionsClient = scope.ServiceProvider.GetRequiredService<SessionsClient>();
+            keepAlives.Add(async () => await sessionsClient.Keepalive(networkResponse.id));
+        }
+
         Status = ProcessStatus.Running;
 
         var subTasks = new List<Task>() {
@@ -141,7 +177,7 @@ public class Process : IProcess<EmulationResult>
             switch (message)
             {
                 case EmulationMessage.Ping:
-                    await componentsClient.Keepalive(runningComponent.id);
+                    await Task.WhenAll(keepAlives.Select(f => f()));
                     break;
                 case EmulationMessage.Quit:
                     keepRunning = false;
