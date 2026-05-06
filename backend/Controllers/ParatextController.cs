@@ -74,7 +74,7 @@ public class ParatextController : ControllerBase
 
         await _dbContext.SaveChangesAsync();
 
-        return Ok(Paratext.FromDBParatext(dbParatext));
+        return Ok(Paratext.FromDBEntity(dbParatext));
     }
 
     /// <summary>
