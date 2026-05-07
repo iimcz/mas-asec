@@ -307,6 +307,7 @@ public class ConversionController : ControllerBase
 
         var imageSize = files.Select(f => new FileInfo(f.Filename).Length).Sum();
         imageSize /= 1024 * 1024;
+        imageSize = Math.Max(100, imageSize);
         imageSize *= 2; // Padding. TODO: separate info configuration variable
 
         await RunLoggedProcess("dd", [ "if=/dev/zero", $"of={imagePath}", "bs=1M", $"count={imageSize}" ]);
