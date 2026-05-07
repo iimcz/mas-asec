@@ -12,12 +12,11 @@ public record Artefact
     public string WebsiteUrl { get; set; }
     public string DigitalObjectType { get; set; }
     public string Format { get; set; }
-    public uint FileSize { get; set; }
+    public long FileSize { get; set; }
     public string Quality { get; set; }
     public string FedoraUrl { get; set; }
 
     public string Type { get; set;}
-    public string PhysicalMediaState { get; set; }
     public string PhysicalMediaType { get; set; }
 
     public List<string> ParatextIds { get; set; }
@@ -28,20 +27,12 @@ public record Artefact
         var artefactType = ArtefactType.Unknown;
         if (Type != null)
             Enum.TryParse(Type, true, out artefactType);
-        var mediaType = Models.Digitalization.PhysicalMediaType.Unknown;
-        if (PhysicalMediaType != null)
-            Enum.TryParse(PhysicalMediaType, true, out mediaType);
-        var mediaState = Models.Digitalization.PhysicalMediaState.Good;
-        if (PhysicalMediaState != null)
-            Enum.TryParse(PhysicalMediaState, true, out mediaState);
         
         return new() {
             Id = Guid.Empty,
             ArchivationDate = DateTime.Now,
             InternalNote = InternalNote,
             Type = artefactType,
-            PhysicalMediaType = mediaType,
-            PhysicalMediaState = mediaState,
             FileName = FileName,
             Label = Label
         };
@@ -65,8 +56,7 @@ public record Artefact
             FedoraUrl = artefact.FedoraUrl,
 
             Type = artefact.Type.ToString(),
-            PhysicalMediaType = artefact.PhysicalMediaType.ToString(),
-            PhysicalMediaState = artefact.PhysicalMediaState.ToString(),
+            PhysicalMediaType = artefact.PhysicalMediaType.ToString()
         };
     }
 }
