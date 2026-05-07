@@ -15,7 +15,7 @@ public class DigitalObject
     public Uri WebsiteUrl { get; set; }
     public string DigitalObjectType { get; set; }
     public string Format { get; set; }
-    public uint FileSize { get; set; }
+    public long FileSize { get; set; }
     public string Quality { get; set; }
     public string FedoraUrl { get; set; }
 
