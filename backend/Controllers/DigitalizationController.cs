@@ -27,7 +27,7 @@ public class DigitalizationController : ControllerBase
     private readonly IMinioClient _minioClient;
     private readonly AsecDBContext _dbContext;
 
-    public DigitalizationController(ILogger<DigitalizationController> logger, IToolRepository tools, IProcessManager<Process, DigitalizationResult> processManager, IMinioClient minioClient, IConfiguration config, AsecDBContext dbContext)
+    public DigitalizationController(ILogger<DigitalizationController> logger, IToolRepository tools, IProcessManager<Process, DigitalizationResult> processManager, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration config, AsecDBContext dbContext)
     {
         _logger = logger;
         _tools = tools;

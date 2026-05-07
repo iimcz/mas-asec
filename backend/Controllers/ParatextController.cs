@@ -21,7 +21,7 @@ public class ParatextController : ControllerBase
     private AsecDBContext _dbContext;
     private IMinioClient _minioClient;
 
-    public ParatextController(AsecDBContext dbContext, IMinioClient minioClient, IConfiguration configuration)
+    public ParatextController(AsecDBContext dbContext, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _minioClient = minioClient;

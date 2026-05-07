@@ -1,13 +1,10 @@
-using asec.Compatibility.CollectiveAccess.Models;
 using asec.Emulation;
 using asec.LongRunning;
 using asec.Models;
-using asec.Models.Archive;
 using asec.Models.Recording;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Minio;
 using Minio.DataModel.Args;
 using Minio.DataModel.Tags;
@@ -28,7 +25,7 @@ public class EmulationController : ControllerBase
     private readonly AsecDBContext _dbContext;
     private readonly IMinioClient _minioClient;
 
-    public EmulationController(IProcessManager<Process, EmulationResult> processManager, AsecDBContext dbContext, IMinioClient minioClient, IConfiguration configuration)
+    public EmulationController(IProcessManager<Process, EmulationResult> processManager, AsecDBContext dbContext, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration configuration)
     {
         _processManager = processManager;
         _dbContext = dbContext;
@@ -85,8 +82,10 @@ public class EmulationController : ControllerBase
                 {
                     Id = Guid.NewGuid(),
                     ParatextType = "Video recording",
-                    Label = $"{videoFile.Type} recording for emulationId: {emulationId}",
-                    CanExport = true
+                    Label = $"{package.Label} gameplay",
+                    InternalNote = $"{videoFile.Type} recording for emulationId: {emulationId}",
+                    CanExport = true,
+                    Date = DateOnly.FromDateTime(DateTime.Now),
                 };
 
                 var fileInfo = new FileInfo(videoFile.Path);
@@ -96,7 +95,10 @@ public class EmulationController : ControllerBase
                     Id = Guid.NewGuid(),
                     FileName = $"{emulationId}-{fileInfo.Name}",
                     Format = "mp4",
-                    FileSize = (uint)fileInfo.Length,
+                    FileSize = fileInfo.Length,
+                    DigitalObjectType = "Video",
+                    Quality = "",
+                    Label = $"Video of {package.Label}",
                     RecordingType = videoFile.Type,
                     Paratexts = [paratext]
                 };
@@ -120,65 +122,6 @@ public class EmulationController : ControllerBase
         }
         
         // TODO: do something with result.SnapshotId...
-        // TODO: reimplement saving paratexts due to db model changes...
-        /*
-        Response.OnCompleted(async () => {
-            var gamePackage = await _dbContext.GamePackages.Include(p => p.Version).ThenInclude(v => v.Work).FirstAsync(p => p.Id == process.PackageId);
-            foreach (var videoFile in result.VideoFiles)
-            {
-                if (videoFile.Type == RecordingType.Screen && finishRequest.KeepScreenRecording)
-                {
-                    var filename = Path.GetFileName(videoFile.Path);
-                    var dbParatext = new Models.Archive.Paratext() {
-                        Id = Guid.NewGuid(),
-                        Filename = $"rec-{process.Id}-{filename}",
-                        Name = $"Screen of session at {DateTime.UtcNow}",
-                        Description = $"Recording of the screen for emulation session ID: {process.Id}",
-                        Downloadable = true,
-                        GamePackage = gamePackage,
-                        Version = gamePackage.Version,
-                        Work = gamePackage.Version.Work,
-                        Source = "SessionRecording",
-                        SourceUrl = null,
-                        Thumbnail = "template:video"
-                    };
-                    var minioArgs = new PutObjectArgs()
-                        .WithBucket(_paratextBucket)
-                        .WithObject(dbParatext.Id.ToString())
-                        .WithFileName(videoFile.Path);
-                    // TODO: check for success
-                    await _minioClient.PutObjectAsync(minioArgs);
-                    _dbContext.Paratexts.Add(dbParatext);
-                    await _dbContext.SaveChangesAsync();
-                }
-                else if (videoFile.Type == RecordingType.Webcam && finishRequest.KeepWebcamRecording)
-                {
-                    var filename = Path.GetFileName(videoFile.Path);
-                    var dbParatext = new Models.Archive.Paratext() {
-                        Id = Guid.NewGuid(),
-                        Filename = $"rec-{process.Id}-{filename}",
-                        Name = $"Webcam of session at {DateTime.UtcNow}",
-                        Description = $"Recording of the webcam for emulation session ID: {process.Id}",
-                        Downloadable = true,
-                        GamePackage = gamePackage,
-                        Version = gamePackage.Version,
-                        Work = gamePackage.Version.Work,
-                        Source = "SessionRecording",
-                        SourceUrl = null,
-                        Thumbnail = "template:video"
-                    };
-                    var minioArgs = new PutObjectArgs()
-                        .WithBucket(_paratextBucket)
-                        .WithObject(dbParatext.Id.ToString())
-                        .WithFileName(videoFile.Path);
-                    // TODO: check for success
-                    await _minioClient.PutObjectAsync(minioArgs);
-                    _dbContext.Paratexts.Add(dbParatext);
-                    await _dbContext.SaveChangesAsync();
-                }
-            }
-        });
-        */
 
         return Ok();
     }

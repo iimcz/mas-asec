@@ -19,7 +19,7 @@ public class ArtefactController : ControllerBase
     private readonly IMinioClient _minioClient;
     private readonly string _minioArtefactBucket;
 
-    public ArtefactController(AsecDBContext dbContext, IMinioClient minioClient, IConfiguration configuration)
+    public ArtefactController(AsecDBContext dbContext, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _minioClient = minioClient;
@@ -94,10 +94,24 @@ public class ArtefactController : ControllerBase
             .FirstOrDefaultAsync<Artefact>(a => a.Id == id);
         if (artefact == null)
             return NotFound();
+        if (!String.IsNullOrEmpty(iartefact.Type))
+        {
+            if (!Enum.TryParse<ArtefactType>(iartefact.Type, out var artefactType))
+                return BadRequest();
+            if (artefact.PhysicalMediaType == PhysicalMediaType.None)
+                artefact.Type = artefactType;
+        }
+        if (!String.IsNullOrEmpty(iartefact.WebsiteUrl))
+        {
+            if (!Uri.TryCreate(iartefact.WebsiteUrl, UriKind.Absolute, out var artefactUrl))
+                return BadRequest();
+            artefact.WebsiteUrl = artefactUrl;
+        }
         // TODO: move to viewmodel? also fixup according to CA management
+        artefact.Label = iartefact.Label;
         artefact.InternalNote = iartefact.InternalNote;
         artefact.Quality = iartefact.Quality;
-        artefact.Format = iartefact.Format;
+
         await _dbContext.SaveChangesAsync();
 
         return Ok(ViewModels.Artefact.FromDBEntity(artefact));

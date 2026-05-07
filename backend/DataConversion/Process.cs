@@ -92,7 +92,7 @@ public class Process : IProcess<ConversionResult>
 
         using (var serviceScope = _serviceScopeFactory.CreateScope())
         {
-            var minioClient = serviceScope.ServiceProvider.GetRequiredService<IMinioClient>();
+            var minioClient = serviceScope.ServiceProvider.GetRequiredKeyedService<IMinioClient>("LocalObjectStorage");
             var args = new GetObjectArgs()
                 .WithBucket(_artefactBucket)
                 .WithObject(artefact.ObjectId.ToString())

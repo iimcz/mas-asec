@@ -4,7 +4,6 @@ using asec.Models.Digitalization;
 using asec.Upload;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Minio;
@@ -23,7 +22,7 @@ namespace asec.Controllers
         private readonly string _minioArtefactBucket;
         private readonly IProcessManager<Process, UploadResult> _processManager;
 
-        public UploadController(AsecDBContext dbContext, IConfiguration config, IMinioClient minioClient, IProcessManager<Process, UploadResult> processManager)
+        public UploadController(AsecDBContext dbContext, IConfiguration config, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IProcessManager<Process, UploadResult> processManager)
         {
             _processManager = processManager;
             _dbContext = dbContext;
@@ -76,6 +75,12 @@ namespace asec.Controllers
             var process = _processManager.GetProcess(id);
             if (process == null) return NotFound();
 
+            if (!Enum.TryParse<ArtefactType>(artefact.Type, true, out var artefactType))
+            {
+                return BadRequest();
+            }
+
+
             var processResult = await _processManager.FinishProcessAsync(id);
 
             var tags = new Dictionary<string, string>()
@@ -90,12 +95,19 @@ namespace asec.Controllers
                 .WithTagging(new Tagging(tags, true))
                 .WithObject(objectId.ToString());
             var artefactObject = await _minioClient.PutObjectAsync(args);
-
+            var fileSize = new FileInfo(processResult.Filename).Length;
+            
             var dbArtefact = await artefact.ToDBEntity(_dbContext);
             dbArtefact.ObjectId = objectId;
+            dbArtefact.PhysicalMediaType = PhysicalMediaType.None;
+            dbArtefact.Type = artefactType;
             dbArtefact.FileName = Path.GetFileName(processResult.Filename);
             dbArtefact.ArchivationDate = process.StartTime;
-            dbArtefact.PhysicalMediaType = Models.Digitalization.PhysicalMediaType.None;
+            dbArtefact.InternalNote = artefact.InternalNote;
+            dbArtefact.Label = artefact.Label;
+            dbArtefact.FileSize = fileSize;
+            dbArtefact.DigitalObjectType = "Text"; // TODO change to the correct type
+            dbArtefact.Format = "PDF"; // TODO: change to the correct format
 
             var paratext = await _dbContext.Paratexts.FindAsync(process.ParatextId);
             var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);

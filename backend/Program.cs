@@ -26,9 +26,18 @@ builder.Services.AddDbContext<AsecDBContext>(b =>
     }
 });
 builder.Services.AddCors();
-builder.Services.AddMinio(options =>
+builder.Services.AddKeyedMinio("LocalObjectStorage", options =>
 {
     var section = builder.Configuration.GetSection("ObjectStorage");
+    options.Endpoint = section.GetValue<string>("Endpoint") ?? "";
+    options.AccessKey = section.GetValue<string>("AccessKey") ?? "";
+    options.SecretKey = section.GetValue<string>("SecretKey") ?? "";
+    options.Region = section.GetValue<string>("Region") ?? "";
+    options.SessionToken = section.GetValue<string>("SessionToken") ?? "";
+});
+builder.Services.AddKeyedMinio("ArchiveObjectStorage", options =>
+{
+    var section = builder.Configuration.GetSection("");
     options.Endpoint = section.GetValue<string>("Endpoint") ?? "";
     options.AccessKey = section.GetValue<string>("AccessKey") ?? "";
     options.SecretKey = section.GetValue<string>("SecretKey") ?? "";
@@ -45,6 +54,13 @@ builder.Services.ConfigureOptions<DigitalizationToolsOptionsSetup>();
 builder.Services.ConfigureOptions<EmulatorOptionsSetup>();
 
 var app = builder.Build();
+
+// First do migrations
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
+    await db.Database.MigrateAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
