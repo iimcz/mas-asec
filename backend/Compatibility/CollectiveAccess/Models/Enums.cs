@@ -49,6 +49,9 @@ public struct BundleNames
     public static readonly string FedoraUrl                        = "fedora_url";
     public static readonly string WebsiteUrl                       = "website_url";
     public static readonly string InternalNotes                    = "internal_notes";
+    public static readonly string Language                         = "language";
+    public static readonly string Date                             = "date";
+    public static readonly string ParatextType                     = "paratext_type";
 }
 
 public struct Tables

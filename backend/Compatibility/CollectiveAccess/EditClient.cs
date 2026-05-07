@@ -31,9 +31,11 @@ public class EditClient : BaseCollectiveAccessClient
 
     public async Task<int> AddOrUpdateParatext(asec.Models.Archive.Paratext paratext, CancellationToken cancellationToken = default(CancellationToken))
     {
+        var relationships = new List<SubjectRelationship>();
         if (paratext.DigitalObject != null)
         {
             int digitalObjectId = await AddOrUpdateDigitalObject(paratext.DigitalObject, cancellationToken);
+            relationships.Add(new(SubjectRelationshipTypes.ManifestationOf, Tables.Objects, digitalObjectId));
         }
 
         // We do not expect an exported paratext to have a physical object.
@@ -52,10 +54,38 @@ public class EditClient : BaseCollectiveAccessClient
                 Erp = "MERGE",
                 MatchOn = [ "idno" ],
                 Bundles = [
-                    //new(
-                    //
-                    //   )
-                ]
+                    new(
+                        Locales.Czech,
+                        BundleNames.PreferredLabels,
+                        paratext.Label
+                    ),
+                    new(
+                        Locales.Czech,
+                        BundleNames.Language,
+                        paratext.Language
+                    ),
+                    new(
+                        Locales.Czech,
+                        BundleNames.Date,
+                        paratext.Date.ToString()
+                    ),
+                    new(
+                        Locales.Czech,
+                        BundleNames.WebsiteUrl,
+                        paratext.WebsiteUrl
+                    ),
+                    new(
+                        Locales.Czech,
+                        BundleNames.InternalNotes,
+                        paratext.InternalNote
+                    ),
+                    new(
+                        Locales.Czech,
+                        BundleNames.ParatextType,
+                        paratext.ParatextType
+                    ),
+                ],
+                Relationships = relationships
             }
         };
 
