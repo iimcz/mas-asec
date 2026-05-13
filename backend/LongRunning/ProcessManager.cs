@@ -35,6 +35,16 @@ public class ProcessManager<TProcess, TResult, TDetail> : IProcessManager<TProce
         return record.Process;
     }
 
+    public List<TProcess> GetProcesses()
+    {
+        var processes = new List<TProcess>();
+        foreach (var record in _processes.Values)
+        {
+            processes.Add(record.Process);
+        }
+        return processes;
+    }
+
     public void StartProcess(TProcess process)
     {
         var tokenSource = new CancellationTokenSource();

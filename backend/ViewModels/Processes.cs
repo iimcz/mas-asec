@@ -1,0 +1,10 @@
+﻿namespace asec.ViewModels
+{
+    public record Processes
+    {
+        public List<DigitalizationProcess> digitalizationProcesses { get; set; } = new();
+        public List<ConversionProcess> conversionProcesses { get; set; } = new();
+        public List<EmulationState> emulationProcesses { get; set; } = new();
+        public List<UploadProcess> uploadProcesses { get; set; } = new();
+    }
+}
