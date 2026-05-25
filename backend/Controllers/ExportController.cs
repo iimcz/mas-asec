@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Minio;
+using Minio.DataModel.Args;
 using asec.Compatibility.CollectiveAccess;
 using asec.Models;
 using asec.Models.Archive;
@@ -15,16 +17,35 @@ public class ExportController : ControllerBase
     private readonly EditClient _editClient;
     private readonly AsecDBContext _dbContext;
 
-    private readonly string _storageBaseUrl;
+    private readonly IMinioClient _localMinioClient;
+    private readonly IMinioClient _archiveMinioClient;
 
-    public ExportController(EditClient editClient, AsecDBContext dbContext, ILogger<ExportController> logger, IConfiguration configuration) : base()
+    private readonly string _artefactBucket;
+    private readonly string _archiveArtefactBucket;
+
+    private readonly string _localCacheDir;
+
+    public ExportController(
+            EditClient editClient,
+            AsecDBContext dbContext,
+            ILogger<ExportController> logger,
+            IConfiguration configuration,
+            [FromKeyedServices("LocalObjectStorage")] IMinioClient localMinioClient,
+            [FromKeyedServices("ArchiveObjectStorage")] IMinioClient archiveMinioClient) : base()
     {
         _editClient = editClient;
         _logger = logger;
         _dbContext = dbContext;
+
+        _localMinioClient = localMinioClient;
+        _archiveMinioClient = archiveMinioClient;
         
-        var storageSection = configuration.GetSection("ObjectStorage");
-        _storageBaseUrl = $"{storageSection.GetValue<string>("Endpoint")}/{storageSection.GetValue<string>("ArtefactBucket")}";
+        var storageSection = configuration.GetSection("LocalObjectStorage");
+        _artefactBucket = storageSection.GetValue<string>("ArtefactBucket");
+        _localCacheDir = storageSection.GetValue<string>("CacheDir");
+
+        var archiveStorageSection = configuration.GetSection("ArchiveObjectStorage");
+        _archiveArtefactBucket = archiveStorageSection.GetValue<string>("ArtefactBucket");
     }
 
     [HttpPost("artefact/{id}")]
@@ -41,7 +62,7 @@ public class ExportController : ControllerBase
             return NotFound();
         }
 
-        PrepareArtefact(artefact);
+        await PrepareArtefact(artefact);
         var remoteId = await _editClient.AddOrUpdateDigitalObject(artefact, cancellationToken);
         artefact.RemoteId = remoteId;
         artefact.ExportedAt = DateTime.Now;
@@ -81,9 +102,45 @@ public class ExportController : ControllerBase
         
     }
 
-    private void PrepareArtefact(Artefact artefact)
+    private async Task PrepareArtefact(Artefact artefact, CancellationToken cancellationToken = default)
     {
+        Directory.CreateDirectory(_localCacheDir);
         artefact.InternalNote = "Digitalized version";
-        artefact.FedoraUrl = $"{_storageBaseUrl}/{artefact.ObjectId}";
+
+        // Push our local minio object to the remote/archive storage.
+
+        var getTagsArgs = new GetObjectTagsArgs()
+            .WithBucket(_artefactBucket)
+            .WithObject(artefact.ObjectId.ToString());
+        var artefactTags = await _localMinioClient.GetObjectTagsAsync(getTagsArgs, cancellationToken);
+
+        var statArgs = new StatObjectArgs()
+            .WithBucket(_artefactBucket)
+            .WithObject(artefact.ObjectId.ToString());
+        var artefactStats = await _localMinioClient.StatObjectAsync(statArgs, cancellationToken);
+
+        var tmpFilename = Path.Combine(_localCacheDir, artefact.FileName);
+
+        _logger.LogInformation($"Downloading artefact {artefact.FileName} with {artefactTags.Tags.Count()} tags of size {artefactStats.Size} bytes from local storage.");
+        var getArgs = new GetObjectArgs()
+            .WithBucket(_artefactBucket)
+            .WithObject(artefact.ObjectId.ToString())
+            .WithFile(tmpFilename);
+        await _localMinioClient.GetObjectAsync(getArgs, cancellationToken);
+
+        _logger.LogInformation($"{_archiveMinioClient.Config.Secure}");
+
+        _logger.LogInformation($"Uploading artefact {artefact.FileName} (cached at '{tmpFilename}') to remote storage.");
+        var putArgs = new PutObjectArgs()
+            .WithBucket(_archiveArtefactBucket)
+            .WithTagging(artefactTags)
+            .WithObject(artefact.ObjectId.ToString())
+            .WithFileName(tmpFilename);
+        // TODO: can we stream the data directly instead of creating a temporary file?
+        await _archiveMinioClient.PutObjectAsync(putArgs, cancellationToken);
+
+        _logger.LogInformation($"Transfer of artefact {artefact.FileName} done.");
+        artefact.FedoraUrl = artefact.ObjectId.ToString();
+
     }
 }

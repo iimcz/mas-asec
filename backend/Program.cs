@@ -1,9 +1,8 @@
 using asec.Configuration;
-using asec.Emulation;
 using asec.Extensions;
 using asec.Models;
 using Microsoft.EntityFrameworkCore;
-using Minio.AspNetCore;
+using Minio;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +27,7 @@ builder.Services.AddDbContext<AsecDBContext>(b =>
 builder.Services.AddCors();
 builder.Services.AddKeyedMinio("LocalObjectStorage", options =>
 {
-    var section = builder.Configuration.GetSection("ObjectStorage");
+    var section = builder.Configuration.GetSection("LocalObjectStorage");
     options.Endpoint = section.GetValue<string>("Endpoint") ?? "";
     options.AccessKey = section.GetValue<string>("AccessKey") ?? "";
     options.SecretKey = section.GetValue<string>("SecretKey") ?? "";
@@ -37,12 +36,15 @@ builder.Services.AddKeyedMinio("LocalObjectStorage", options =>
 });
 builder.Services.AddKeyedMinio("ArchiveObjectStorage", options =>
 {
-    var section = builder.Configuration.GetSection("");
+    var section = builder.Configuration.GetSection("ArchiveObjectStorage");
     options.Endpoint = section.GetValue<string>("Endpoint") ?? "";
     options.AccessKey = section.GetValue<string>("AccessKey") ?? "";
     options.SecretKey = section.GetValue<string>("SecretKey") ?? "";
     options.Region = section.GetValue<string>("Region") ?? "";
     options.SessionToken = section.GetValue<string>("SessionToken") ?? "";
+    options.ConfigureClient(client => {
+        client.WithSSL();
+    });
 });
 builder.Services.AddHttpClient();
 builder.Services.AddAsecServices();
