@@ -12,15 +12,15 @@ namespace asec.Controllers
     [Route("/api/v1/processes")]
     public class ProcessController : ControllerBase
     {
-        private readonly IProcessManager<Digitalization.Process, DigitalizationResult> _digitalizationProcessManager;
-        private readonly IProcessManager<DataConversion.Process, ConversionResult> _conversionProcessManager;
-        private readonly IProcessManager<Emulation.Process, EmulationResult> _emulationProcessManager;
-        private readonly IProcessManager<Upload.Process, UploadResult> _uploadProcessManager;
+        private readonly IProcessManager<Digitalization.Process, DigitalizationResult, DigitalizationProcessDetail> _digitalizationProcessManager;
+        private readonly IProcessManager<DataConversion.Process, ConversionResult, ConversionProcessDetail> _conversionProcessManager;
+        private readonly IProcessManager<Emulation.BaseProcess, EmulationResult, EmulationProcessDetail> _emulationProcessManager;
+        private readonly IProcessManager<Upload.Process, UploadResult, EmptyProcessDetail> _uploadProcessManager;
         public ProcessController(
-            IProcessManager<Digitalization.Process, DigitalizationResult> digitalizationProcessManager,
-            IProcessManager<DataConversion.Process, ConversionResult> conversionProcessManager,
-            IProcessManager<Emulation.Process, EmulationResult> emulationProcessManager,
-            IProcessManager<Upload.Process, UploadResult> uploadProcessManager)
+            IProcessManager<Digitalization.Process, DigitalizationResult, DigitalizationProcessDetail> digitalizationProcessManager,
+            IProcessManager<DataConversion.Process, ConversionResult, ConversionProcessDetail> conversionProcessManager,
+            IProcessManager<Emulation.BaseProcess, EmulationResult, EmulationProcessDetail> emulationProcessManager,
+            IProcessManager<Upload.Process, UploadResult, EmptyProcessDetail> uploadProcessManager)
         {
             _digitalizationProcessManager = digitalizationProcessManager;
             _conversionProcessManager = conversionProcessManager;
@@ -44,7 +44,7 @@ namespace asec.Controllers
             }
             foreach (var process in _emulationProcessManager.GetProcesses())
             {
-                result.emulationProcesses.Add(EmulationState.FromProcess(process));
+                result.emulationProcesses.Add(EmulationProcess.FromProcess(process));
             }
             foreach (var process in _uploadProcessManager.GetProcesses())
             {
