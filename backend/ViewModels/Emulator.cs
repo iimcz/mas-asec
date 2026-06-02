@@ -19,7 +19,7 @@ public record Emulator
             Id = environment.Id.ToString(),
             Name = environment.Emulator.Name,
             Homepage = environment.Emulator.Homepage.ToString(),
-            Version = environment.EmulatorVersion,
+            Version = environment.Version,
             Platforms = environment.Emulator.Platforms.Select(p => p.Name)
         };
     }
