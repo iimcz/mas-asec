@@ -4,7 +4,12 @@ using asec.LongRunning;
 
 namespace asec.Digitalization;
 
-public class Process : IProcess<DigitalizationResult>
+public class DigitalizationProcessDetail
+{
+    public string ToolMessage { get; set; }
+}
+
+public class Process : IProcess<DigitalizationResult, DigitalizationProcessDetail>
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
 
@@ -23,8 +28,8 @@ public class Process : IProcess<DigitalizationResult>
 
     // TODO: consider locking modification to avoid changing the value during get from different thread
     public ProcessStatus Status { get; set; }
-    public string StatusDetail { get; set; }
-    
+    public DigitalizationProcessDetail StatusDetail { get; set; }
+
     public ChannelWriter<string> InputChannel => _inputChannel.Writer;
     private Channel<string> _inputChannel = Channel.CreateBounded<string>(new BoundedChannelOptions(1) {
         FullMode = BoundedChannelFullMode.DropOldest,
@@ -49,17 +54,17 @@ public class Process : IProcess<DigitalizationResult>
         CreateDirectoryStructure();
     }
 
-    public async Task<string> WaitForInput(string statusDetail, CancellationToken cancellationToken)
+    public async Task<string> WaitForInput(string message, CancellationToken cancellationToken)
     {
         if (Status != ProcessStatus.Running)
             throw new InvalidOperationException("Tried to wait when not running.");
         Status = ProcessStatus.WaitingForInput;
-        StatusDetail = statusDetail;
+        StatusDetail.ToolMessage = message;
 
         var result = await _inputChannel.Reader.ReadAsync(cancellationToken);
 
         Status = ProcessStatus.Running;
-        StatusDetail = String.Empty;
+        StatusDetail.ToolMessage = String.Empty;
         return result;
     }
 
@@ -82,7 +87,7 @@ public class Process : IProcess<DigitalizationResult>
 
         Directory.CreateDirectory(WorkDir);
         Directory.CreateDirectory(UploadDir);
-        
+
         File.Create(LogPath).Close();
     }
 }

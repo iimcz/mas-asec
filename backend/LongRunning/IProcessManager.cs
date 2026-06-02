@@ -1,6 +1,6 @@
 namespace asec.LongRunning;
 
-public interface IProcessManager<TProcess, TResult> : IHostedService where TProcess : IProcess<TResult>
+public interface IProcessManager<TProcess, TResult, TDetail> : IHostedService where TProcess : IProcess<TResult, TDetail>
 {
     TProcess GetProcess(Guid processId);
     void StartProcess(TProcess process);

@@ -47,7 +47,7 @@ public class CopyConverter : IConverter
         if (process.Artefacts.Any(a => a.Type != ArtefactType.ZipArchive))
         {
             process.Status = ProcessStatus.Failed;
-            process.StatusDetail = "InvalidInput";
+            process.StatusDetail.ToolMessage = "InvalidInput";
             return null;
         }
         using var logStream = new FileStream(process.LogPath, FileMode.Append);
@@ -69,4 +69,3 @@ public class CopyConverter : IConverter
         return new(outFiles);
     }
 }
-

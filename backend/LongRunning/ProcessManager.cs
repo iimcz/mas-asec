@@ -4,7 +4,7 @@ using asec.LongRunning;
 
 namespace asec.Digitalization;
 
-public class ProcessManager<TProcess, TResult> : IProcessManager<TProcess, TResult> where TProcess : IProcess<TResult>
+public class ProcessManager<TProcess, TResult, TDetail> : IProcessManager<TProcess, TResult, TDetail> where TProcess : IProcess<TResult, TDetail>
 {
     private readonly Dictionary<Guid, ProcessRecord> _processes = new();
 

@@ -1,21 +1,23 @@
 namespace asec.ViewModels;
 
-public record DigitalizationProcess
-{
-    public string ProcessId { get; set; } = "";
-    public string ToolId { get; set; } = "";
-    public string Status { get; set; } = "";
-    public string StatusDetail { get; set; } = "";
-    public string StartTime { get; set; } = "";
+public record DigitalizationDetail(
+    string ToolId,
+    string ToolMessage
+);
 
+public record DigitalizationProcess : Process<DigitalizationDetail>
+{
     public static DigitalizationProcess FromProcess(Digitalization.Process process)
     {
-        return new DigitalizationProcess {
-            ProcessId = process.Id.ToString(),
-            ToolId = process.DigitalizationTool.Id.ToString(),
+        return new DigitalizationProcess
+        {
+            Id = process.Id.ToString(),
+            StartTime = process.StartTime.ToString(),
             Status = process.Status.ToString(),
-            StatusDetail = process.StatusDetail,
-            StartTime = process.StartTime.ToString()
+            StatusDetail = new(
+                process.DigitalizationTool.Id.ToString(),
+                process.StatusDetail.ToolMessage
+            )
         };
     }
 }

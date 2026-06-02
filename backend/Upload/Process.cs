@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace asec.Upload
 {
-    public class Process : IProcess<UploadResult>
+    public class Process : IProcess<UploadResult, EmptyProcessDetail>
     {
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Guid VersionId { get; private set; } = Guid.Empty;
@@ -13,7 +13,7 @@ namespace asec.Upload
         public string BaseDir { get; private set; }
         public string LogPath { get; private set; }
         public ProcessStatus Status { get; set; }
-        public string StatusDetail { get; set; }
+        public EmptyProcessDetail StatusDetail { get; set; }
         public Stream FileStream { get; set; }
         public string Boundary { get; set; }
 

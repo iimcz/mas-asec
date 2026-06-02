@@ -1,21 +1,18 @@
-﻿namespace asec.ViewModels
-{
-    public record UploadProcess
-    {
-        public string ProcessId { get; set; } = "";
-        public string Status { get; set; } = "";
-        public string StatusDetail { get; set; } = "";
-        public string StartTime { get; set; } = "";
+﻿namespace asec.ViewModels;
 
-        public static UploadProcess FromProcess(Upload.Process process)
+public record UploadDetail(
+);
+
+public record UploadProcess : Process<UploadDetail>
+{
+    public static UploadProcess FromProcess(Upload.Process process)
+    {
+        return new UploadProcess
         {
-            return new UploadProcess
-            {
-                ProcessId = process.Id.ToString(),
-                Status = process.Status.ToString(),
-                StatusDetail = process.StatusDetail,
-                StartTime = process.StartTime.ToString()
-            };
-        }
+            Id = process.Id.ToString(),
+            Status = process.Status.ToString(),
+            StartTime = process.StartTime.ToString(),
+            StatusDetail = new()
+        };
     }
 }

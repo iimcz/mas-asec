@@ -17,13 +17,19 @@ public class EmulationConfig
     public string FfmpegPath;
     public string MainDisplay;
     public string WebcamDevice;
-    public string EaasTargetDrive;
+    public string EaasTargetInputDrive;
+    public string EaasTargetOutputDrive;
     public string StreamBaseUrl;
-    public bool IsDiskDrive;
 }
 
+public class EmulationProcessDetail
+{
+    public bool IsGpuPassthrough { get; set; }
+    public bool IsUsbPassthrough { get; set; }
+    public string Other { get; set; }
+}
 
-public class Process : IProcess<EmulationResult>
+public abstract class BaseProcess : IProcess<EmulationResult, EmulationProcessDetail>
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
 
@@ -38,30 +44,27 @@ public class Process : IProcess<EmulationResult>
     public string LogPath { get; private set; }
 
     public ProcessStatus Status { get; private set; } = ProcessStatus.Initialization;
-
-    public string StatusDetail { get; private set; }
+    public EmulationProcessDetail StatusDetail { get; private set; } = new()
+    {
+        IsGpuPassthrough = true,
+        IsUsbPassthrough = true,
+        Other = ""
+    };
 
     public ChannelWriter<EmulationMessage> ChannelWriter => _inputChannel.Writer;
-    private Channel<EmulationMessage> _inputChannel = Channel.CreateBounded<EmulationMessage>(new BoundedChannelOptions(4)
+    protected Channel<EmulationMessage> _inputChannel = Channel.CreateBounded<EmulationMessage>(new BoundedChannelOptions(4)
     {
         FullMode = BoundedChannelFullMode.DropOldest,
         SingleReader = true,
         SingleWriter = false
     });
 
-    public Guid PackageId { get; private set; }
+    protected readonly IServiceScopeFactory _serviceScopeFactory;
+    protected readonly EmulationConfig _config;
+    protected StreamWriter _logWriter;
 
-    // TODO: have this variable for different emulators
-    public bool IsGpuPassthrough => true;
-
-    public bool IsUsbPassthrough { get; private set; }
-
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly EmulationConfig _config;
-
-    public Process(Guid packageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config)
+    public BaseProcess(IServiceScopeFactory serviceScopeFactory, EmulationConfig config)
     {
-        PackageId = packageId;
         _serviceScopeFactory = serviceScopeFactory;
         _config = config;
 
@@ -80,7 +83,7 @@ public class Process : IProcess<EmulationResult>
 
         Directory.CreateDirectory(SubprocessLogsDir);
         Directory.CreateDirectory(RecordingsDir);
-        
+
         File.Create(LogPath).Close();
     }
 
@@ -92,38 +95,39 @@ public class Process : IProcess<EmulationResult>
         CancellationToken = cancellationToken;
         StartTime = DateTime.Now;
 
-        // TODO: do we need to keep the scope always? Explore other options.
-        using var scope = _serviceScopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
 
-        logWriter.WriteLine($"Looking up package: {PackageId}");
-        var package = await dbContext.DigitalObjects
-            .OfType<GamePackage>()
-            .Include(p => p.Environment)
-            .FirstOrDefaultAsync(p => p.Id == PackageId, cancellationToken);
-        if (package == null)
+        // TODO: maybe find a better way? This might be dangerous regarding resource disposal...
+        _logWriter = logWriter;
+
+        // TODO: do we need to keep the scope always? Explore other options.
+
+        var environment = await ResolveEnvironment();
+        if (environment == null)
         {
             Status = ProcessStatus.Failed;
-            StatusDetail = EmulationStatusDetail.PackageNotFound.ToString();
+            StatusDetail.Other = EmulationStatusDetail.PackageNotFound.ToString(); // TODO: make this environment not found
             return new EmulationResult(null, String.Empty);
         }
 
+        List<Drive> envDrives = new();
+        var inputImage = ResolveInputImageId();
+        if (inputImage != null)
+            envDrives.Add(new(_config.EaasTargetInputDrive, new ImageDataSource(inputImage)));
+        var outputImage = ResolveOutputImageId();
+        if (outputImage != null)
+            envDrives.Add(new(_config.EaasTargetOutputDrive, new ImageDataSource(outputImage)));
+
         List<Func<Task>> keepAlives = [];
 
-        object dataSource = _config.IsDiskDrive ? new ImageDataSource(package.ObjectId) : new ObjectDataSource(package.ObjectId);
+        using var scope = _serviceScopeFactory.CreateScope();
 
-        logWriter.WriteLine($"Starting EaaS package ID: {package.Environment.EaasId}");
+        logWriter.WriteLine($"Starting EaaS environment ID: {environment.EaasId}");
         var componentsClient = scope.ServiceProvider.GetRequiredService<ComponentsClient>();
-        var runningComponent = await componentsClient.StartComponent(new MachineComponentRequest(
-            package.Environment.EaasId,
-            new List<Drive>() {
-                new Drive(_config.EaasTargetDrive, dataSource)
-            }
-            ));
+        var runningComponent = await componentsClient.StartComponent(new MachineComponentRequest(environment.EaasId, envDrives));
         var cachedState = await componentsClient.GetComponentState(runningComponent.id);
         keepAlives.Add(async () => await componentsClient.Keepalive(runningComponent.id));
 
-        if (package.Environment.InternetConnected)
+        if (environment.InternetConnected)
         {
             logWriter.WriteLine($"Emulator environment wants internet, starting network for component ID: {runningComponent.id}");
             var networkClient = scope.ServiceProvider.GetRequiredService<NetworksClient>();
@@ -191,9 +195,10 @@ public class Process : IProcess<EmulationResult>
             }
         }
 
+        string snapshotId = null;
         if (saveMachineState)
         {
-            // TODO: handle saving machine state
+            snapshotId = await componentsClient.SnapshotComponent(runningComponent.id, environment.EaasId, $"Emulation snapshot at {DateTime.Now.ToString()}");
         }
         await componentsClient.StopComponent(runningComponent.id);
         Status = ProcessStatus.Success;
@@ -210,7 +215,7 @@ public class Process : IProcess<EmulationResult>
         List<VideoFile> recordings = new();
         if (largestScreenRecording != null)
             recordings.Add(new(largestScreenRecording, RecordingType.Screen));
-        
+
         // Add webcam recording if it exists.
         var webcamRecordingPath = Path.Combine(RecordingsDir, "webcam.mp4");
         if (File.Exists(webcamRecordingPath))
@@ -218,7 +223,7 @@ public class Process : IProcess<EmulationResult>
 
         // TODO: return actual values
         return new EmulationResult(
-            recordings, ""
+            recordings, snapshotId
         );
     }
 
@@ -386,4 +391,75 @@ public class Process : IProcess<EmulationResult>
     {
         PackageNotFound
     }
+
+    protected abstract Task<EmulationEnvironment> ResolveEnvironment(CancellationToken cancellationToken = default);
+    protected abstract string ResolveInputImageId();
+    protected abstract string ResolveOutputImageId();
+}
+
+
+public class PreparationProcess : BaseProcess
+{
+    public Guid EnvironmentId { get; private set; }
+    public string DigitalObjectsImageId { get; private set; }
+
+    public PreparationProcess(Guid environmentId, string digitalObjectsImageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config) : base(serviceScopeFactory, config)
+    {
+        EnvironmentId = environmentId;
+        DigitalObjectsImageId = digitalObjectsImageId;
+    }
+
+    protected override async Task<EmulationEnvironment> ResolveEnvironment(CancellationToken cancellationToken)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
+        _logWriter.WriteLine($"Looking up exploration environment: {EnvironmentId}");
+        var environment = await dbContext.Environments
+            .Where(e => e.Type == EnvironmentType.Preparation)
+            .FirstOrDefaultAsync(e => e.Id == EnvironmentId);
+        return environment;
+    }
+
+    protected override string ResolveInputImageId()
+    {
+        // TODO: implement
+        return null;
+    }
+
+    protected override string ResolveOutputImageId()
+    {
+        // TODO: implement
+        return null;
+    }
+
+}
+
+public class KioskProcess : BaseProcess
+{
+    public Guid PackageId { get; private set; }
+
+    public KioskProcess(Guid packageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config) : base(serviceScopeFactory, config)
+    {
+        PackageId = packageId;
+    }
+
+    protected override async Task<EmulationEnvironment> ResolveEnvironment(CancellationToken cancellationToken)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
+        _logWriter.WriteLine($"Looking up package: {PackageId}");
+        var package = await dbContext.DigitalObjects
+            .OfType<GamePackage>()
+            .Include(p => p.Environment)
+            .FirstOrDefaultAsync(p => p.Id == PackageId, cancellationToken);
+        return package?.Environment;
+    }
+
+    protected override string ResolveInputImageId()
+    {
+        // TODO: implement
+        return null;
+    }
+
+    protected override string ResolveOutputImageId() => null;
 }

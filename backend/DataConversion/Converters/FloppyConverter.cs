@@ -79,7 +79,7 @@ public class FloppyConverter : IConverter
         if (process.Artefacts.Any(a => a.Type != ArtefactType.SfmFloppy))
         {
             process.Status = ProcessStatus.Failed;
-            process.StatusDetail = "InvalidInput";
+            process.StatusDetail.ToolMessage = "InvalidInput";
             return null;
         }
         using var logStream = new FileStream(process.LogPath, FileMode.Append);
@@ -128,7 +128,7 @@ public class FloppyConverter : IConverter
             {
                 // TODO: check other failure modes
                 process.Status = ProcessStatus.Failed;
-                process.StatusDetail = StatusDetail.FailedToConvertArtefact.ToString();
+                process.StatusDetail.ToolMessage = StatusDetail.FailedToConvertArtefact.ToString();
                 return null;
             }
 

@@ -24,7 +24,7 @@ public class GreaseweazleTool : IDigitalizationTool
     private readonly Regex FirmwareVersionRegex = new Regex(@"^\s*Firmware: (\d+).(\d+)$");
 
     public Guid Id { get; set; } = Guid.NewGuid();
-    
+
     public string Slug => _config.Slug;
 
     public string Name => "Greaseweazle";
@@ -129,7 +129,7 @@ public class GreaseweazleTool : IDigitalizationTool
         if (!checkProcess.HasExited || checkProcess.ExitCode != 0)
         {
             process.Status = ProcessStatus.Failed;
-            process.StatusDetail = StatusDetail.DriveCheckError.ToString();
+            process.StatusDetail.ToolMessage = StatusDetail.DriveCheckError.ToString();
             return null;
         }
         process.Status = ProcessStatus.Running;
@@ -158,7 +158,7 @@ public class GreaseweazleTool : IDigitalizationTool
         {
             // TODO: check other failure modes ("Command Failed: GetInfo: Bad Command")
             process.Status = ProcessStatus.Failed;
-            process.StatusDetail = StatusDetail.FailedToProcessMedia.ToString();
+            process.StatusDetail.ToolMessage = StatusDetail.FailedToProcessMedia.ToString();
             return null;
         }
         process.Status = ProcessStatus.Success;

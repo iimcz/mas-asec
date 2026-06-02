@@ -7,7 +7,12 @@ using Minio.DataModel.Args;
 
 namespace asec.DataConversion;
 
-public class Process : IProcess<ConversionResult>
+public class ConversionProcessDetail
+{
+    public string ToolMessage { get; set; }
+}
+
+public class Process : IProcess<ConversionResult, ConversionProcessDetail>
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
     public Guid EnvironmentId { get; private set; }
@@ -25,8 +30,8 @@ public class Process : IProcess<ConversionResult>
     public string LogPath { get; private set; }
 
     public ProcessStatus Status { get; set; }
+    public ConversionProcessDetail StatusDetail { get; set; }
 
-    public string StatusDetail { get; set; }
     public List<Artefact> Artefacts { get; set; }
     public ChannelWriter<string> InputChannel => _inputChannel.Writer;
     private Channel<string> _inputChannel = Channel.CreateBounded<string>(new BoundedChannelOptions(1) {
@@ -97,7 +102,7 @@ public class Process : IProcess<ConversionResult>
                 .WithBucket(_artefactBucket)
                 .WithObject(artefact.ObjectId.ToString())
                 .WithFile(Path.Combine(artefactFetchDir, artefact.FileName));
-            
+
             await minioClient.GetObjectAsync(args, cancellationToken);
         }
 
@@ -106,7 +111,7 @@ public class Process : IProcess<ConversionResult>
             if (artefact.Type != ArtefactType.ZipArchive)
                 throw new InvalidOperationException("Can only extract ZIP archives!");
             string extractionDir = Path.Combine(artefactFetchDir, artefact.FileName + "_extracted");
-            
+
             var extractionProcess = System.Diagnostics.Process.Start(_unzipBinary, new List<string>() {
                 Path.Combine(artefactFetchDir, artefact.FileName),
                 "-d", extractionDir
@@ -126,12 +131,12 @@ public class Process : IProcess<ConversionResult>
         if (Status != ProcessStatus.Running)
             throw new InvalidOperationException("Tried to wait when not running.");
         Status = ProcessStatus.WaitingForInput;
-        StatusDetail = statusDetail;
+        StatusDetail.ToolMessage = statusDetail;
 
         var result = await _inputChannel.Reader.ReadAsync(cancellationToken);
 
         Status = ProcessStatus.Running;
-        StatusDetail = String.Empty;
+        StatusDetail.ToolMessage = String.Empty;
         return result;
     }
 }
