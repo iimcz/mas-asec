@@ -1,0 +1,46 @@
+namespace asec.Compatibility.EaasApi.Models;
+
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming rule violation", "IDE1006")]
+public record EnvironmentDetails(
+    // NOTE: unneeded fields are ignored and commented out
+    //string networking,
+    //string parentEnvId,
+    string envId,
+    string title,
+    string description,
+    //string version,
+    //string emulator,
+    //string helpText,
+    //string enableRelativeMouse,
+    //string enablePrinting,
+    //string shutdownByOs,
+    //string disableGhostCursor,
+    //string timeContext,
+    //string author,
+    //string canProcessAdditionalFiles,
+    //string archive,
+    //string xpraEncoding,
+    //string owner,
+    //string envType,
+    //string revisions,
+    //string installedSoftwareIds,
+    //string userTag,
+    //string os,
+    //string nativeConfig,
+    //string useXpra,
+    //string useWebRTC,
+    //string containerName,
+    //string containerVersion,
+    List<EnvironmentDrive> drives
+    //string timestamp,
+    //string objectId,
+    //string objectArchive,
+    //string input,
+    //string output,
+    //string processArgs,
+    //string processEnvs,
+    //string runtimeId,
+    //string linuxRuntime,
+    //string isServiceContainer,
+    //string digest
+);

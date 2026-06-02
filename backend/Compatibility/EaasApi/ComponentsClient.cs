@@ -1,5 +1,6 @@
 using asec.Compatibility.EaasApi.Models;
 using RestSharp;
+using System.Text.Json;
 using ControlUrlMap = System.Collections.Generic.Dictionary<System.String, System.Uri>;
 
 namespace asec.Compatibility.EaasApi;
@@ -93,6 +94,32 @@ public class ComponentsClient : BaseEaasClient
         await _client.GetAsync<ProcessResultUrl>(request);
 
         // TODO: save emulator log from the above returned url, if not null.
+    }
+
+    public async Task<string> SnapshotComponent(string componentId, string environmentId, string message, CancellationToken cancellationToken = default)
+    {
+        var snapshotRequest = new SnapshotRequest(
+            "saveRevision",
+            message,
+            false,
+            false,
+            environmentId
+        );
+        RestRequest request = new($"/components/{componentId}/async/snapshot");
+        request.AddJsonBody(snapshotRequest);
+
+        var task = await _client.PostAsync<TaskStateResponse>(request, cancellationToken);
+
+        // TODO: forward tasks back to allow polling, instead of blocking until task completion.
+        while (!task!.isDone && !cancellationToken.IsCancellationRequested)
+        {
+            await Task.Delay(1000, cancellationToken);
+            RestRequest taskRequest = new("/tasks/" + task.taskId);
+            task = await _client.GetAsync<TaskStateResponse>(taskRequest, cancellationToken);
+        }
+
+        var output = JsonDocument.Parse(task?.object_ ?? "{}");
+        return output?.RootElement.GetProperty("envId").GetString();
     }
 
     /// <summary>

@@ -38,4 +38,29 @@ public class EnvironmentRepositoryClient : BaseEaasClient
 
         return task.userData?["imageId"];
     }
+
+    public async Task<EnvironmentDetails> GetEnvironmentDetails(string environmentId, CancellationToken cancellationToken = default)
+    {
+        RestRequest detailsRequest = new(_repositoryUrl + $"environments/{environmentId}");
+        var details = await _client.GetAsync<EnvironmentDetails>(detailsRequest, cancellationToken);
+        return details;
+    }
+
+    public async Task<string> DownloadImage(string imageId, string outputFolder, CancellationToken cancellationToken = default)
+    {
+        RestRequest downloadRequest = new(_repositoryUrl + $"images/{imageId}/url");
+        var stream = await _client.DownloadStreamAsync(downloadRequest, cancellationToken);
+
+        if (stream == null)
+            return null;
+
+        var outputFile = Path.Combine(outputFolder, imageId);
+
+        using (FileStream outputStream = new FileStream(outputFile, FileMode.CreateNew))
+        {
+            await stream.CopyToAsync(outputStream);
+        }
+
+        return outputFile;
+    }
 }
