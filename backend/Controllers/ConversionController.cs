@@ -9,6 +9,7 @@ using asec.DataConversion;
 using asec.ViewModels;
 using asec.Emulation;
 using asec.Models;
+using asec.Platforms;
 
 namespace asec.Controllers;
 
@@ -25,7 +26,7 @@ public class ConversionController : ControllerBase
     private readonly string _unzipBinary;
     private readonly ILogger<ConversionController> _logger;
     private readonly AsecDBContext _dbContext;
-    private readonly IProcessManager<DataConversion.Process, ConversionResult> _processManager;
+    private readonly IProcessManager<DataConversion.Process, ConversionResult, ConversionProcessDetail> _processManager;
     private readonly IEmulatorRepository _emulatorRepository;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
@@ -37,7 +38,7 @@ public class ConversionController : ControllerBase
     public ConversionController(
         ILogger<ConversionController> logger,
         AsecDBContext dbContext,
-        IProcessManager<DataConversion.Process, ConversionResult> processManager,
+        IProcessManager<DataConversion.Process, ConversionResult, ConversionProcessDetail> processManager,
         IEmulatorRepository emulatorRepository,
         IServiceScopeFactory serviceScopeFactory,
         IConfiguration config,
@@ -91,7 +92,7 @@ public class ConversionController : ControllerBase
 
         var process = new DataConversion.Process(environmentId, converter, await artefacts.ToListAsync(), version, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
         _processManager.StartProcess(process);
-        
+
         return Ok(ConversionProcess.FromProcess(process));
     }
 
@@ -115,15 +116,8 @@ public class ConversionController : ControllerBase
         _processManager.RemoveProcess(process);
 
         string eaasId = null;
-        if (process.Converter.UseDiskImage)
-        {
-            var diskImagePath = await CreateDiskImageFromFiles(result.Files, package.Name, cancellationToken);
-            eaasId = await UploadImageToEaaS(diskImagePath, package.Name, cancellationToken);
-        }
-        else
-        {
-            eaasId = await UploadFilesToEaaS(result.Files, DeviceIdFromType(process.Artefacts[0].Type), package.Name, cancellationToken);
-        }
+        var diskImagePath = await CreateDiskImageFromFiles(result.Files, package.Name, cancellationToken);
+        eaasId = await UploadImageToEaaS(diskImagePath, package.Name, cancellationToken);
 
         if (eaasId == null)
             throw new ApplicationException("Failed to import objects or image into EaaS.");
@@ -135,7 +129,6 @@ public class ConversionController : ControllerBase
 
         var dbGamePackage = new Models.Emulation.GamePackage() {
             ObjectId = eaasId,
-            IsDiskImage = process.Converter.UseDiskImage,
             Name = package.Name,
             ConversionDate = process.StartTime,
             Converter = await _dbContext.Converters.FindAsync(process.Converter.Id),
@@ -163,7 +156,7 @@ public class ConversionController : ControllerBase
         var process = _processManager.GetProcess(Guid.Parse(processId));
         if (process == null)
             return NotFound();
-        
+
         await process.InputChannel.WriteAsync(input.Data);
         return Ok();
     }
@@ -198,7 +191,7 @@ public class ConversionController : ControllerBase
         var version = await _dbContext.WorkVersions.FirstOrDefaultAsync(v => v.Id == process.VersionId);
         if (version is null)
             return NotFound();
-        
+
         await _processManager.CancelProcessAsync(process.Id);
         _processManager.RemoveProcess(process);
 
@@ -306,40 +299,21 @@ public class ConversionController : ControllerBase
         Directory.CreateDirectory(mountPath);
 
         var imageSize = files.Select(f => new FileInfo(f.Filename).Length).Sum();
-        imageSize /= 1024 * 1024;
-        imageSize = Math.Max(100, imageSize);
-        imageSize *= 2; // Padding. TODO: separate info configuration variable
+        var output = await Linux.MakeQcow2Image(imageSize, imagePath, FileSystem.Ext4, cancellationToken);
+        _logger.LogInformation(output);
 
-        await RunLoggedProcess("dd", [ "if=/dev/zero", $"of={imagePath}", "bs=1M", $"count={imageSize}" ]);
-        await RunLoggedProcess("mkfs", [ "-t", "ext4", "-F", imagePath, "-E", "root_owner" ]);
-        await RunLoggedProcess("fuse2fs", [ imagePath, mountPath ]);
+        output = await Linux.MountQcow2Image(imagePath, mountPath);
+        _logger.LogInformation(output);
 
         foreach (var file in files)
         {
             System.IO.File.Move(file.Filename, Path.Join(mountPath, Path.GetFileName(file.Filename)));
         }
 
-        await RunLoggedProcess("fusermount", [ "-u", mountPath ]);
+        output = await Linux.UnmountQcow2Image(mountPath);
+        _logger.LogInformation(output);
         Directory.Delete(mountPath);
 
         return imagePath;
-    }
-
-    private async Task RunLoggedProcess(string app, IList<string> arguments)
-    {
-        var startInfo = new ProcessStartInfo() {
-            FileName = app,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-        };
-        foreach (var arg in arguments)
-            startInfo.ArgumentList.Add(arg);
-
-        var process = System.Diagnostics.Process.Start(startInfo);
-        if (process == null)
-            throw new ApplicationException($"Failed to run {app}!");
-        await process.WaitForExitAsync();
-        _logger.LogWarning(process.StandardError.ReadToEnd());
-        _logger.LogInformation(process.StandardOutput.ReadToEnd());
     }
 }
