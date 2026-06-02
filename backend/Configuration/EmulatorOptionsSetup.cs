@@ -16,7 +16,8 @@ public class EmulatorOptionsSetup : IConfigureOptions<EmulatorOptions>
         using (FileStream stream = new FileStream(_emulatorsFilePath, FileMode.Open))
         {
             var loaded = JsonSerializer.Deserialize<EmulatorOptions>(stream);
-            options.Configurations = loaded?.Configurations;
+            options.Emulators = loaded?.Emulators;
+            options.PreparationEnvironments = loaded?.PreparationEnvironments;
         }
     }
 }

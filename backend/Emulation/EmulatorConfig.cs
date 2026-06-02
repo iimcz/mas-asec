@@ -12,6 +12,8 @@ public class EmulatorConfig
 
 public class EmulatorEnvironmentConfig
 {
+    public string Name { get; set; }
+    public string Note { get; set; }
     public string Version { get; set; }
     public string EaasId { get; set; }
     public bool InternetConnected { get; set; }

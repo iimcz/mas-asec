@@ -24,15 +24,16 @@ public class EmulatorRepository : IEmulatorRepository
         _serviceProvider = serviceProvider;
         _options = options.Value;
 
-        _logger.LogInformation("Loaded {} emulators from configuration.", _options.Configurations.Count);
+        _logger.LogInformation("Loaded {} emulators from configuration.", _options.Emulators.Count);
+        _logger.LogInformation("Loaded {} exploration environments from configuration.", _options.PreparationEnvironments.Count);
     }
-    
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
 
-        foreach (var config in _options.Configurations)
+        foreach (var config in _options.Emulators)
         {
             var platforms = await dbContext.Platforms
                 .Where(p => config.Platforms.Contains(p.Name))
@@ -49,7 +50,8 @@ public class EmulatorRepository : IEmulatorRepository
             if (emulator == null)
             {
                 _logger.LogInformation("Emulator {} not found, adding to database.", config.Name);
-                emulator = new() {
+                emulator = new()
+                {
                     Id = Guid.Empty,
                     Name = config.Name
                 };
@@ -59,6 +61,31 @@ public class EmulatorRepository : IEmulatorRepository
             emulator.Platforms = platforms;
 
             await LoadEmulatorVersions(dbContext, config, emulator, cancellationToken);
+        }
+
+        foreach (var env in _options.PreparationEnvironments)
+        {
+            var environment = await dbContext.Environments
+                .Include(e => e.Converters)
+                .Where(e => e.Type == EnvironmentType.Preparation)
+                .FirstOrDefaultAsync(e => e.Name == env.Name && e.Version == env.Version);
+
+            if (environment == null)
+            {
+                _logger.LogInformation("Environment record for exploration environment {} not found, adding to database.", env.Name);
+                environment = new()
+                {
+                    Id = Guid.Empty,
+                    Name = env.Name,
+                    Version = env.Version
+                };
+                await dbContext.AddAsync(environment, cancellationToken);
+            }
+            environment.EaasId = env.EaasId;
+            environment.InternetConnected = env.InternetConnected;
+            environment.Note = env.Note;
+
+            await LoadConverters(dbContext, env, environment, cancellationToken);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -72,21 +99,24 @@ public class EmulatorRepository : IEmulatorRepository
         {
             var environment = await dbContext.Environments
                 .Include(e => e.Converters)
-                .FirstOrDefaultAsync(e => e.Emulator == emulator && e.EmulatorVersion == env.Version, cancellationToken);
-            
+                .Where(e => e.Type == EnvironmentType.Kiosk)
+                .FirstOrDefaultAsync(e => e.Emulator == emulator && e.Version == env.Version, cancellationToken);
+
             if (environment == null)
             {
                 _logger.LogInformation("Environment record for environment {} version {} not found, adding to database.", config.Name, env.Version);
-                environment = new() {
+                environment = new()
+                {
                     Id = Guid.Empty,
                     Emulator = emulator,
-                    EmulatorVersion = env.Version
+                    Version = env.Version,
+                    Type = EnvironmentType.Kiosk
                 };
                 await dbContext.AddAsync(environment, cancellationToken);
             }
             environment.EaasId = env.EaasId;
             environment.InternetConnected = env.InternetConnected;
-            
+
             await LoadConverters(dbContext, env, environment, cancellationToken);
         }
     }
@@ -104,7 +134,8 @@ public class EmulatorRepository : IEmulatorRepository
             if (dbConverter == null)
             {
                 _logger.LogInformation("Converter '{}' not found in database, creating new.", converter.Name);
-                dbConverter = new() {
+                dbConverter = new()
+                {
                     Id = Guid.NewGuid(),
                     Name = converter.Name,
                     Environment = converter.Environment,
@@ -147,13 +178,13 @@ public class EmulatorRepository : IEmulatorRepository
             .FirstOrDefaultAsync(e => e.Id == emulatorId);
         if (emulator == null)
             return null;
-        
+
         var dbConverter = emulator.Converters
             .Where(c => c.SupportedArtefactTypes.Contains(sourceType))
             .FirstOrDefault();
         if (dbConverter == null)
             return null;
-        
+
         return _converters[dbConverter.Id];
     }
 
@@ -167,7 +198,7 @@ public class EmulatorRepository : IEmulatorRepository
             .FirstOrDefaultAsync(e => e.Id == emulatorId);
         if (emulator == null)
             return null;
-        
+
         return emulator.Converters
             .Where(c => _converters.ContainsKey(c.Id))
             .Select(c => _converters[c.Id]);
