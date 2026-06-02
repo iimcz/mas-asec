@@ -16,17 +16,16 @@ public class GamePackageController : ControllerBase
 {
     private AsecDBContext _dbContext;
     private IServiceScopeFactory _serviceScopeFactory;
-    private IProcessManager<Process, EmulationResult> _processManager;
+    private IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail> _processManager;
 
     private readonly string _ffmpegPath;
     private readonly string _emulationBaseDirs;
     private readonly string _mainDisplay;
     private readonly string _emulationStreamBaseUrl;
     private readonly string _webcamDevice;
-    private readonly string _eaasOpticalDrive;
-    private readonly string _eaasDiskDrive;
+    private readonly string _eaasDiskInputDrive;
 
-    public GamePackageController(IConfiguration configuration, AsecDBContext dbContext, IServiceScopeFactory serviceScopeFactory, IProcessManager<Process, EmulationResult> processManager)
+    public GamePackageController(IConfiguration configuration, AsecDBContext dbContext, IServiceScopeFactory serviceScopeFactory, IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail> processManager)
     {
         _dbContext = dbContext;
         _serviceScopeFactory = serviceScopeFactory;
@@ -38,8 +37,7 @@ public class GamePackageController : ControllerBase
         _mainDisplay = section.GetValue<string>("MainDisplay");
         _emulationStreamBaseUrl = section.GetValue<string>("StreamOutBaseUrl");
         _webcamDevice = section.GetValue<string>("WebcamDevice");
-        _eaasOpticalDrive = section.GetValue<string>("EaasOpticalDrive");
-        _eaasDiskDrive = section.GetValue<string>("EaasDiskDrive");
+        _eaasDiskInputDrive = section.GetValue<string>("EaasDiskInputDrive");
     }
 
     /// <summary>
@@ -94,29 +92,28 @@ public class GamePackageController : ControllerBase
     /// <param name="packageId">ID of the package to start</param>
     /// <returns>State of the emulation</returns>
     [HttpPost("{packageId}/emulate")]
-    [Produces(typeof(EmulationState))]
+    [Produces(typeof(EmulationProcess))]
     public async Task<IActionResult> EmulateGamePackage(string packageId)
     {
         var id = Guid.Parse(packageId);
         var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.GamePackage>().Include(p => p.Environment).FirstOrDefaultAsync(p => p.Id == id);
         if (package == null)
             return NotFound();
-        
+
         var config = new EmulationConfig() {
             DirsBase = _emulationBaseDirs,
             FfmpegPath = _ffmpegPath,
             MainDisplay = _mainDisplay,
             StreamBaseUrl = _emulationStreamBaseUrl,
             WebcamDevice = _webcamDevice,
-            EaasTargetDrive = package.IsDiskImage ? _eaasDiskDrive : _eaasOpticalDrive,
-            IsDiskDrive = package.IsDiskImage
+            EaasTargetInputDrive = _eaasDiskInputDrive,
         };
-        var process = new Process(
+        var process = new KioskProcess(
             package.Id,
             _serviceScopeFactory,
             config
         );
         _processManager.StartProcess(process);
-        return Ok(EmulationState.FromProcess(process));
+        return Ok(EmulationProcess.FromProcess(process));
     }
 }

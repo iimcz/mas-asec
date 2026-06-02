@@ -22,11 +22,11 @@ public class DigitalizationController : ControllerBase
     private readonly string _digitalizationDirsBase;
     private readonly ILogger<DigitalizationController> _logger;
     private readonly IToolRepository _tools;
-    private readonly IProcessManager<Process, DigitalizationResult> _processManager;
+    private readonly IProcessManager<Process, DigitalizationResult, DigitalizationProcessDetail> _processManager;
     private readonly IMinioClient _minioClient;
     private readonly AsecDBContext _dbContext;
 
-    public DigitalizationController(ILogger<DigitalizationController> logger, IToolRepository tools, IProcessManager<Process, DigitalizationResult> processManager, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration config, AsecDBContext dbContext)
+    public DigitalizationController(ILogger<DigitalizationController> logger, IToolRepository tools, IProcessManager<Process, DigitalizationResult, DigitalizationProcessDetail> processManager, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration config, AsecDBContext dbContext)
     {
         _logger = logger;
         _tools = tools;
@@ -140,7 +140,7 @@ public class DigitalizationController : ControllerBase
         dbArtefact.PhysicalMediaType = process.DigitalizationTool.PhysicalMedia;
         dbArtefact.DigitalizationTool = await _dbContext.DigitalizationTools.FindAsync(process.DigitalizationTool.Id);
         // TODO: overwrite other info with the process equivalents
-        
+
         var paratext = await _dbContext.Paratexts.FindAsync(process.ParatextId);
         var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);
         dbArtefact.Paratexts = new List<asec.Models.Archive.Paratext>();
@@ -150,7 +150,7 @@ public class DigitalizationController : ControllerBase
             dbArtefact.Paratexts.Add(paratext);
         if (version is not null)
             dbArtefact.WorkVersions.Add(version);
-        
+
         await _dbContext.DigitalObjects.AddAsync(dbArtefact);
         await _dbContext.SaveChangesAsync();
         _processManager.RemoveProcess(process);

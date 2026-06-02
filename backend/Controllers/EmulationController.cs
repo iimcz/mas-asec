@@ -21,11 +21,11 @@ public class EmulationController : ControllerBase
 {
     private readonly string _emulationStreamBaseUrl;
     private readonly string _paratextBucket;
-    private readonly IProcessManager<Process, EmulationResult> _processManager;
+    private readonly IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail> _processManager;
     private readonly AsecDBContext _dbContext;
     private readonly IMinioClient _minioClient;
 
-    public EmulationController(IProcessManager<Process, EmulationResult> processManager, AsecDBContext dbContext, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration configuration)
+    public EmulationController(IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail> processManager, AsecDBContext dbContext, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration configuration)
     {
         _processManager = processManager;
         _dbContext = dbContext;
@@ -47,8 +47,8 @@ public class EmulationController : ControllerBase
         var process = _processManager.GetProcess(id);
         if (process == null)
             return NotFound();
-        await process.ChannelWriter.WriteAsync(Process.EmulationMessage.Ping);
-        return Ok(EmulationState.FromProcess(process));
+        await process.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Ping);
+        return Ok(EmulationProcess.FromProcess(process));
     }
 
     /// <summary>
@@ -61,12 +61,12 @@ public class EmulationController : ControllerBase
     public async Task<IActionResult> FinishEmulation(string emulationId, [FromBody] EmulationFinishRequest finishRequest)
     {
         var id = Guid.Parse(emulationId);
-        var process = _processManager.GetProcess(id);
+        var process = _processManager.GetProcess(id) as KioskProcess;
         if (process == null)
             return NotFound();
         await process.ChannelWriter.WriteAsync(
-            finishRequest.SaveMachineState ? Process.EmulationMessage.SaveMachineState : Process.EmulationMessage.NoSaveMachineState);
-        await process.ChannelWriter.WriteAsync(Process.EmulationMessage.Quit);
+            finishRequest.SaveMachineState ? BaseProcess.EmulationMessage.SaveMachineState : BaseProcess.EmulationMessage.NoSaveMachineState);
+        await process.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Quit);
         var result = await _processManager.FinishProcessAsync(id);
 
         var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.GamePackage>().Include(p => p.Version).FirstOrDefaultAsync(p => p.Id == process.PackageId);
@@ -120,7 +120,7 @@ public class EmulationController : ControllerBase
                 await _dbContext.SaveChangesAsync();
             }
         }
-        
+
         // TODO: do something with result.SnapshotId...
 
         return Ok();

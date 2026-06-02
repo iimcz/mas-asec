@@ -20,9 +20,9 @@ namespace asec.Controllers
         private string _uploadPath;
         private readonly IMinioClient _minioClient;
         private readonly string _minioArtefactBucket;
-        private readonly IProcessManager<Process, UploadResult> _processManager;
+        private readonly IProcessManager<Process, UploadResult, EmptyProcessDetail> _processManager;
 
-        public UploadController(AsecDBContext dbContext, IConfiguration config, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IProcessManager<Process, UploadResult> processManager)
+        public UploadController(AsecDBContext dbContext, IConfiguration config, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IProcessManager<Process, UploadResult, EmptyProcessDetail> processManager)
         {
             _processManager = processManager;
             _dbContext = dbContext;
@@ -96,7 +96,7 @@ namespace asec.Controllers
                 .WithObject(objectId.ToString());
             var artefactObject = await _minioClient.PutObjectAsync(args);
             var fileSize = new FileInfo(processResult.Filename).Length;
-            
+
             var dbArtefact = await artefact.ToDBEntity(_dbContext);
             dbArtefact.ObjectId = objectId;
             dbArtefact.PhysicalMediaType = PhysicalMediaType.None;
