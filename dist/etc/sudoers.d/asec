@@ -1,0 +1,7 @@
+# Assuming username "asec" - change if necessary
+# Better option would be just userspace mounting, but that might not be easy with
+# qemu-nbd and mounting the resulting drive.
+Cmnd_Alias      IMAGING_COMMANDS = /usr/bin/qemu-img, /usr/bin/qemu-nbd
+Cmnd_Aliad      MOUNT_COMMANDS = /usr/bin/mount /dev/nbd* *, /usr/bin/umount
+
+asec ALL=(root) NOPASSWD: IMAGING_COMMANDS, MOUNT_COMMANDS
