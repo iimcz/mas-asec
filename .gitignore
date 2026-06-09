@@ -1,5 +1,6 @@
-# These, if anything, should be inside the code directory (backend)
+# Ignore editor setting folders
 .vscode/
+.zed/
 
 # Created when generating documentation from here.
 _site/
