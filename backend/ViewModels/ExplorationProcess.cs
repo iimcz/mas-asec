@@ -1,7 +1,8 @@
 namespace asec.ViewModels;
 
 public record ExplorationDetail(
-
+    string StreamUrl,
+    RunnablePackage LatestParsedRunnable
 );
 
 public record ExplorationProcess : Process<ExplorationDetail>
@@ -12,7 +13,10 @@ public record ExplorationProcess : Process<ExplorationDetail>
             Id = process.Id.ToString(),
             StartTime = process.StartTime.ToString(),
             Status = process.Status.ToString(),
-            StatusDetail = new()
+            StatusDetail = new(
+                process.CurrentStreamUrl,
+                RunnablePackage.FromDBEntity(process.LatestRunnablePackage)
+            )
         };
     }
 }

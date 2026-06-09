@@ -3,6 +3,7 @@ using asec.DataConversion;
 using asec.Emulation;
 using asec.LongRunning;
 using asec.Models.Digitalization;
+using asec.Models.Emulation;
 using asec.Platforms;
 using System.Threading.Channels;
 
@@ -36,6 +37,10 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
     public ExplorationProcessDetail StatusDetail { get; private set; } = new();
 
     public ChannelWriter<ExplorationMessage> ChannelWriter => _inputChannel.Writer;
+
+    public string CurrentStreamUrl { get; private set; } = ""; // TODO: placeholder
+    public RunnablePackage LatestRunnablePackage { get; private set; } = new(); // TODO: placeholder
+
     protected Channel<ExplorationMessage> _inputChannel = Channel.CreateBounded<ExplorationMessage>(new BoundedChannelOptions(4)
     {
         FullMode = BoundedChannelFullMode.DropOldest,
@@ -209,7 +214,9 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         Ping,
         GotoExploration,
         GotoKiosk,
-        Quit
+        Save,
+        Abort,
+        Done
     }
 
     public enum ExplorationState
