@@ -25,7 +25,7 @@ public class EmulatorRepository : IEmulatorRepository
         _options = options.Value;
 
         _logger.LogInformation("Loaded {} emulators from configuration.", _options.Emulators.Count);
-        _logger.LogInformation("Loaded {} exploration environments from configuration.", _options.PreparationEnvironments.Count);
+        _logger.LogInformation("Loaded {} exploration environments from configuration.", _options.ExplorationEnvironments.Count);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -63,11 +63,11 @@ public class EmulatorRepository : IEmulatorRepository
             await LoadEmulatorVersions(dbContext, config, emulator, cancellationToken);
         }
 
-        foreach (var env in _options.PreparationEnvironments)
+        foreach (var env in _options.ExplorationEnvironments)
         {
             var environment = await dbContext.Environments
                 .Include(e => e.Converters)
-                .Where(e => e.Type == EnvironmentType.Preparation)
+                .Where(e => e.Type == EnvironmentType.Exploration)
                 .FirstOrDefaultAsync(e => e.Name == env.Name && e.Version == env.Version);
 
             if (environment == null)

@@ -2,6 +2,6 @@ namespace asec.Models.Emulation;
 
 public enum EnvironmentType
 {
-    Preparation,
+    Exploration,
     Kiosk
 }

@@ -401,13 +401,13 @@ public abstract class BaseProcess : IProcess<EmulationResult, EmulationProcessDe
 }
 
 
-public class PreparationProcess : BaseProcess
+public class ExplorationProcess : BaseProcess
 {
     public Guid EnvironmentId { get; private set; }
     public string DigitalObjectsImageId { get; private set; }
     public string OutputImageId { get; private set; }
 
-    public PreparationProcess(Guid environmentId, string digitalObjectsImageId, string outputImageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
+    public ExplorationProcess(Guid environmentId, string digitalObjectsImageId, string outputImageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
     {
         EnvironmentId = environmentId;
         DigitalObjectsImageId = digitalObjectsImageId;
@@ -420,7 +420,7 @@ public class PreparationProcess : BaseProcess
         var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
         _logWriter.WriteLine($"Looking up exploration environment: {EnvironmentId}");
         var environment = await dbContext.Environments
-            .Where(e => e.Type == EnvironmentType.Preparation)
+            .Where(e => e.Type == EnvironmentType.Exploration)
             .FirstOrDefaultAsync(e => e.Id == EnvironmentId);
         return environment;
     }

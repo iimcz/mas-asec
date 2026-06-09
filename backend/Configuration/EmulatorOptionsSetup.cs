@@ -17,7 +17,7 @@ public class EmulatorOptionsSetup : IConfigureOptions<EmulatorOptions>
         {
             var loaded = JsonSerializer.Deserialize<EmulatorOptions>(stream);
             options.Emulators = loaded?.Emulators;
-            options.PreparationEnvironments = loaded?.PreparationEnvironments;
+            options.ExplorationEnvironments = loaded?.ExplorationEnvironments;
         }
     }
 }
