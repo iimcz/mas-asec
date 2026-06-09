@@ -34,19 +34,19 @@ namespace asec.Controllers
         {
             var result = new Processes();
 
-            foreach(var process in _digitalizationProcessManager.GetProcesses())
+            foreach(var process in _digitalizationProcessManager.GetProcesses().Where(p => !p.IsSubprocess))
             {
                 result.digitalizationProcesses.Add(DigitalizationProcess.FromProcess(process));
             }
-            foreach (var process in _conversionProcessManager.GetProcesses())
+            foreach (var process in _conversionProcessManager.GetProcesses().Where(p => !p.IsSubprocess))
             {
                 result.conversionProcesses.Add(ConversionProcess.FromProcess(process));
             }
-            foreach (var process in _emulationProcessManager.GetProcesses())
+            foreach (var process in _emulationProcessManager.GetProcesses().Where(p => !p.IsSubprocess))
             {
                 result.emulationProcesses.Add(EmulationProcess.FromProcess(process));
             }
-            foreach (var process in _uploadProcessManager.GetProcesses())
+            foreach (var process in _uploadProcessManager.GetProcesses().Where(p => !p.IsSubprocess))
             {
                 result.uploadProcesses.Add(UploadProcess.FromProcess(process));
             }

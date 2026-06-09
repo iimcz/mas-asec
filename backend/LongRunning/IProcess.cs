@@ -10,6 +10,7 @@ public interface IProcess<TResult, TDetail>
 
     // TODO: consider locking modification to avoid changing the value during get from different thread
     ProcessStatus Status { get; }
+    bool IsSubprocess { get; }
     TDetail StatusDetail { get; }
 
     Task<TResult> Start(CancellationToken cancellationToken);

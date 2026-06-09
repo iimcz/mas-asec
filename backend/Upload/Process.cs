@@ -13,6 +13,7 @@ namespace asec.Upload
         public string BaseDir { get; private set; }
         public string LogPath { get; private set; }
         public ProcessStatus Status { get; set; }
+        public bool IsSubprocess { get; set; } = false;
         public EmptyProcessDetail StatusDetail { get; set; }
         public Stream FileStream { get; set; }
         public string Boundary { get; set; }

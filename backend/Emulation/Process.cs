@@ -44,6 +44,7 @@ public abstract class BaseProcess : IProcess<EmulationResult, EmulationProcessDe
     public string LogPath { get; private set; }
 
     public ProcessStatus Status { get; private set; } = ProcessStatus.Initialization;
+    public bool IsSubprocess { get; private set; }
     public EmulationProcessDetail StatusDetail { get; private set; } = new()
     {
         IsGpuPassthrough = true,
@@ -63,7 +64,7 @@ public abstract class BaseProcess : IProcess<EmulationResult, EmulationProcessDe
     protected readonly EmulationConfig _config;
     protected StreamWriter _logWriter;
 
-    public BaseProcess(IServiceScopeFactory serviceScopeFactory, EmulationConfig config)
+    public BaseProcess(IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _config = config;
@@ -72,6 +73,8 @@ public abstract class BaseProcess : IProcess<EmulationResult, EmulationProcessDe
         LogPath = Path.Combine(BaseDir, "log.txt");
         SubprocessLogsDir = Path.Combine(BaseDir, "sublogs");
         RecordingsDir = Path.Combine(BaseDir, "recordings");
+
+        IsSubprocess = isSubprocess;
 
         CreateDirectoryStructure();
     }
@@ -402,11 +405,13 @@ public class PreparationProcess : BaseProcess
 {
     public Guid EnvironmentId { get; private set; }
     public string DigitalObjectsImageId { get; private set; }
+    public string OutputImageId { get; private set; }
 
-    public PreparationProcess(Guid environmentId, string digitalObjectsImageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config) : base(serviceScopeFactory, config)
+    public PreparationProcess(Guid environmentId, string digitalObjectsImageId, string outputImageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
     {
         EnvironmentId = environmentId;
         DigitalObjectsImageId = digitalObjectsImageId;
+        OutputImageId = outputImageId;
     }
 
     protected override async Task<EmulationEnvironment> ResolveEnvironment(CancellationToken cancellationToken)
@@ -422,14 +427,12 @@ public class PreparationProcess : BaseProcess
 
     protected override string ResolveInputImageId()
     {
-        // TODO: implement
-        return null;
+        return DigitalObjectsImageId;
     }
 
     protected override string ResolveOutputImageId()
     {
-        // TODO: implement
-        return null;
+        return OutputImageId;
     }
 
 }
@@ -437,8 +440,9 @@ public class PreparationProcess : BaseProcess
 public class KioskProcess : BaseProcess
 {
     public Guid PackageId { get; private set; }
+    private GamePackage _package;
 
-    public KioskProcess(Guid packageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config) : base(serviceScopeFactory, config)
+public KioskProcess(Guid packageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
     {
         PackageId = packageId;
     }
@@ -448,17 +452,16 @@ public class KioskProcess : BaseProcess
         using var scope = _serviceScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
         _logWriter.WriteLine($"Looking up package: {PackageId}");
-        var package = await dbContext.DigitalObjects
+        _package = await dbContext.DigitalObjects
             .OfType<GamePackage>()
             .Include(p => p.Environment)
             .FirstOrDefaultAsync(p => p.Id == PackageId, cancellationToken);
-        return package?.Environment;
+        return _package?.Environment;
     }
 
     protected override string ResolveInputImageId()
     {
-        // TODO: implement
-        return null;
+        return _package?.ObjectId;
     }
 
     protected override string ResolveOutputImageId() => null;

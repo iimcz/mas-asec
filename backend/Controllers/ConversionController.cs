@@ -21,9 +21,6 @@ namespace asec.Controllers;
 [Route("/api/v1/conversion")]
 public class ConversionController : ControllerBase
 {
-    private readonly string _conversionDirsBase;
-    private readonly string _artefactBucket;
-    private readonly string _unzipBinary;
     private readonly ILogger<ConversionController> _logger;
     private readonly AsecDBContext _dbContext;
     private readonly IProcessManager<DataConversion.Process, ConversionResult, ConversionProcessDetail> _processManager;
@@ -34,6 +31,7 @@ public class ConversionController : ControllerBase
     private readonly ObjectRepositoryClient _eaasObjectRepoClient;
     private readonly EnvironmentRepositoryClient _eaasEnvironmentRepoClient;
     private readonly EaasUploadClient _eaasUploadClient;
+    private readonly IConfiguration _configuration;
 
     public ConversionController(
         ILogger<ConversionController> logger,
@@ -56,10 +54,7 @@ public class ConversionController : ControllerBase
         _eaasObjectRepoClient = eaasObjectRepositoryClient;
         _eaasEnvironmentRepoClient = eaasEnvironmentRepoClient;
 
-        var section = config.GetSection("Conversion");
-        _unzipBinary = section.GetValue<string>("UnzipBinary");
-        _conversionDirsBase = section.GetValue<string>("ProcessBaseDir");
-        _artefactBucket = config.GetSection("ObjectStorage").GetValue<string>("ArtefactBucket");
+        _configuration = config;
     }
 
     /// <summary>
@@ -90,7 +85,7 @@ public class ConversionController : ControllerBase
         if (converter == null)
             return NotFound();
 
-        var process = new DataConversion.Process(environmentId, converter, await artefacts.ToListAsync(), version, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
+        var process = new DataConversion.Process(converter, await artefacts.ToListAsync(), _serviceScopeFactory, _configuration, environmentId, version.Id);
         _processManager.StartProcess(process);
 
         return Ok(ConversionProcess.FromProcess(process));
@@ -116,8 +111,9 @@ public class ConversionController : ControllerBase
         _processManager.RemoveProcess(process);
 
         string eaasId = null;
-        var diskImagePath = await CreateDiskImageFromFiles(result.Files, package.Name, cancellationToken);
-        eaasId = await UploadImageToEaaS(diskImagePath, package.Name, cancellationToken);
+        var conversionBaseDir = _configuration.GetSection("Conversion").GetValue<string>("ProcessBaseDir");
+        eaasId = await new ResultUploader(_eaasUploadClient, _eaasObjectRepoClient, _eaasEnvironmentRepoClient, conversionBaseDir, _logger)
+            .UploadImageToEaaS(result.Files, package.Name, cancellationToken);
 
         if (eaasId == null)
             throw new ApplicationException("Failed to import objects or image into EaaS.");
@@ -195,7 +191,7 @@ public class ConversionController : ControllerBase
         await _processManager.CancelProcessAsync(process.Id);
         _processManager.RemoveProcess(process);
 
-        var newProcess = new DataConversion.Process(process.EnvironmentId, process.Converter, process.Artefacts, version, _serviceScopeFactory, _conversionDirsBase, _artefactBucket, _unzipBinary);
+        var newProcess = new DataConversion.Process(process.Converter, process.Artefacts, _serviceScopeFactory, _configuration, process.EnvironmentId, process.VersionId);
         _processManager.StartProcess(newProcess);
 
         return Ok(ConversionProcess.FromProcess(newProcess));
@@ -232,88 +228,5 @@ public class ConversionController : ControllerBase
             return NotFound();
         await _processManager.CancelProcessAsync(id);
         return Ok(ConversionProcess.FromProcess(process));
-    }
-
-    private static string DeviceIdFromType(ArtefactType _)
-    {
-        // TODO: For now always use Files. In the future it would be nice
-        // to properly specify the device. This is here to ensure even a floppy
-        // gets presented to the virtual machine as an .img file, instead of
-        // an inserted floppy disk. That would require also checking if the format
-        // is supported by QEMU and wouldn't allow differently formatted floppies
-        // for different platforms/emulators.
-        return DeviceID.Files;
-    }
-
-    private async Task<string> UploadImageToEaaS(string diskImagePath, string name, CancellationToken cancellationToken = default(CancellationToken))
-    {
-        var eaasUploadResponse = await _eaasUploadClient.Upload(diskImagePath, cancellationToken);
-        if (eaasUploadResponse.status != "0")
-        {
-            _logger.LogError("Failed to upload disk image to EaaS:");
-            _logger.LogError("{}", eaasUploadResponse);
-        }
-
-        var importImage = new ImportImageRequest(
-            eaasUploadResponse.uploadedItemList[0].url, name
-        );
-
-        var eaasImageId = await _eaasEnvironmentRepoClient.ImportImage(importImage, cancellationToken);
-        return eaasImageId;
-    }
-
-    private async Task<string> UploadFilesToEaaS(IList<ConvertedFile> files, string deviceId, string name, CancellationToken cancellationToken = default(CancellationToken))
-    {
-        // TODO: do better error checking
-        var eaasUploadTasks = files.Select(f => _eaasUploadClient.Upload(f.Filename, cancellationToken));
-        var eaasUploadResponses = await Task.WhenAll(eaasUploadTasks);
-        if (!eaasUploadResponses.All(r => r.status == "0"))
-        {
-            _logger.LogError("Failed to upload some objects to EaaS:");
-            foreach (var resp in eaasUploadResponses)
-                _logger.LogError("{}", resp);
-        }
-
-        // TODO: use a proper file format (ImportFileInfo.fileFmt)
-        var importObjects = eaasUploadResponses.SelectMany(
-            r => r.uploadedItemList
-        ).Select(
-            uploaded => new ImportFileInfo(uploaded.url, deviceId, string.Empty, uploaded.filename)
-        ).ToList();
-
-        var eaasObjectId = await _eaasObjectRepoClient.ImportObjects(new(
-            name,
-            importObjects
-        ), cancellationToken);
-
-        return eaasObjectId;
-    }
-
-    private async Task<string> CreateDiskImageFromFiles(IList<ConvertedFile> files, string name, CancellationToken cancellationToken = default(CancellationToken))
-    {
-        // TODO: for now, this will only work on linux due to the filesystem used and the availability of the tools.
-        // In the future, this could be extended to be at least configurable, maybe include some tool checks somewhere
-        // and maybe have a version for other platforms as well.
-        var imagePath = Path.Join(_conversionDirsBase, name + ".img");
-        var mountPath = Path.Join(_conversionDirsBase, name + "_mounted");
-        Directory.CreateDirectory(mountPath);
-
-        var imageSize = files.Select(f => new FileInfo(f.Filename).Length).Sum();
-        var output = await Linux.MakeQcow2Image(imageSize, imagePath, FileSystem.Ext4, cancellationToken);
-        _logger.LogInformation(output);
-
-        output = await Linux.MountQcow2Image(imagePath, mountPath);
-        _logger.LogInformation(output);
-
-        foreach (var file in files)
-        {
-            System.IO.File.Move(file.Filename, Path.Join(mountPath, Path.GetFileName(file.Filename)));
-        }
-
-        output = await Linux.UnmountQcow2Image(mountPath);
-        _logger.LogInformation(output);
-        Directory.Delete(mountPath);
-
-        return imagePath;
     }
 }

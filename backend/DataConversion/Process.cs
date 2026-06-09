@@ -30,6 +30,7 @@ public class Process : IProcess<ConversionResult, ConversionProcessDetail>
     public string LogPath { get; private set; }
 
     public ProcessStatus Status { get; set; }
+    public bool IsSubprocess { get; private set; }
     public ConversionProcessDetail StatusDetail { get; set; }
 
     public List<Artefact> Artefacts { get; set; }
@@ -47,15 +48,19 @@ public class Process : IProcess<ConversionResult, ConversionProcessDetail>
     private readonly string _unzipBinary;
     private readonly string _artefactBucket;
 
-    public Process(Guid environmentId, IConverter converter, List<Artefact> artefacts, Models.Archive.WorkVersion version, IServiceScopeFactory serviceScopeFactory, string dirsBase, string artefactBucket, string unzipBin)
+    public Process(IConverter converter, List<Artefact> artefacts, IServiceScopeFactory serviceScopeFactory, IConfiguration configuration, Guid environmentId, Guid versionId, bool isSubprocess = false)
     {
         Converter = converter;
         _serviceScopeFactory = serviceScopeFactory;
-        _unzipBinary = unzipBin;
-        _artefactBucket = artefactBucket;
         Artefacts = artefacts;
         EnvironmentId = environmentId;
-        VersionId = version.Id;
+        VersionId = versionId;
+        IsSubprocess = isSubprocess;
+
+        var section = configuration.GetSection("Conversion");
+        _artefactBucket = configuration.GetSection("LocalObjectStorage").GetValue<string>("ArtefactBucket");
+        _unzipBinary = section.GetValue<string>("UnzipBinary");
+        var dirsBase = section.GetValue<string>("ProcessBaseDir") ?? "";
 
         BaseDir = Path.Combine(dirsBase, Id.ToString());
         FetchDir = Path.Combine(BaseDir, "fetched");

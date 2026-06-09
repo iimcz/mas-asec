@@ -28,6 +28,7 @@ public class Process : IProcess<DigitalizationResult, DigitalizationProcessDetai
 
     // TODO: consider locking modification to avoid changing the value during get from different thread
     public ProcessStatus Status { get; set; }
+    public bool IsSubprocess { get; private set; }
     public DigitalizationProcessDetail StatusDetail { get; set; }
 
     public ChannelWriter<string> InputChannel => _inputChannel.Writer;
@@ -37,7 +38,7 @@ public class Process : IProcess<DigitalizationResult, DigitalizationProcessDetai
         SingleWriter = false
     });
 
-    public Process(IDigitalizationTool digitalizationTool, Models.Archive.WorkVersion version, Models.Archive.Paratext paratext, string dirsBase)
+    public Process(IDigitalizationTool digitalizationTool, Models.Archive.WorkVersion version, Models.Archive.Paratext paratext, string dirsBase, bool isSubprocess = false)
     {
         DigitalizationTool = digitalizationTool;
 
@@ -50,6 +51,8 @@ public class Process : IProcess<DigitalizationResult, DigitalizationProcessDetai
 
         OutputPath = Path.Combine(BaseDir, "output");
         LogPath = Path.Combine(BaseDir, "log.txt");
+
+        IsSubprocess = isSubprocess;
 
         CreateDirectoryStructure();
     }
