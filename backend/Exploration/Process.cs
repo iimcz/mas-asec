@@ -18,6 +18,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 {
     private readonly IServiceScopeFactory _serviceProvider;
     private readonly IConfiguration _configuration;
+    private readonly string _emulationStreamBaseUrl;
     private readonly EmulationConfig _explorationProcessConfig;
     private readonly Guid _explorationEnvironmentId;
     private readonly List<Artefact> _artefacts;
@@ -61,6 +62,8 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
         _configuration = configuration;
         var section = configuration.GetSection("Emulation");
+
+        _emulationStreamBaseUrl = section.GetValue<string>("StreamBaseUrl");
 
         _explorationProcessConfig = new EmulationConfig()
         {
@@ -186,7 +189,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         var emulationProcess = new ExplorationProcess(_explorationEnvironmentId, _prepEaasImageId, _prepEaasOuptutImageId, _serviceProvider, _explorationProcessConfig, true);
 
         emulationProcessManager.StartProcess(emulationProcess);
-        CurrentStreamUrl = _explorationProcessConfig.StreamBaseUrl + emulationProcess.Id.ToString();
+        CurrentStreamUrl =_emulationStreamBaseUrl + emulationProcess.Id.ToString();
 
         while (_inputChannel.Reader.TryRead(out _)) ;
 
@@ -282,7 +285,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         var emulationProcess = new ExplorationProcess(_explorationEnvironmentId, _playableEaasImageId, null, _serviceProvider, _explorationProcessConfig, true);
 
         emulationProcessManager.StartProcess(emulationProcess);
-        CurrentStreamUrl = _explorationProcessConfig.StreamBaseUrl + emulationProcess.Id.ToString();
+        CurrentStreamUrl = _emulationStreamBaseUrl + emulationProcess.Id.ToString();
 
         while (_inputChannel.Reader.TryRead(out _)) ;
 
