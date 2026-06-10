@@ -23,17 +23,22 @@ public static class Linux
             RedirectStandardOutput = true
         };
 
+        string info = $"Running {executable}";
+        foreach ( var arg in args ) info += $" {arg}";
+
         var process = Process.Start(startInfo);
         if (process != null)
         {
             await process.WaitForExitAsync(cancellationToken);
             if (process.ExitCode == 0)
-                return process.StandardOutput.ReadToEnd();
+                return info + "\n" + process.StandardOutput.ReadToEnd();
             else
-                return process.StandardError.ReadToEnd();
+                return info + "\n" + process.StandardError.ReadToEnd();
         }
-        return null;
+        return info;
     }
+
+    private static async Task SafetyWait() => await Task.Delay(1000);
 
     public static async Task<string> QemuImg(bool sudo, List<string> args, CancellationToken cancellationToken = default)
         => await Execute(sudo, "qemu-img", args, cancellationToken);
@@ -67,6 +72,7 @@ public static class Linux
         // TODO: find first available nbd device, instead of hardcoded 0
         partial = await QemuNbd(true, ["--connect=/dev/nbd0", path], cancellationToken);
         sw.WriteLine(partial);
+        await SafetyWait();
 
         // TODO: use root_perms if available - currently used distro only supports root_owner
         partial = await Mkfs(true, ["-t", fs.ToString().ToLower(), "-F", "/dev/nbd0"], cancellationToken);
@@ -74,6 +80,7 @@ public static class Linux
 
         partial = await QemuNbd(true, ["-d", "/dev/nbd0"], cancellationToken);
         sw.WriteLine(partial);
+        await SafetyWait();
 
         // HACK: use very lax perms to allow copying data in
         Directory.CreateDirectory("/tmp/asec-permfix");
@@ -93,6 +100,7 @@ public static class Linux
 
         var partial = await QemuNbd(true, ["--connect=/dev/nbd0", path], cancellationToken);
         sw.WriteLine(partial);
+        await SafetyWait();
 
         // NOTE: assumes the whole image is formatted without a partition table
         partial = await Mount(true, ["/dev/nbd0", mountpoint], cancellationToken);
@@ -111,6 +119,7 @@ public static class Linux
         // TODO: check which device was actually mounted to the mountpoint and disconnect that
         partial = await QemuNbd(true, ["-d", "/dev/nbd0"], cancellationToken);
         sw.WriteLine(partial);
+        await SafetyWait();
 
         return sw.ToString();
     }
