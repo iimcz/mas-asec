@@ -31,7 +31,7 @@ public class Process : IProcess<ConversionResult, ConversionProcessDetail>
 
     public ProcessStatus Status { get; set; }
     public bool IsSubprocess { get; private set; }
-    public ConversionProcessDetail StatusDetail { get; set; }
+    public ConversionProcessDetail StatusDetail { get; set; } = new();
 
     public List<Artefact> Artefacts { get; set; }
     public ChannelWriter<string> InputChannel => _inputChannel.Writer;
