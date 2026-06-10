@@ -1,10 +1,11 @@
 namespace asec.ViewModels;
 
-// Should copy asec.Exploration.Process.ExplorationMessage, but without Ping, Abort, Save and Finish
 public enum ExplorationInputType
 {
     GotoExploration,
-    GotoKiosk
+    GotoCheck,
+    GotoKiosk,
+    Done
 }
 
 public record ExplorationDone(

@@ -2,7 +2,8 @@ namespace asec.ViewModels;
 
 public record ExplorationDetail(
     string StreamUrl,
-    RunnablePackage LatestParsedRunnable
+    string State,
+    PlayableObject LatestParsedPlayable
 );
 
 public record ExplorationProcess : Process<ExplorationDetail>
@@ -15,7 +16,8 @@ public record ExplorationProcess : Process<ExplorationDetail>
             Status = process.Status.ToString(),
             StatusDetail = new(
                 process.CurrentStreamUrl,
-                RunnablePackage.FromDBEntity(process.LatestRunnablePackage)
+                process.StatusDetail.State.ToString(),
+                process.LatestPlayableObject != null ? PlayableObject.FromDBEntity(process.LatestPlayableObject) : null
             )
         };
     }

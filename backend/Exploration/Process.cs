@@ -38,8 +38,8 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
     public ChannelWriter<ExplorationMessage> ChannelWriter => _inputChannel.Writer;
 
-    public string CurrentStreamUrl { get; private set; } = ""; // TODO: placeholder
-    public RunnablePackage LatestRunnablePackage { get; private set; } = new(); // TODO: placeholder
+    public string CurrentStreamUrl { get; private set; } = "";
+    public PlayableObject LatestPlayableObject { get; private set; } = null;
 
     protected Channel<ExplorationMessage> _inputChannel = Channel.CreateBounded<ExplorationMessage>(new BoundedChannelOptions(4)
     {
@@ -48,14 +48,12 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         SingleWriter = false,
     });
 
-    private Emulation.ExplorationProcess _prepEmuSubProcess = null;
-    private Emulation.KioskProcess _kioskEmuSubProcess = null;
-    private DataConversion.Process _conversionProcess = null;
-
     private string _playableEaasImageId;
     private string _prepEaasImageId;
     private string _prepEaasOuptutImageId;
     private string _prepSnapshotId;
+    private string _playableImage;
+    private ConversionResult _initialConversionResult;
 
     public Process(IConfiguration configuration, IServiceScopeFactory serviceProvider, Guid explorationEnvironmentId, List<Artefact> artefacts)
     {
@@ -66,7 +64,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
         _explorationProcessConfig = new EmulationConfig()
         {
-            DirsBase =  section.GetValue<string>("ProcessBaseDir"),
+            DirsBase = section.GetValue<string>("ProcessBaseDir"),
             FfmpegPath = section.GetValue<string>("FfmpegPath"),
             MainDisplay = section.GetValue<string>("MainDisplay"),
             StreamBaseUrl = section.GetValue<string>("StreamOutBaseUrl"),
@@ -89,130 +87,240 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
     public async Task<ExplorationResult> Start(CancellationToken cancellationToken)
     {
+        CancellationToken = cancellationToken;
+        StartTime = DateTime.Now;
+        BaseDir = _processDir;
+        LogPath = Path.Combine(_processDir, "log.txt");
         Directory.CreateDirectory(_processDir);
 
+        Status = ProcessStatus.Running;
+        StatusDetail.State = ExplorationState.InitialConversion;
+        while (StatusDetail.State != ExplorationState.Done && !cancellationToken.IsCancellationRequested)
         {
-            var scope = _serviceProvider.CreateScope();
-            StatusDetail.State = ExplorationState.InitialConversion;
-            var conversionProcessManager = scope.ServiceProvider.GetRequiredService<IProcessManager<DataConversion.Process, ConversionResult, ConversionProcessDetail>>();
-            var conversionProcess = new DataConversion.Process(
-                new DataConversion.Converters.CopyConverter(null), // HACK: <- this should be handled better, maybe find an already constructed converter
-                _artefacts,
-                _serviceProvider,
-                _configuration,
-                Guid.Empty,
-                Guid.Empty
-            );
-            var conversionResult = await conversionProcessManager.StartProcessAsync(conversionProcess);
+            var nextState = StatusDetail.State switch
+            {
+                ExplorationState.InitialConversion => await PerformInitialConversion(),
+                ExplorationState.InitialUpload => await PerformInitialUpload(),
+                ExplorationState.ExplorationEnvironmentRunning => await RunExplorationEnvironment(),
+                ExplorationState.DownloadExplorationData => await DownloadExplorationData(),
+                ExplorationState.ExtractingPlayableInfo => await ExtractPlayableInfo(),
+                ExplorationState.UploadKioskData => await UploadKioskData(),
+                ExplorationState.KioskEnvironmentRunning => await RunKioskEnvironment(),
+                ExplorationState.Done => ExplorationState.Done,
+                ExplorationState.Aborted => ExplorationState.Aborted,
+                _ => throw new NotImplementedException(),
+            };
 
-            if (conversionProcess.Status != ProcessStatus.Success)
+            if (StatusDetail.State == ExplorationState.Aborted)
             {
                 Status = ProcessStatus.Failed;
-                return null;
+                break;
             }
 
-            StatusDetail.State = ExplorationState.InitialUpload;
-            var eaasUploadClient = scope.ServiceProvider.GetRequiredService<EaasUploadClient>();
-            var eaasEnvironmentRepoClient = scope.ServiceProvider.GetRequiredService<EnvironmentRepositoryClient>();
-            var conversionBaseDir = _configuration.GetSection("").GetValue<string>("");
-
-            // TODO: better image name
-            _prepEaasImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvironmentRepoClient, conversionBaseDir, null)
-                .UploadImageToEaaS(conversionResult.Files, $"exploration[{Id}]", cancellationToken);
-
-            var emptyImage = await Linux.MakeQcow2Image(1024 * 1024 * 1024, Path.Combine(_processDir, "output.qcow2"), FileSystem.Ext4, cancellationToken);
-            _prepEaasOuptutImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvironmentRepoClient, null, null)
-                .UploadImageToEaaS(emptyImage, $"output[{Id}]", cancellationToken);
-        }
-        {
-            var scope = _serviceProvider.CreateScope();
-            StatusDetail.State = ExplorationState.ExplorationEnvironmentRunning;
-
-            var emulationProcessManager = scope.ServiceProvider.GetRequiredService<IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail>>();
-            var emulationProcess = new ExplorationProcess(_explorationEnvironmentId, _prepEaasImageId, _prepEaasOuptutImageId, _serviceProvider, _explorationProcessConfig, true);
-
-            emulationProcessManager.StartProcess(emulationProcess);
-
-            bool keepRunning = true;
-            while (_inputChannel.Reader.TryRead(out _)); // NOTE: clear the input channel first
-
-            while (keepRunning && !cancellationToken.IsCancellationRequested)
+            if (StatusDetail.State == ExplorationState.Done)
             {
-                var message = await _inputChannel.Reader.ReadAsync(cancellationToken);
+                Status = ProcessStatus.Success;
+                break;
+            }
 
-                switch (message)
-                {
-                    case ExplorationMessage.Ping:
-                        await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Ping);
-                        break;
-                    case ExplorationMessage.GotoKiosk:
+            StatusDetail.State = nextState;
+        }
+        return null;
+    }
+
+    private async Task<ExplorationState> PerformInitialConversion()
+    {
+        using var scope = _serviceProvider.CreateScope();
+
+        var conversionProcessManager = scope.ServiceProvider.GetRequiredService<IProcessManager<DataConversion.Process, ConversionResult, ConversionProcessDetail>>();
+        var conversionProcess = new DataConversion.Process(
+            new DataConversion.Converters.CopyConverter(null), // HACK: for now use just a hardcoded converter - this should use a deduced one later, though still likely just CopyConverter
+            _artefacts,
+            _serviceProvider,
+            _configuration,
+            Guid.Empty,
+            Guid.Empty,
+            true
+        );
+        _initialConversionResult = await conversionProcessManager.StartProcessAsync(conversionProcess);
+
+        if (conversionProcess.Status != ProcessStatus.Success)
+        {
+            Status = ProcessStatus.Failed;
+        }
+        return ExplorationState.InitialUpload;
+    }
+
+    private async Task<ExplorationState> PerformInitialUpload()
+    {
+        using var scope = _serviceProvider.CreateScope();
+
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Process>>();
+
+        var eaasUploadClient = scope.ServiceProvider.GetRequiredService<EaasUploadClient>();
+        var eaasEnvironmentRepoClient = scope.ServiceProvider.GetRequiredService<EnvironmentRepositoryClient>();
+        var conversionBaseDir = Path.Combine(BaseDir, "subprocesses", "conversion");
+        Directory.CreateDirectory(conversionBaseDir);
+
+        _prepEaasImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvironmentRepoClient, conversionBaseDir, logger)
+            .UploadImageToEaaS(_initialConversionResult.Files, $"exploration[{Id}]");
+
+        // TODO: choose a better size, using some variable, ideally...
+        var emptyImage = await Linux.MakeQcow2Image(1024 * 1024 * 1024, Path.Combine(_processDir, $"output[{Id}].qcow2"), FileSystem.Ext4);
+        _prepEaasOuptutImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvironmentRepoClient, null, logger)
+            .UploadImageToEaaS(emptyImage, $"output[{Id}]");
+
+        return ExplorationState.ExplorationEnvironmentRunning;
+    }
+
+    private async Task<ExplorationState> RunExplorationEnvironment()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        StatusDetail.State = ExplorationState.ExplorationEnvironmentRunning;
+        LatestPlayableObject = null;
+
+        var emulationProcessManager = scope.ServiceProvider.GetRequiredService<IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail>>();
+        var emulationProcess = new ExplorationProcess(_explorationEnvironmentId, _prepEaasImageId, _prepEaasOuptutImageId, _serviceProvider, _explorationProcessConfig, true);
+
+        emulationProcessManager.StartProcess(emulationProcess);
+        CurrentStreamUrl = _explorationProcessConfig.StreamBaseUrl + emulationProcess.Id.ToString();
+
+        while (_inputChannel.Reader.TryRead(out _)) ;
+
+        while (!CancellationToken.IsCancellationRequested)
+        {
+            var message = await _inputChannel.Reader.ReadAsync(CancellationToken);
+
+            switch (message)
+            {
+                case ExplorationMessage.Ping:
+                    await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Ping);
+                    break;
+                case ExplorationMessage.GotoCheck:
+                    {
                         await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.SaveMachineState);
                         await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Quit);
-                        keepRunning = false;
-                        break;
-                }
+                        var emulationResult = await emulationProcessManager.FinishProcessAsync(emulationProcess.Id);
+                        _prepSnapshotId = emulationResult.SnapshotId;
+                        return ExplorationState.DownloadExplorationData;
+                    }
+                case ExplorationMessage.Abort:
+                    return ExplorationState.Aborted;
             }
-
-            var emulationResult = await emulationProcessManager.FinishProcessAsync(emulationProcess.Id);
-            _prepSnapshotId = emulationResult.SnapshotId;
         }
+
+        return ExplorationState.Aborted;
+    }
+
+    private async Task<ExplorationState> DownloadExplorationData()
+    {
+        using var scope = _serviceProvider.CreateScope();
+
+        var eaasEnvRepoClient = scope.ServiceProvider.GetRequiredService<EnvironmentRepositoryClient>();
+        var snapshotDetails = await eaasEnvRepoClient.GetEnvironmentDetails(_prepSnapshotId);
+
+        var imageId = snapshotDetails.drives[int.Parse(_explorationProcessConfig.EaasTargetOutputDrive)].data;
+        var snapshotData = await eaasEnvRepoClient.DownloadImage(imageId, _processDir);
+
+        var imageInfo = await Linux.ReadImageInfo(snapshotData);
+        while (imageInfo.RootElement.TryGetProperty("backing-filename", out var backingImgId))
         {
-            StatusDetail.State = ExplorationState.TransferringKioskData;
-            var scope = _serviceProvider.CreateScope();
-
-            var eaasEnvRepoClient = scope.ServiceProvider.GetRequiredService<EnvironmentRepositoryClient>();
-            var snapshotDetails = await eaasEnvRepoClient.GetEnvironmentDetails(_prepSnapshotId);
-
-            var imageId = snapshotDetails.drives[int.Parse(_explorationProcessConfig.EaasTargetOutputDrive)].data;
-            var snapshotData = await eaasEnvRepoClient.DownloadImage(imageId, _processDir);
-
-            var imageInfo = await Linux.ReadImageInfo(snapshotData);
-            while (imageInfo.RootElement.TryGetProperty("backing-filename", out var backingImgId))
-            {
-                var nextImage = await eaasEnvRepoClient.DownloadImage(backingImgId.GetString(), _processDir);
-                imageInfo = await Linux.ReadImageInfo(nextImage);
-            }
-            var playableImage = await Linux.FlattenQcow2Image(snapshotData, Path.Combine(_processDir, "playable.qcow2"));
-
-            var eaasUploadClient = scope.ServiceProvider.GetRequiredService<EaasUploadClient>();
-            _playableEaasImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvRepoClient, null, null).UploadImageToEaaS(playableImage, $"playable[{Id}]");
+            var nextImage = await eaasEnvRepoClient.DownloadImage(backingImgId.GetString(), _processDir);
+            imageInfo = await Linux.ReadImageInfo(nextImage);
         }
+        _playableImage = await Linux.FlattenQcow2Image(snapshotData, Path.Combine(_processDir, "playable.qcow2"));
+
+        return ExplorationState.ExtractingPlayableInfo;
+    }
+
+    private async Task<ExplorationState> UploadKioskData()
+    {
+        using var scope = _serviceProvider.CreateScope();
+
+        var eaasUploadClient = scope.ServiceProvider.GetRequiredService<EaasUploadClient>();
+        var eaasEnvRepoClient = scope.ServiceProvider.GetRequiredService<EnvironmentRepositoryClient>();
+
+        _playableEaasImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvRepoClient, null, null).UploadImageToEaaS(_playableImage, $"playable[{Id}]");
+
+        return ExplorationState.KioskEnvironmentRunning;
+    }
+
+    private async Task<ExplorationState> ExtractPlayableInfo()
+    {
+        // TODO: info extraction
+
+        while (!CancellationToken.IsCancellationRequested)
         {
-            StatusDetail.State = ExplorationState.KioskEnvironmentRunning;
-            var scope = _serviceProvider.CreateScope();
+            var message = await _inputChannel.Reader.ReadAsync(CancellationToken);
 
-            var emulationProcessManager = scope.ServiceProvider.GetRequiredService<IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail>>();
-            // TODO: use a proper env id from exported json
-            var emulationProcess = new ExplorationProcess(_explorationEnvironmentId, _playableEaasImageId, null, _serviceProvider, _explorationProcessConfig, true);
-            emulationProcessManager.StartProcess(emulationProcess);
-
-            bool keepRunning = true;
-            while (_inputChannel.Reader.TryRead(out _)); // NOTE: clear the input channel first
-
-            while (keepRunning && !cancellationToken.IsCancellationRequested)
+            switch (message)
             {
-                var message = await _inputChannel.Reader.ReadAsync(cancellationToken);
-
-                switch (message)
-                {
-                    case ExplorationMessage.Ping:
-                        await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Ping);
-                        break;
-                    case ExplorationMessage.GotoExploration:
-                        await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Quit);
-                        keepRunning = false;
-                        break;
-                }
+                case ExplorationMessage.GotoExploration:
+                    return ExplorationState.ExplorationEnvironmentRunning;
+                case ExplorationMessage.GotoKiosk:
+                    return ExplorationState.KioskEnvironmentRunning;
             }
         }
 
-        return null;
+        return ExplorationState.Aborted;
+    }
+
+    private async Task<ExplorationState> RunKioskEnvironment()
+    {
+        StatusDetail.State = ExplorationState.KioskEnvironmentRunning;
+
+        using var scope = _serviceProvider.CreateScope();
+
+        var emulationProcessManager = scope.ServiceProvider.GetRequiredService<IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail>>();
+        var emulationProcess = new ExplorationProcess(_explorationEnvironmentId, _playableEaasImageId, null, _serviceProvider, _explorationProcessConfig, true);
+
+        emulationProcessManager.StartProcess(emulationProcess);
+        CurrentStreamUrl = _explorationProcessConfig.StreamBaseUrl + emulationProcess.Id.ToString();
+
+        while (_inputChannel.Reader.TryRead(out _)) ;
+
+        while (!CancellationToken.IsCancellationRequested)
+        {
+            var message = await _inputChannel.Reader.ReadAsync(CancellationToken);
+
+            ExplorationState? nextState = null;
+
+            switch (message)
+            {
+                case ExplorationMessage.Ping:
+                    await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Ping);
+                    break;
+                case ExplorationMessage.GotoExploration:
+                    nextState = ExplorationState.ExplorationEnvironmentRunning;
+                    break;
+                case ExplorationMessage.GotoCheck:
+                    nextState = ExplorationState.ExtractingPlayableInfo;
+                    break;
+                case ExplorationMessage.Abort:
+                    nextState = ExplorationState.Aborted;
+                    break;
+                case ExplorationMessage.Done:
+                    nextState = ExplorationState.Done;
+                    break;
+            }
+
+            if (nextState != null)
+            {
+                await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.SaveMachineState);
+                await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Quit);
+                await emulationProcessManager.FinishProcessAsync(emulationProcess.Id);
+                return (ExplorationState) nextState;
+            }
+        }
+
+        return ExplorationState.Aborted;
     }
 
     public enum ExplorationMessage
     {
         Ping,
         GotoExploration,
+        GotoCheck,
         GotoKiosk,
         Save,
         Abort,
@@ -224,7 +332,11 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         InitialConversion,
         InitialUpload,
         ExplorationEnvironmentRunning,
-        TransferringKioskData,
+        DownloadExplorationData,
+        ExtractingPlayableInfo,
+        UploadKioskData,
         KioskEnvironmentRunning,
+        Aborted,
+        Done
     }
 }

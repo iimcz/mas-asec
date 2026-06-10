@@ -1,6 +1,7 @@
 ﻿using asec.DataConversion;
 using asec.Digitalization;
 using asec.Emulation;
+using asec.Exploration;
 using asec.LongRunning;
 using asec.Upload;
 using asec.ViewModels;
@@ -16,20 +17,23 @@ namespace asec.Controllers
         private readonly IProcessManager<DataConversion.Process, ConversionResult, ConversionProcessDetail> _conversionProcessManager;
         private readonly IProcessManager<Emulation.BaseProcess, EmulationResult, EmulationProcessDetail> _emulationProcessManager;
         private readonly IProcessManager<Upload.Process, UploadResult, EmptyProcessDetail> _uploadProcessManager;
+        private readonly IProcessManager<Exploration.Process, ExplorationResult, ExplorationProcessDetail> _explorationProcessManager;
+
         public ProcessController(
             IProcessManager<Digitalization.Process, DigitalizationResult, DigitalizationProcessDetail> digitalizationProcessManager,
             IProcessManager<DataConversion.Process, ConversionResult, ConversionProcessDetail> conversionProcessManager,
             IProcessManager<Emulation.BaseProcess, EmulationResult, EmulationProcessDetail> emulationProcessManager,
-            IProcessManager<Upload.Process, UploadResult, EmptyProcessDetail> uploadProcessManager)
+            IProcessManager<Upload.Process, UploadResult, EmptyProcessDetail> uploadProcessManager,
+            IProcessManager<Exploration.Process, ExplorationResult, ExplorationProcessDetail> explorationProcessManager)
         {
             _digitalizationProcessManager = digitalizationProcessManager;
             _conversionProcessManager = conversionProcessManager;
             _emulationProcessManager = emulationProcessManager;
             _uploadProcessManager = uploadProcessManager;
+            _explorationProcessManager = explorationProcessManager;
         }
 
         [HttpGet]
-        [Route("list")]
         public async Task<IActionResult> GetProcesses()
         {
             var result = new Processes();
@@ -49,6 +53,10 @@ namespace asec.Controllers
             foreach (var process in _uploadProcessManager.GetProcesses().Where(p => !p.IsSubprocess))
             {
                 result.uploadProcesses.Add(UploadProcess.FromProcess(process));
+            }
+            foreach (var process in _explorationProcessManager.GetProcesses().Where(p => !p.IsSubprocess))
+            {
+                result.explorationProcesses.Add(ViewModels.ExplorationProcess.FromProcess(process));
             }
 
             return Ok(result);
@@ -78,6 +86,11 @@ namespace asec.Controllers
             if (_uploadProcessManager.GetProcess(id) is not null)
             {
                 await _uploadProcessManager.CancelProcessAsync(id);
+                return Ok();
+            }
+            if (_explorationProcessManager.GetProcess(id) is not null)
+            {
+                await _explorationProcessManager.CancelProcessAsync(id);
                 return Ok();
             }
 

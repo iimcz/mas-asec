@@ -50,11 +50,14 @@ public static class Linux
     public static async Task<string> Umount(bool sudo, List<string> args, CancellationToken cancellationToken = default)
         => await Execute(sudo, "umount", args, cancellationToken);
 
+    public static async Task<string> Chmod(bool sudo, List<string> args, CancellationToken cancellationToken = default)
+        => await Execute(sudo, "chmod", args, cancellationToken);
+
     public static async Task<string> MakeQcow2Image(long sizeBytes, string path, FileSystem fs = FileSystem.Ext4, CancellationToken cancellationToken = default)
     {
         // NOTE: could be 1024^2 but this will suffice for now...
         var sizeMB = sizeBytes / 1000_000 + 1;
-        sizeMB += 3; // For ext4 header and structures
+        sizeMB += 5; // For ext4 header and structures
 
         StringWriter sw = new();
 
@@ -65,10 +68,20 @@ public static class Linux
         partial = await QemuNbd(true, ["--connect=/dev/nbd0", path], cancellationToken);
         sw.WriteLine(partial);
 
-        partial = await Mkfs(true, ["-t", fs.ToString().ToLower(), "-F", "/dev/nbd0", "-E", "root_perms=666"]);
+        // TODO: use root_perms if available - currently used distro only supports root_owner
+        partial = await Mkfs(true, ["-t", fs.ToString().ToLower(), "-F", "/dev/nbd0"], cancellationToken);
         sw.WriteLine(partial);
 
         partial = await QemuNbd(true, ["-d", "/dev/nbd0"], cancellationToken);
+        sw.WriteLine(partial);
+
+        // HACK: use very lax perms to allow copying data in
+        Directory.CreateDirectory("/tmp/asec-permfix");
+        partial = await MountQcow2Image(path, "/tmp/asec-permfix", cancellationToken);
+        sw.WriteLine(partial);
+        partial = await Chmod(true, ["777", "/tmp/asec-permfix"], cancellationToken);
+        sw.WriteLine(partial);
+        partial = await UnmountQcow2Image("/tmp/asec-permfix", cancellationToken);
         sw.WriteLine(partial);
 
         return sw.ToString();
@@ -82,7 +95,7 @@ public static class Linux
         sw.WriteLine(partial);
 
         // NOTE: assumes the whole image is formatted without a partition table
-        partial = await Mount(true, [mountpoint, "/dev/nbd0"], cancellationToken);
+        partial = await Mount(true, ["/dev/nbd0", mountpoint], cancellationToken);
         sw.WriteLine(partial);
 
         return sw.ToString();
@@ -123,10 +136,10 @@ public static class Linux
 
         return status == "connected";
     }
-     
+
     [DllImport("libc", SetLastError=true, EntryPoint="kill")]
     private static extern int sys_kill (int pid, int sig);
-    
+
     public static void Kill(this Process process, Signum sig)
     {
         sys_kill(process.Id, (int) sig);
@@ -137,7 +150,7 @@ public enum FileSystem
 {
     Ext4
 }
-    
+
 public enum Signum : int
 {
     SIGHUP    =  1, // Hangup (POSIX).

@@ -69,7 +69,7 @@ public class GameExplorationController : ControllerBase
         return Ok(ExplorationProcess.FromProcess(process));
     }
 
-    [HttpGet("{explorationId}/ping")]
+    [HttpPost("{explorationId}/input/ping")]
     [Produces(typeof(ExplorationProcess))]
     public async Task<IActionResult> PingExplorationProcess(string explorationId)
     {
@@ -94,7 +94,7 @@ public class GameExplorationController : ControllerBase
     }
 
     [HttpPost("{explorationId}/input/save")]
-    [Produces(typeof(ViewModels.RunnablePackage))]
+    [Produces(typeof(ViewModels.PlayableObject))]
     public async Task<IActionResult> SaveExploration(string explorationId, [FromBody] ExplorationDone saveInfo)
     {
         var id = Guid.Parse(explorationId);
@@ -107,7 +107,7 @@ public class GameExplorationController : ControllerBase
     }
 
     [HttpPost("{explorationId}/input/finish")]
-    [Produces(typeof(ViewModels.RunnablePackage))]
+    [Produces(typeof(ViewModels.PlayableObject))]
     public async Task<IActionResult> FinishExploration(string explorationId, [FromBody] ExplorationDone finishInfo)
     {
         var id = Guid.Parse(explorationId);
@@ -116,7 +116,7 @@ public class GameExplorationController : ControllerBase
             return NotFound();
 
         // TODO: implement properly
-        return Ok(ViewModels.RunnablePackage.FromDBEntity(process.LatestRunnablePackage));
+        return Ok(ViewModels.PlayableObject.FromDBEntity(process.LatestPlayableObject));
     }
 
     [HttpPost("{explorationId}/input/{type}")]
@@ -134,15 +134,21 @@ public class GameExplorationController : ControllerBase
 
         switch (message)
         {
+            case ExplorationInputType.GotoCheck:
+                await process.ChannelWriter.WriteAsync(Process.ExplorationMessage.GotoCheck);
+                break;
             case ExplorationInputType.GotoKiosk:
                 await process.ChannelWriter.WriteAsync(Process.ExplorationMessage.GotoKiosk);
                 break;
             case ExplorationInputType.GotoExploration:
                 await process.ChannelWriter.WriteAsync(Process.ExplorationMessage.GotoExploration);
                 break;
+            case ExplorationInputType.Done:
+                await process.ChannelWriter.WriteAsync(Process.ExplorationMessage.Done);
+                break;
         }
 
-        await Task.Delay(100); // HACK: wait a bit for changes to happen
+        await Task.Delay(100);
         return Ok(ExplorationProcess.FromProcess(process));
     }
 }

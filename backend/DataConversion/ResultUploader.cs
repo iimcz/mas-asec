@@ -84,7 +84,7 @@ public class ResultUploader
         var output = await Linux.MakeQcow2Image(imageSize, imagePath, FileSystem.Ext4, cancellationToken);
         _logger?.LogInformation(output);
 
-        output = await Linux.MountQcow2Image(imagePath, mountPath);
+        output = await Linux.MountQcow2Image(imagePath, mountPath, cancellationToken);
         _logger?.LogInformation(output);
 
         foreach (var file in files)
@@ -92,7 +92,7 @@ public class ResultUploader
             System.IO.File.Move(file.Filename, Path.Join(mountPath, Path.GetFileName(file.Filename)));
         }
 
-        output = await Linux.UnmountQcow2Image(mountPath);
+        output = await Linux.UnmountQcow2Image(mountPath, cancellationToken);
         _logger?.LogInformation(output);
         Directory.Delete(mountPath);
 

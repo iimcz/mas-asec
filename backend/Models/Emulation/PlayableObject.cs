@@ -1,6 +1,6 @@
 namespace asec.Models.Emulation;
 
-public class RunnablePackage
+public class PlayableObject
 {
 
 }
