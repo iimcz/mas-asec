@@ -76,7 +76,7 @@ public class ResultUploader
         // TODO: for now, this will only work on linux due to the filesystem used and the availability of the tools.
         // In the future, this could be extended to be at least configurable, maybe include some tool checks somewhere
         // and maybe have a version for other platforms as well.
-        var imagePath = Path.Join(_baseDirectory, name + ".img");
+        var imagePath = Path.Join(_baseDirectory, name + ".qcow2");
         var mountPath = Path.Join(_baseDirectory, name + "_mounted");
         Directory.CreateDirectory(mountPath);
 
