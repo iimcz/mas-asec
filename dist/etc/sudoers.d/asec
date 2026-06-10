@@ -1,7 +1,8 @@
 # Assuming username "asec" - change if necessary
 # Better option would be just userspace mounting, but that might not be easy with
 # qemu-nbd and mounting the resulting drive.
-Cmnd_Alias      IMAGING_COMMANDS = /usr/bin/qemu-img, /usr/bin/qemu-nbd
-Cmnd_Aliad      MOUNT_COMMANDS = /usr/bin/mount /dev/nbd* *, /usr/bin/umount
+Cmnd_Alias      ASEC_IMAGING_COMMANDS = /usr/bin/qemu-img, /usr/bin/qemu-nbd
+Cmnd_Alias      ASEC_MOUNT_COMMANDS = /usr/bin/mount /dev/nbd* *, /usr/bin/umount
+Cmnd_Alias      ASEC_MKFS_COMMANDS = /usr/bin/mkfs -t ext4 -F /dev/nbd*, /usr/sbin/mkfs -t ext4 -F /dev/nbd*, /usr/bin/chmod 777 /tmp/asec-permfix
 
-asec ALL=(root) NOPASSWD: IMAGING_COMMANDS, MOUNT_COMMANDS
+asec ALL=(root) NOPASSWD: ASEC_IMAGING_COMMANDS, ASEC_MOUNT_COMMANDS, ASEC_MKFS_COMMANDS
