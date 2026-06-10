@@ -104,6 +104,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
                 ExplorationState.ExplorationEnvironmentRunning => await RunExplorationEnvironment(),
                 ExplorationState.DownloadExplorationData => await DownloadExplorationData(),
                 ExplorationState.ExtractingPlayableInfo => await ExtractPlayableInfo(),
+                ExplorationState.WaitingForCheck => await WaitForCheck(),
                 ExplorationState.UploadKioskData => await UploadKioskData(),
                 ExplorationState.KioskEnvironmentRunning => await RunKioskEnvironment(),
                 ExplorationState.Done => ExplorationState.Done,
@@ -166,7 +167,9 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
             .UploadImageToEaaS(_initialConversionResult.Files, $"exploration[{Id}]");
 
         // TODO: choose a better size, using some variable, ideally...
-        var emptyImage = await Linux.MakeQcow2Image(1024 * 1024 * 1024, Path.Combine(_processDir, $"output[{Id}].qcow2"), FileSystem.Ext4);
+        var emptyImage = Path.Combine(_processDir, $"output[{Id}].qcow2");
+        var emptyImageCreationLog = await Linux.MakeQcow2Image(1024 * 1024 * 1024, emptyImage, FileSystem.Ext4);
+        logger.LogInformation(emptyImageCreationLog);
         _prepEaasOuptutImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvironmentRepoClient, null, logger)
             .UploadImageToEaaS(emptyImage, $"output[{Id}]");
 
@@ -248,7 +251,11 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
     private async Task<ExplorationState> ExtractPlayableInfo()
     {
         // TODO: info extraction
+        return ExplorationState.WaitingForCheck;
+    }
 
+    private async Task<ExplorationState> WaitForCheck()
+    {
         while (!CancellationToken.IsCancellationRequested)
         {
             var message = await _inputChannel.Reader.ReadAsync(CancellationToken);
@@ -334,6 +341,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         ExplorationEnvironmentRunning,
         DownloadExplorationData,
         ExtractingPlayableInfo,
+        WaitingForCheck,
         UploadKioskData,
         KioskEnvironmentRunning,
         Aborted,
