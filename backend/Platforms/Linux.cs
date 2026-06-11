@@ -23,19 +23,16 @@ public static class Linux
             RedirectStandardOutput = true
         };
 
-        string info = $"Running {executable}";
-        foreach ( var arg in args ) info += $" {arg}";
-
         var process = Process.Start(startInfo);
         if (process != null)
         {
             await process.WaitForExitAsync(cancellationToken);
             if (process.ExitCode == 0)
-                return info + "\n" + process.StandardOutput.ReadToEnd();
+                return process.StandardOutput.ReadToEnd();
             else
-                return info + "\n" + process.StandardError.ReadToEnd();
+                return process.StandardError.ReadToEnd();
         }
-        return info;
+        return null;
     }
 
     private static async Task SafetyWait() => await Task.Delay(1000);
