@@ -222,11 +222,19 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
     {
         using var scope = _serviceProvider.CreateScope();
 
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Process>>();
+        logger.LogInformation($"Downloading data from snapshot {_prepSnapshotId}");
+
         var eaasEnvRepoClient = scope.ServiceProvider.GetRequiredService<EnvironmentRepositoryClient>();
         var snapshotDetails = await eaasEnvRepoClient.GetEnvironmentDetails(_prepSnapshotId);
 
         var imageId = snapshotDetails.drives[int.Parse(_explorationProcessConfig.EaasTargetOutputDrive)].data;
+        imageId = imageId.Substring("binding://".Length);
+
+        logger.LogInformation($"Downloading image {imageId}");
         var snapshotData = await eaasEnvRepoClient.DownloadImage(imageId, _processDir);
+
+        logger.LogInformation($"Top-level image downladed to {snapshotData}");
 
         var imageInfo = await Linux.ReadImageInfo(snapshotData);
         while (imageInfo.RootElement.TryGetProperty("backing-filename", out var backingImgId))
@@ -234,7 +242,9 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
             var nextImage = await eaasEnvRepoClient.DownloadImage(backingImgId.GetString(), _processDir);
             imageInfo = await Linux.ReadImageInfo(nextImage);
         }
-        _playableImage = await Linux.FlattenQcow2Image(snapshotData, Path.Combine(_processDir, "playable.qcow2"));
+        _playableImage = Path.Combine(_processDir, "playable.qcow2");
+        var flattenOutput = await Linux.FlattenQcow2Image(snapshotData, _playableImage);
+        logger.LogInformation(flattenOutput);
 
         return ExplorationState.ExtractingPlayableInfo;
     }
@@ -268,7 +278,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
                 case ExplorationMessage.GotoExploration:
                     return ExplorationState.ExplorationEnvironmentRunning;
                 case ExplorationMessage.GotoKiosk:
-                    return ExplorationState.KioskEnvironmentRunning;
+                    return ExplorationState.UploadKioskData;
             }
         }
 
