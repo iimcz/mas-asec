@@ -15,8 +15,7 @@ public class GameExplorationController : ControllerBase
     private readonly ILogger<GameExplorationController> _logger;
     private readonly AsecDBContext _dbContext;
     private readonly IConfiguration _configuration;
-    private readonly string _emulationStreamBaseUrl;
-    private IServiceScopeFactory _serviceScopeFactory;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private IProcessManager<Exploration.Process, ExplorationResult, ExplorationProcessDetail> _processManager;
 
     public GameExplorationController(
@@ -32,8 +31,6 @@ public class GameExplorationController : ControllerBase
 
         _serviceScopeFactory = serviceScopeFactory;
         _processManager = processManager;
-
-        _emulationStreamBaseUrl = configuration.GetSection("Emulation").GetValue<string>("StreamBaseUrl");
     }
 
     [HttpGet("environments")]
