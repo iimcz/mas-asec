@@ -2,6 +2,7 @@ using asec.Compatibility.EaasApi;
 using asec.DataConversion;
 using asec.Emulation;
 using asec.LongRunning;
+using asec.Models;
 using asec.Models.Digitalization;
 using asec.Models.Emulation;
 using asec.Platforms;
@@ -263,7 +264,47 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
     private async Task<ExplorationState> ExtractPlayableInfo()
     {
-        // TODO: info extraction
+        using var scope = _serviceProvider.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Process>>();
+
+        var playableMountpoint = Path.Combine(_processDir, "playable_mounted");
+        Directory.CreateDirectory(playableMountpoint);
+
+        var output = await Linux.MountQcow2Image(_playableImage, playableMountpoint);
+        logger.LogInformation(output);
+
+        var jsonPath = Path.Combine(playableMountpoint, "game.json");
+        if (Path.Exists(jsonPath))
+        {
+            using FileStream fs = new(jsonPath, FileMode.Open);
+            var jsonData = System.Text.Json.JsonSerializer.Deserialize<PlayableObjectDef>(fs);
+
+            if (jsonData != null)
+            {
+                using AsecDBContext dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
+                var environment = dbContext.Environments.Where(e => e.Slug == jsonData.EmulatorSlug).FirstOrDefault();
+
+                LatestPlayableObject = new() {
+                    Id = Guid.Empty,
+                    Label = jsonData.Label,
+                    InternalNote = jsonData.Note,
+                    CreationDate = DateTime.Now,
+                    Environment = environment
+                };
+            }
+            else
+            {
+                LatestPlayableObject = null;
+            }
+        }
+        else
+        {
+            LatestPlayableObject = null;
+        }
+
+        output = await Linux.UnmountQcow2Image(playableMountpoint);
+        logger.LogInformation(output);
+
         return ExplorationState.WaitingForCheck;
     }
 

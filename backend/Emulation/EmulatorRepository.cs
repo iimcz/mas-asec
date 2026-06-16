@@ -77,7 +77,9 @@ public class EmulatorRepository : IEmulatorRepository
                 {
                     Id = Guid.Empty,
                     Name = env.Name,
-                    Version = env.Version
+                    Version = env.Version,
+                    Slug = env.Slug,
+                    Type = EnvironmentType.Exploration
                 };
                 await dbContext.AddAsync(environment, cancellationToken);
             }
@@ -110,6 +112,7 @@ public class EmulatorRepository : IEmulatorRepository
                     Id = Guid.Empty,
                     Emulator = emulator,
                     Version = env.Version,
+                    Slug = env.Slug,
                     Type = EnvironmentType.Kiosk
                 };
                 await dbContext.AddAsync(environment, cancellationToken);

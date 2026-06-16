@@ -5,6 +5,7 @@ using asec.LongRunning;
 using asec.Exploration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CommunityToolkit.HighPerformance.Helpers;
 
 namespace asec.Controllers;
 
@@ -37,8 +38,16 @@ public class GameExplorationController : ControllerBase
     public async Task<IActionResult> GetEnvironments()
     {
         return Ok(_dbContext.Environments
-                .Where(e => e.Type == EnvironmentType.Exploration)
-                .Select(e => ExplorationEnvironment.FromEmulationEnvironment(e)));
+            .Where(e => e.Type == EnvironmentType.Exploration)
+            .Select(e => ExplorationEnvironment.FromEmulationEnvironment(e)));
+    }
+
+    [HttpGet("kiosks")]
+    public async Task<IActionResult> GetKiosks()
+    {
+        return Ok(_dbContext.Environments
+            .Where(e => e.Type == EnvironmentType.Kiosk)
+            .Select(e => ExplorationEnvironment.FromEmulationEnvironment(e)));
     }
 
     [HttpPost("start")]
@@ -111,6 +120,8 @@ public class GameExplorationController : ControllerBase
         var process = _processManager.GetProcess(id);
         if (process == null)
             return NotFound();
+
+        var result = await _processManager.FinishProcessAsync(id);
 
         // TODO: implement properly
         return Ok(ViewModels.PlayableObject.FromDBEntity(process.LatestPlayableObject));

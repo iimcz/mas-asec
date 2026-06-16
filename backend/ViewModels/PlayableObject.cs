@@ -2,14 +2,23 @@ namespace asec.ViewModels;
 
 public record PlayableObject {
     public string Id { get; set; }
-    public string Name { get; set; }
+    public string Label { get; set; }
     public string Note { get; set; }
     public string EmulatorSlug { get; set; }
-    public string Other { get; set; } // TODO: fill out according to what we will be parsing
+    public string CreationDate { get; set; }
+    public string VersionId { get; set; }
+    public List<string> DigitalObjectIds { get; set; }
 
     public static PlayableObject FromDBEntity(Models.Emulation.PlayableObject playableObject)
     {
-        // TODO: implement
-        return new();
+        return new() {
+            Id = playableObject.Id.ToString(),
+            Label = playableObject.Label,
+            Note = playableObject.InternalNote,
+            EmulatorSlug = playableObject.Environment?.Id.ToString(),
+            VersionId = playableObject.Version?.Id.ToString(),
+            CreationDate = playableObject.CreationDate.ToString(),
+            DigitalObjectIds = playableObject.IncludedDigitalObjects.Select(o => o.Id.ToString()).ToList(),
+        };
     }
 }

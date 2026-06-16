@@ -9,7 +9,7 @@ namespace asec.Models;
 public class AsecDBContext : DbContext
 {
     public DbSet<Work> Works { get; set; }
-    public DbSet<Archive.WorkVersion> WorkVersions { get; set; }
+    public DbSet<WorkVersion> WorkVersions { get; set; }
     public DbSet<PhysicalObject> PhysicalObjects { get; set; }
     public DbSet<DigitalObject> DigitalObjects { get; set; }
 
@@ -32,7 +32,7 @@ public class AsecDBContext : DbContext
 
         modelBuilder.Entity<DigitalObject>();
         modelBuilder.Entity<Artefact>();
-        modelBuilder.Entity<GamePackage>();
+        modelBuilder.Entity<PlayableObject>();
 
         modelBuilder.Entity<WorkVersion>().HasMany(w => w.DigitalObjects).WithMany(o => o.WorkVersions);
         modelBuilder.Entity<WorkVersion>().HasMany(w => w.PhysicalObjects).WithMany(o => o.WorkVersions);

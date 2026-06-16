@@ -64,9 +64,9 @@ public class VersionController : ControllerBase
     /// </summary>
     /// <param name="versionId">ID of the vesrion</param>
     /// <returns>Enumerable of game packages</returns>
-    [HttpGet("{versionId}/packages")]
-    [Produces(typeof(IEnumerable<GamePackage>))]
-    public async Task<IActionResult> GetGamePackages(string versionId)
+    [HttpGet("{versionId}/playableobjects")]
+    [Produces(typeof(IEnumerable<PlayableObject>))]
+    public async Task<IActionResult> GetPlayableObjects(string versionId)
     {
         var id = Guid.Parse(versionId);
         var version = await _dbContext.WorkVersions
@@ -74,10 +74,10 @@ public class VersionController : ControllerBase
             .FirstOrDefaultAsync(v => v.Id == id);
         if (version == null)
             return NotFound();
-        var packages = version.DigitalObjects.OfType<Models.Emulation.GamePackage>().ToList();
+        var packages = version.DigitalObjects.OfType<Models.Emulation.PlayableObject>().ToList();
         packages.ForEach(p => _dbContext.Entry(p).Collection(p => p.IncludedDigitalObjects).Load());
         packages.ForEach(p => _dbContext.Entry(p).Reference(p => p.Environment).Load());
-        return Ok(packages.Select(p => GamePackage.FromGamePackage(p)));
+        return Ok(packages.Select(p => PlayableObject.FromDBEntity(p)));
     }
 
     [HttpGet("{versionId}/paratexts")]

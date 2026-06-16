@@ -12,7 +12,7 @@ namespace asec.Controllers;
 /// </summary>
 [ApiController]
 [Route("/api/v1/packages")]
-public class GamePackageController : ControllerBase
+public class PlayableObjectController : ControllerBase
 {
     private AsecDBContext _dbContext;
     private IServiceScopeFactory _serviceScopeFactory;
@@ -25,7 +25,7 @@ public class GamePackageController : ControllerBase
     private readonly string _webcamDevice;
     private readonly string _eaasDiskInputDrive;
 
-    public GamePackageController(IConfiguration configuration, AsecDBContext dbContext, IServiceScopeFactory serviceScopeFactory, IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail> processManager)
+    public PlayableObjectController(IConfiguration configuration, AsecDBContext dbContext, IServiceScopeFactory serviceScopeFactory, IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail> processManager)
     {
         _dbContext = dbContext;
         _serviceScopeFactory = serviceScopeFactory;
@@ -46,19 +46,19 @@ public class GamePackageController : ControllerBase
     /// <param name="packageId">ID of the GamePackage</param>
     /// <returns>Details of the GamePackage</returns>
     [HttpGet("{packageId}")]
-    [Produces(typeof(GamePackage))]
-    public async Task<IActionResult> GetGamePackage(string packageId)
+    [Produces(typeof(PlayableObject))]
+    public async Task<IActionResult> GetPlayableObject(string packageId)
     {
         var id = Guid.Parse(packageId);
         var package = await _dbContext.DigitalObjects
-            .OfType<Models.Emulation.GamePackage>()
+            .OfType<Models.Emulation.PlayableObject>()
             .Include(p => p.IncludedDigitalObjects)
             .Include(p => p.Environment)
             .Include(p => p.Version)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (package == null)
             return NotFound();
-        return Ok(GamePackage.FromGamePackage(package));
+        return Ok(PlayableObject.FromDBEntity(package));
     }
 
     /// <summary>
@@ -68,22 +68,25 @@ public class GamePackageController : ControllerBase
     /// <param name="inPackage">Metadata to update</param>
     /// <returns>The updated GamePackage</returns>
     [HttpPost("{packageId}")]
-    [Produces(typeof(GamePackage))]
-    public async Task<IActionResult> UpdateGamePackage(string packageId, [FromBody] GamePackage inPackage)
+    [Produces(typeof(PlayableObject))]
+    public async Task<IActionResult> UpdatePlayableObject(string packageId, [FromBody] PlayableObjectUpdate inObject)
     {
         var id = Guid.Parse(packageId);
         var package = await _dbContext.DigitalObjects
-            .OfType<Models.Emulation.GamePackage>()
+            .OfType<Models.Emulation.PlayableObject>()
             .Include(p => p.IncludedDigitalObjects)
             .Include(p => p.Environment)
             .Include(p => p.Version)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (package == null)
             return NotFound();
-        // We only update the name here.
-        package.Name = inPackage.Name;
+
+        // We only update the name and note here.
+        package.Label = inObject.Label;
+        package.InternalNote = inObject.Note;
+
         await _dbContext.SaveChangesAsync();
-        return Ok(GamePackage.FromGamePackage(package));
+        return Ok(PlayableObject.FromDBEntity(package));
     }
 
     /// <summary>
@@ -93,10 +96,10 @@ public class GamePackageController : ControllerBase
     /// <returns>State of the emulation</returns>
     [HttpPost("{packageId}/emulate")]
     [Produces(typeof(EmulationProcess))]
-    public async Task<IActionResult> EmulateGamePackage(string packageId)
+    public async Task<IActionResult> EmulatePlayableObject(string packageId)
     {
         var id = Guid.Parse(packageId);
-        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.GamePackage>().Include(p => p.Environment).FirstOrDefaultAsync(p => p.Id == id);
+        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.PlayableObject>().Include(p => p.Environment).FirstOrDefaultAsync(p => p.Id == id);
         if (package == null)
             return NotFound();
 

@@ -440,7 +440,7 @@ public class ExplorationProcess : BaseProcess
 public class KioskProcess : BaseProcess
 {
     public Guid PackageId { get; private set; }
-    private GamePackage _package;
+    private PlayableObject _package;
 
 public KioskProcess(Guid packageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
     {
@@ -453,7 +453,7 @@ public KioskProcess(Guid packageId, IServiceScopeFactory serviceScopeFactory, Em
         var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
         _logWriter.WriteLine($"Looking up package: {PackageId}");
         _package = await dbContext.DigitalObjects
-            .OfType<GamePackage>()
+            .OfType<PlayableObject>()
             .Include(p => p.Environment)
             .FirstOrDefaultAsync(p => p.Id == PackageId, cancellationToken);
         return _package?.Environment;

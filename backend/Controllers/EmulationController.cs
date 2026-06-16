@@ -69,7 +69,7 @@ public class EmulationController : ControllerBase
         await process.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Quit);
         var result = await _processManager.FinishProcessAsync(id);
 
-        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.GamePackage>().Include(p => p.Version).FirstOrDefaultAsync(p => p.Id == process.PackageId);
+        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.PlayableObject>().Include(p => p.Version).FirstOrDefaultAsync(p => p.Id == process.PackageId);
         if (package == null)
             return NotFound();
         var version = package.Version;
