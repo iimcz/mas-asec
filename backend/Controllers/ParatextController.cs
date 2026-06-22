@@ -26,9 +26,9 @@ public class ParatextController : ControllerBase
         _dbContext = dbContext;
         _minioClient = minioClient;
 
-        _bucketName = configuration.GetSection("ObjectStorage").GetValue<string>("ParatextBucket");
+        _bucketName = configuration.GetSection("LocalObjectStorage").GetValue<string>("ParatextBucket");
     }
-    
+
     /// <summary>
     /// Get the details of the specified paratext.
     /// </summary>

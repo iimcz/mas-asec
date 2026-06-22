@@ -33,7 +33,7 @@ public class DigitalizationController : ControllerBase
         _processManager = processManager;
         _minioClient = minioClient;
         _dbContext = dbContext;
-        _minioArtefactBucket = config.GetSection("ObjectStorage").GetValue<string>("ArtefactBucket");
+        _minioArtefactBucket = config.GetSection("LocalObjectStorage").GetValue<string>("ArtefactBucket");
         _digitalizationDirsBase = config.GetSection("Digitalization").GetValue<string>("ProcessBaseDir");
     }
 

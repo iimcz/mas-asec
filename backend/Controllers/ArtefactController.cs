@@ -23,7 +23,7 @@ public class ArtefactController : ControllerBase
     {
         _dbContext = dbContext;
         _minioClient = minioClient;
-        _minioArtefactBucket = configuration.GetSection("ObjectStorage").GetValue<string>("ArtefactBucket");
+        _minioArtefactBucket = configuration.GetSection("LocalObjectStorage").GetValue<string>("ArtefactBucket");
     }
 
     /// <summary>

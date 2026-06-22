@@ -31,7 +31,7 @@ public class EmulationController : ControllerBase
         _dbContext = dbContext;
         _minioClient = minioClient;
         _emulationStreamBaseUrl = configuration.GetSection("Emulation").GetValue<string>("StreamBaseUrl");
-        _paratextBucket = configuration.GetSection("ObjectStorage").GetValue<string>("ParatextBucket");
+        _paratextBucket = configuration.GetSection("LocalObjectStorage").GetValue<string>("ParatextBucket");
     }
 
     /// <summary>
@@ -69,10 +69,10 @@ public class EmulationController : ControllerBase
         await process.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Quit);
         var result = await _processManager.FinishProcessAsync(id);
 
-        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.PlayableObject>().Include(p => p.Version).FirstOrDefaultAsync(p => p.Id == process.PackageId);
+        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.PlayableObject>().Include(p => p.WorkVersions).FirstOrDefaultAsync(p => p.Id == process.PackageId);
         if (package == null)
             return NotFound();
-        var version = package.Version;
+        var version = package.WorkVersions?.FirstOrDefault();
 
         foreach (var videoFile in result.VideoFiles)
         {

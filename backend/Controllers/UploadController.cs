@@ -1,4 +1,4 @@
-﻿using asec.LongRunning;
+using asec.LongRunning;
 using asec.Models;
 using asec.Models.Digitalization;
 using asec.Upload;
@@ -27,7 +27,7 @@ namespace asec.Controllers
             _processManager = processManager;
             _dbContext = dbContext;
             _minioClient = minioClient;
-            _minioArtefactBucket = config.GetSection("ObjectStorage").GetValue<string>("ArtefactBucket");
+            _minioArtefactBucket = config.GetSection("LocalObjectStorage").GetValue<string>("ArtefactBucket");
             CreateDirectory(config.GetSection("Digitalization").GetValue<string>("ProcessBaseDir"));
         }
 

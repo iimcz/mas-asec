@@ -54,7 +54,7 @@ public class PlayableObjectController : ControllerBase
             .OfType<Models.Emulation.PlayableObject>()
             .Include(p => p.IncludedDigitalObjects)
             .Include(p => p.Environment)
-            .Include(p => p.Version)
+            .Include(p => p.WorkVersions)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (package == null)
             return NotFound();
@@ -76,7 +76,7 @@ public class PlayableObjectController : ControllerBase
             .OfType<Models.Emulation.PlayableObject>()
             .Include(p => p.IncludedDigitalObjects)
             .Include(p => p.Environment)
-            .Include(p => p.Version)
+            .Include(p => p.WorkVersions)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (package == null)
             return NotFound();
