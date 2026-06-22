@@ -29,6 +29,7 @@ public class ResultUploader
 
     public async Task<string> UploadImageToEaaS(string imgFile, string name, CancellationToken cancellationToken = default(CancellationToken))
     {
+        _logger?.LogInformation("Uploading disk image to EaaS...");
         var eaasUploadResponse = await _eaasUploadClient.Upload(imgFile, cancellationToken);
         if (eaasUploadResponse.status != "0")
         {
@@ -40,6 +41,7 @@ public class ResultUploader
             eaasUploadResponse.uploadedItemList[0].url, name
         );
 
+        _logger?.LogInformation("Marking the upload as disk image.");
         var eaasImageId = await _eaasEnvironmentRepoClient.ImportImage(importImage, cancellationToken);
         return eaasImageId;
     }
@@ -81,7 +83,7 @@ public class ResultUploader
         Directory.CreateDirectory(mountPath);
 
         var imageSize = files.Select(f => new FileInfo(f.Filename).Length).Sum();
-        var output = await Linux.MakeQcow2Image(imageSize, imagePath, FileSystem.Ext4, cancellationToken);
+        var output = await Linux.MakeQcow2Image(imageSize, imagePath, FileSystem.Ext4, cancellationToken: cancellationToken);
         _logger?.LogInformation(output);
 
         output = await Linux.MountQcow2Image(imagePath, mountPath, cancellationToken);

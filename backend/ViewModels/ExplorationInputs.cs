@@ -9,6 +9,6 @@ public enum ExplorationInputType
 }
 
 public record ExplorationDone(
-    string PackageName,
+    string PackageLabel,
     string PackageNote
 );

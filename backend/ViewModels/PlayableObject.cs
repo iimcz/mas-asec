@@ -15,10 +15,10 @@ public record PlayableObject {
             Id = playableObject.Id.ToString(),
             Label = playableObject.Label,
             Note = playableObject.InternalNote,
-            EmulatorSlug = playableObject.Environment?.Id.ToString(),
-            VersionId = playableObject.Version?.Id.ToString(),
+            EmulatorSlug = playableObject.Environment?.Slug.ToString(),
+            VersionId = playableObject.WorkVersions?.FirstOrDefault()?.Id.ToString(),
             CreationDate = playableObject.CreationDate.ToString(),
-            DigitalObjectIds = playableObject.IncludedDigitalObjects.Select(o => o.Id.ToString()).ToList(),
+            DigitalObjectIds = playableObject.IncludedDigitalObjects?.Select(o => o.Id.ToString()).ToList(),
         };
     }
 }

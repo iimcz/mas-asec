@@ -60,6 +60,11 @@ public class GameExplorationController : ControllerBase
             .FirstOrDefaultAsync(e => e.Id == id);
         if (environment == null)
             return NotFound();
+        var versionId = Guid.Parse(request.VersionId);
+        var version = await _dbContext.WorkVersions
+            .FindAsync(versionId);
+        if (version == null)
+            return NotFound();
 
         var digiObjectIds = request.DigitalObjectIds.Select(id => Guid.Parse(id));
         var digiObjects = _dbContext.DigitalObjects.Where(o => digiObjectIds.Contains(o.Id));
@@ -69,7 +74,8 @@ public class GameExplorationController : ControllerBase
             _configuration,
             _serviceScopeFactory,
             id,
-            artefacts.ToList()
+            artefacts.ToList(),
+            version
         );
         _processManager.StartProcess(process);
         return Ok(ExplorationProcess.FromProcess(process));
@@ -121,10 +127,26 @@ public class GameExplorationController : ControllerBase
         if (process == null)
             return NotFound();
 
+        await process.ChannelWriter.WriteAsync(Process.ExplorationMessage.Done);
         var result = await _processManager.FinishProcessAsync(id);
 
-        // TODO: implement properly
-        return Ok(ViewModels.PlayableObject.FromDBEntity(process.LatestPlayableObject));
+        var artefacts = await _dbContext.DigitalObjects
+            .Where(a => result.IncludedArtefactIds.Contains(a.Id))
+            .ToListAsync();
+        var version = await _dbContext.WorkVersions.FindAsync(result.VersionId);
+        var environment = await _dbContext.Environments.FindAsync(result.PlayableObject.Environment.Id);
+
+        var playable = result.PlayableObject;
+        playable.Label = finishInfo.PackageLabel;
+        playable.InternalNote = finishInfo.PackageNote;
+        playable.Environment = environment;
+        playable.IncludedDigitalObjects = artefacts;
+        playable.WorkVersions = [version];
+
+        _dbContext.DigitalObjects.Add(playable);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(ViewModels.PlayableObject.FromDBEntity(playable));
     }
 
     [HttpPost("{explorationId}/input/{type}")]

@@ -434,7 +434,37 @@ public class ExplorationProcess : BaseProcess
     {
         return OutputImageId;
     }
+}
 
+public class KioskCheckProcess : BaseProcess
+{
+    private readonly string _playableImageId;
+
+    public Guid EnvironmentId { get; private set; }
+
+    public KioskCheckProcess(Guid environmentId, string playableImageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
+    {
+        EnvironmentId = environmentId;
+        _playableImageId = playableImageId;
+    }
+
+    protected override async Task<EmulationEnvironment> ResolveEnvironment(CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
+        _logWriter.WriteLine($"Looking up kiosk environment: {EnvironmentId}");
+        var environment = await dbContext.Environments
+            .Where(e => e.Type == EnvironmentType.Kiosk)
+            .FirstOrDefaultAsync(e => e.Id == EnvironmentId);
+        return environment;
+    }
+
+    protected override string ResolveInputImageId()
+    {
+        return _playableImageId;
+    }
+
+    protected override string ResolveOutputImageId() => null;
 }
 
 public class KioskProcess : BaseProcess
@@ -442,7 +472,7 @@ public class KioskProcess : BaseProcess
     public Guid PackageId { get; private set; }
     private PlayableObject _package;
 
-public KioskProcess(Guid packageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
+    public KioskProcess(Guid packageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
     {
         PackageId = packageId;
     }

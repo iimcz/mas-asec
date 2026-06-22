@@ -55,7 +55,7 @@ public static class Linux
     public static async Task<string> Chmod(bool sudo, List<string> args, CancellationToken cancellationToken = default)
         => await Execute(sudo, "chmod", args, cancellationToken);
 
-    public static async Task<string> MakeQcow2Image(long sizeBytes, string path, FileSystem fs = FileSystem.Ext4, CancellationToken cancellationToken = default)
+    public static async Task<string> MakeQcow2Image(long sizeBytes, string path, FileSystem fs = FileSystem.Ext4, string label = "empty", CancellationToken cancellationToken = default)
     {
         // NOTE: could be 1024^2 but this will suffice for now...
         var sizeMB = sizeBytes / 1000_000 + 1;
@@ -72,7 +72,7 @@ public static class Linux
         await SafetyWait();
 
         // TODO: use root_perms if available - currently used distro only supports root_owner
-        partial = await Mkfs(true, ["-t", fs.ToString().ToLower(), "-F", "/dev/nbd0"], cancellationToken);
+        partial = await Mkfs(true, ["-t", fs.ToString().ToLower(), "-F", "/dev/nbd0", "-L", label], cancellationToken);
         sw.WriteLine(partial);
 
         partial = await QemuNbd(true, ["-d", "/dev/nbd0"], cancellationToken);
