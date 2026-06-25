@@ -75,7 +75,8 @@ public class GameExplorationController : ControllerBase
             _serviceScopeFactory,
             id,
             artefacts.ToList(),
-            version
+            version,
+            request.OutputImageSize ?? 0
         );
         _processManager.StartProcess(process);
         return Ok(ExplorationProcess.FromProcess(process));

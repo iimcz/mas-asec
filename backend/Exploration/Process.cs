@@ -19,6 +19,7 @@ public class ExplorationProcessDetail
 public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 {
     private readonly IServiceScopeFactory _serviceProvider;
+    private readonly long _outputSize;
     private readonly IConfiguration _configuration;
     private readonly string _emulationStreamBaseUrl;
     private readonly EmulationConfig _emulationProcessConfig;
@@ -55,7 +56,6 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         SingleWriter = false,
     });
 
-    private string _playableEaasImageId;
     private string _prepEaasImageId;
     private string _prepEaasOuptutImageId;
     private string _prepSnapshotId;
@@ -63,9 +63,12 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
     private string _outputImage;
     private ConversionResult _initialConversionResult;
 
-    public Process(IConfiguration configuration, IServiceScopeFactory serviceProvider, Guid explorationEnvironmentId, List<Artefact> artefacts, WorkVersion version)
+    public Process(IConfiguration configuration, IServiceScopeFactory serviceProvider, Guid explorationEnvironmentId, List<Artefact> artefacts, WorkVersion version, long requestedOutputSize)
     {
         _serviceProvider = serviceProvider;
+
+        // The minimum is 2 times the size of all artefacts combined.
+        _outputSize = Math.Max(requestedOutputSize, artefacts.Select(a => a.FileSize).Sum() * 2);
 
         _configuration = configuration;
         var section = configuration.GetSection("Emulation");
@@ -183,7 +186,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         var outputImageMount = Path.Combine(_processDir, $"output[{Id}]_mounted");
         Directory.CreateDirectory(outputImageMount);
 
-        var log = await Linux.MakeQcow2Image(1024 * 1024 * 1024, _outputImage, FileSystem.Ext4, "game");
+        var log = await Linux.MakeQcow2Image(_outputSize, _outputImage, FileSystem.Ext4, "game");
         logger.LogInformation(log);
 
         log = await Linux.MountQcow2Image(_outputImage, outputImageMount);
@@ -375,7 +378,8 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         var eaasUploadClient = scope.ServiceProvider.GetRequiredService<EaasUploadClient>();
         var eaasEnvRepoClient = scope.ServiceProvider.GetRequiredService<EnvironmentRepositoryClient>();
 
-        _playableEaasImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvRepoClient, null, logger).UploadImageToEaaS(_playableImage, $"playable[{Id}]");
+        // TODO: remove the previous image
+        LatestPlayableObject.ObjectId = await new ResultUploader(eaasUploadClient, null, eaasEnvRepoClient, null, logger).UploadImageToEaaS(_playableImage, $"playable[{Id}]");
 
         return ExplorationState.KioskEnvironmentRunning;
     }
@@ -387,7 +391,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         using var scope = _serviceProvider.CreateScope();
 
         var emulationProcessManager = scope.ServiceProvider.GetRequiredService<IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail>>();
-        var emulationProcess = new KioskCheckProcess(_kioskEnvironmentId, _playableEaasImageId, _serviceProvider, _emulationProcessConfig, true);
+        var emulationProcess = new KioskCheckProcess(_kioskEnvironmentId, LatestPlayableObject.ObjectId, _serviceProvider, _emulationProcessConfig, true);
 
         emulationProcessManager.StartProcess(emulationProcess);
         CurrentStreamUrl = _emulationStreamBaseUrl + emulationProcess.Id.ToString();
@@ -421,7 +425,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
             if (nextState != null)
             {
-                await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.SaveMachineState);
+                await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.NoSaveMachineState);
                 await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Quit);
                 await emulationProcessManager.FinishProcessAsync(emulationProcess.Id);
                 return (ExplorationState) nextState;
