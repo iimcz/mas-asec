@@ -6,9 +6,6 @@ using Minio;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add additional configuration files
-//builder.Configuration.AddJsonFile("emulators.json", false);
-
 // Add services to the container.
 builder.Services.AddDbContext<AsecDBContext>(b =>
 {
@@ -42,7 +39,8 @@ builder.Services.AddKeyedMinio("ArchiveObjectStorage", options =>
     options.SecretKey = section.GetValue<string>("SecretKey") ?? "";
     options.Region = section.GetValue<string>("Region") ?? "";
     options.SessionToken = section.GetValue<string>("SessionToken") ?? "";
-    options.ConfigureClient(client => {
+    options.ConfigureClient(client =>
+    {
         client.WithSSL();
     });
 });
