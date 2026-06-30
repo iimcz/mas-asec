@@ -21,7 +21,7 @@ public class ItemClient : BaseCollectiveAccessClient
             getRelationships(jwt: $jwt, id: $id, table: $table, target: $target, restrictToTypes: $tgTypes, restrictToRelationshipTypes: $relTypes)
             {
                 id
-                relationships { id } 
+                relationships { id }
             }
         }
     """;
@@ -34,9 +34,11 @@ public class ItemClient : BaseCollectiveAccessClient
 
     private async Task<IList<MinRelationship>> GetParatextPhysicalObjectRelationships(int id, CancellationToken cancellationToken = default(CancellationToken))
     {
-        var request = new GraphQLRequest<GetRelationshipsArgs>() {
+        var request = new GraphQLRequest<GetRelationshipsArgs>()
+        {
             Query = RELATIONSHIPS_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Id = id,
                 Table = Tables.Occurrences,
                 Target = Tables.Objects,
@@ -51,9 +53,11 @@ public class ItemClient : BaseCollectiveAccessClient
 
     private async Task<IList<MinRelationship>> GetVersionParatextRelationships(int id, string relationshipType, CancellationToken cancellationToken = default(CancellationToken))
     {
-        var request = new GraphQLRequest<GetRelationshipsArgs>() {
+        var request = new GraphQLRequest<GetRelationshipsArgs>()
+        {
             Query = RELATIONSHIPS_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Id = id,
                 Table = Tables.Occurrences,
                 Target = Tables.Occurrences,
@@ -68,9 +72,11 @@ public class ItemClient : BaseCollectiveAccessClient
 
     private async Task<IList<MinRelationship>> GetWorkVersionRelationships(int id, CancellationToken cancellationToken = default(CancellationToken))
     {
-        var request = new GraphQLRequest<GetRelationshipsArgs>() {
+        var request = new GraphQLRequest<GetRelationshipsArgs>()
+        {
             Query = RELATIONSHIPS_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Id = id,
                 Table = Tables.Occurrences,
                 Target = Tables.Occurrences,
@@ -94,9 +100,11 @@ public class ItemClient : BaseCollectiveAccessClient
 
     public async Task<Work> GetWork(int id, CancellationToken cancellationToken = default(CancellationToken))
     {
-        var request = new GraphQLRequest<GetArgs>() {
+        var request = new GraphQLRequest<GetArgs>()
+        {
             Query = GET_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Id = id,
                 Table = Tables.Occurrences,
                 Bundles = new() {
@@ -108,7 +116,7 @@ public class ItemClient : BaseCollectiveAccessClient
             }
         };
 
-        var response = await PostAuthenticatedAsync<GetArgs,GetRoot<Work>>(ENDPOINT, request, cancellationToken);
+        var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Work>>(ENDPOINT, request, cancellationToken);
         if (response == null || !response.Ok)
         {
             // TODO: better error handling and logging
@@ -124,9 +132,11 @@ public class ItemClient : BaseCollectiveAccessClient
     {
         var relationships = await GetWorkVersionRelationships(id, cancellationToken);
 
-        var relDataRequest = new GraphQLRequest<GetArgs>() {
+        var relDataRequest = new GraphQLRequest<GetArgs>()
+        {
             Query = GET_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Table = Tables.OccurrencesXOccurrences,
                 Bundles = new() { BundleCodes.OccurrenceRelLeftId }
             }
@@ -138,7 +148,7 @@ public class ItemClient : BaseCollectiveAccessClient
             relDataRequest.Variables.Id = rel.Id;
             var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Relationship>>(ENDPOINT, relDataRequest, cancellationToken);
 
-            if(!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
+            if (!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
             {
                 // invalid ID, skip
                 continue;
@@ -150,7 +160,8 @@ public class ItemClient : BaseCollectiveAccessClient
         var versionRequest = new GraphQLRequest<GetArgs>()
         {
             Query = GET_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Table = Tables.Occurrences,
                 Bundles = new() {
                     BundleCodes.OccurrenceLabel,
@@ -182,9 +193,11 @@ public class ItemClient : BaseCollectiveAccessClient
         var relationshipsContx = await GetVersionParatextRelationships(id, RelationTypes.WorkVersionContextualizeParatext, cancellationToken);
         var relationshipsRepre = await GetVersionParatextRelationships(id, RelationTypes.WorkVersionRepresentParatext, cancellationToken);
 
-        var relDataRequest = new GraphQLRequest<GetArgs>() {
+        var relDataRequest = new GraphQLRequest<GetArgs>()
+        {
             Query = GET_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Table = Tables.OccurrencesXOccurrences,
                 Bundles = new() { BundleCodes.OccurrenceRelLeftId }
             }
@@ -196,7 +209,7 @@ public class ItemClient : BaseCollectiveAccessClient
             relDataRequest.Variables.Id = rel.Id;
             var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Relationship>>(ENDPOINT, relDataRequest, cancellationToken);
 
-            if(!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
+            if (!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
             {
                 // invalid ID, skip
                 continue;
@@ -205,9 +218,11 @@ public class ItemClient : BaseCollectiveAccessClient
             paratextIds.Add(otherId);
         }
 
-        var paratextRequest = new GraphQLRequest<GetArgs>() {
+        var paratextRequest = new GraphQLRequest<GetArgs>()
+        {
             Query = GET_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Table = Tables.Occurrences,
                 Bundles = new() {
                     BundleCodes.OccurrenceLabel,
@@ -238,9 +253,11 @@ public class ItemClient : BaseCollectiveAccessClient
     {
         var relationships = await GetParatextPhysicalObjectRelationships(id, cancellationToken);
 
-        var relDataRequest = new GraphQLRequest<GetArgs>() {
+        var relDataRequest = new GraphQLRequest<GetArgs>()
+        {
             Query = GET_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Table = Tables.OccurrencesXOccurrences,
                 Bundles = new() { BundleCodes.OccurrenceRelLeftId }
             }
@@ -252,7 +269,7 @@ public class ItemClient : BaseCollectiveAccessClient
             relDataRequest.Variables.Id = rel.Id;
             var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Relationship>>(ENDPOINT, relDataRequest, cancellationToken);
 
-            if(!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
+            if (!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
             {
                 // invalid ID, skip
                 continue;
@@ -261,9 +278,11 @@ public class ItemClient : BaseCollectiveAccessClient
             objectIds.Add(otherId);
         }
 
-        var objectRequest = new GraphQLRequest<GetArgs>() {
+        var objectRequest = new GraphQLRequest<GetArgs>()
+        {
             Query = GET_QUERY,
-            Variables = new() {
+            Variables = new()
+            {
                 Table = Tables.Objects,
                 Bundles = new() {
                     BundleCodes.ObjectOwner,
@@ -294,40 +313,71 @@ public class ItemClient : BaseCollectiveAccessClient
         return objects;
     }
 
+    public async Task<Paratext> GetParatext(int id, CancellationToken cancellationToken = default)
+    {
+        var request = new GraphQLRequest<GetArgs>()
+        {
+            Query = GET_QUERY,
+            Variables = new()
+            {
+                Id = id,
+                Table = Tables.Occurrences,
+                Bundles = new() {
+                    BundleCodes.OccurrenceLabel,
+                    BundleCodes.OccurrenceLanguage,
+                    BundleCodes.OccurrenceDate,
+                    BundleCodes.OccurrenceFilledOutBy,
+                    BundleCodes.OccurrenceEmissionSize,
+                    BundleCodes.OccurrenceIdentificationNumber,
+                    BundleCodes.OccurrenceParatextType
+                }
+            }
+        };
+
+        var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Paratext>>(ENDPOINT, request, cancellationToken);
+        if (response == null || !response.Ok)
+        {
+            // TODO: better error handling and logging
+            throw new ApplicationException(response?.Errors?.ToString());
+        }
+
+        return response.Data.Get;
+    }
+
     public class GetRelationshipsArgs : GraphQLAuthVars
     {
-        public string Table {get; set;}
-        public string Target {get; set;}
-        public int Id {get; set;}
-        public List<string> RelTypes {get; set;}
-        public List<string> TgTypes {get; set;}
+        public string Table { get; set; }
+        public string Target { get; set; }
+        public int Id { get; set; }
+        public List<string> RelTypes { get; set; }
+        public List<string> TgTypes { get; set; }
     }
 
     public class GetRelationshipsRoot
     {
-        public GetRelationshipsItem GetRelationships {get; set;}
+        public GetRelationshipsItem GetRelationships { get; set; }
     }
 
     public class GetRelationshipsItem
     {
-        public int Id {get; set;}
-        public IList<MinRelationship> Relationships {get; set;}
+        public int Id { get; set; }
+        public IList<MinRelationship> Relationships { get; set; }
     }
 
     public class MinRelationship
     {
-        public int Id {get; set;}
+        public int Id { get; set; }
     }
 
     public class GetArgs : GraphQLAuthVars
     {
-        public int Id {get; set;}
-        public string Table {get; set;}
-        public List<string> Bundles {get; set;}
+        public int Id { get; set; }
+        public string Table { get; set; }
+        public List<string> Bundles { get; set; }
     }
 
     public class GetRoot<T>
     {
-        public T Get {get; set;}
+        public T Get { get; set; }
     }
 }
