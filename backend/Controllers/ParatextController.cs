@@ -1,11 +1,10 @@
-using asec.Emulation;
+using asec.Compatibility.CollectiveAccess;
+using asec.Compatibility.CollectiveAccess.Models;
 using asec.Models;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Minio;
-using Minio.DataModel.Args;
-using Minio.DataModel.Tags;
 
 namespace asec.Controllers;
 
@@ -18,15 +17,38 @@ public class ParatextController : ControllerBase
 {
     private readonly string _bucketName;
 
-    private AsecDBContext _dbContext;
-    private IMinioClient _minioClient;
+    private readonly AsecDBContext _dbContext;
+    private readonly IMinioClient _minioClient;
+    private readonly SearchClient _caSearchClient;
 
-    public ParatextController(AsecDBContext dbContext, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration configuration)
+    public ParatextController(AsecDBContext dbContext, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, SearchClient searchClient, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _minioClient = minioClient;
+        _caSearchClient = searchClient;
 
         _bucketName = configuration.GetSection("LocalObjectStorage").GetValue<string>("ParatextBucket");
+    }
+
+    /// <summary>
+    /// Rudimentary search for remote paratexts located in the CollectiveAccess database.
+    /// </summary>
+    /// <param name="searchTerm">What to search for</param>
+    /// <returns>List of all the paratexts found in the remote DB</returns>
+    [HttpGet("all")]
+    [Produces(typeof(List<RemoteParatext>))]
+    public async Task<IActionResult> ListRemoteParatexts(string searchTerm)
+    {
+        var foundParatexts = await _caSearchClient.GetParatexts(searchTerm);
+
+        var result = foundParatexts.Select(p => new RemoteParatext()
+        {
+            Id = p.Id,
+            Idno = p.Idno,
+            Label = p.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceLabel),
+            Note = p.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceInternalNote)
+        });
+        return Ok(result);
     }
 
     /// <summary>
@@ -35,7 +57,7 @@ public class ParatextController : ControllerBase
     /// <param name="paratextId">ID of the paratext</param>
     /// <returns>Details of the paratext</returns>
     [HttpGet("{paratextId}")]
-    [Produces(typeof(Paratext))]
+    [Produces(typeof(ViewModels.Paratext))]
     public async Task<IActionResult> GetParatext(string paratextId)
     {
         var id = Guid.Parse(paratextId);
@@ -45,7 +67,7 @@ public class ParatextController : ControllerBase
             .FirstOrDefaultAsync(p => p.Id == id);
         if (dbParatext == null)
             return NotFound();
-        return Ok(Paratext.FromDBEntity(dbParatext));
+        return Ok(ViewModels.Paratext.FromDBEntity(dbParatext));
     }
 
     /// <summary>
@@ -55,8 +77,8 @@ public class ParatextController : ControllerBase
     /// <param name="paratext">New details of the paratext</param>
     /// <returns>The updated paratext</returns>
     [HttpPost("{paratextId}")]
-    [Produces(typeof(Paratext))]
-    public async Task<IActionResult> UpdateParatext(string paratextId, [FromBody] Paratext paratext)
+    [Produces(typeof(ViewModels.Paratext))]
+    public async Task<IActionResult> UpdateParatext(string paratextId, [FromBody] ViewModels.Paratext paratext)
     {
         var id = Guid.Parse(paratextId);
         var dbParatext = await _dbContext.Paratexts.FindAsync(id);
@@ -74,97 +96,6 @@ public class ParatextController : ControllerBase
 
         await _dbContext.SaveChangesAsync();
 
-        return Ok(Paratext.FromDBEntity(dbParatext));
-    }
-
-    /// <summary>
-    /// Add a file to the paratext. This file will then be available for download.
-    /// </summary>
-    /// <param name="paratextId">ID of the paratext</param>
-    /// <param name="filename">Name of the uploaded file</param>
-    /// <param name="file">The uploaded file</param>
-    /// <returns>The updated (now downloadable) paratext</returns>
-    [HttpPost("{paratextId}/upload/{filename}")]
-    [Produces(typeof(Paratext))]
-    public async Task<IActionResult> UploadParatextFile(string paratextId, string filename, [FromForm] IFormFile file)
-    {
-        var id = Guid.Parse(paratextId);
-        var dbParatext = await _dbContext.Paratexts.FindAsync(id);
-        if (dbParatext == null)
-            return NotFound();
-
-        var tmpFile = Path.GetTempFileName();
-        using (var fileStream = new FileStream(tmpFile, FileMode.OpenOrCreate, FileAccess.Write))
-        {
-            await file.CopyToAsync(fileStream);
-        }
-
-        var fileInfo = new FileInfo(tmpFile);
-
-        var digitalObject = new Models.Archive.DigitalObject()
-        {
-            Id = Guid.NewGuid(),
-            FileName = filename,
-            Format = fileInfo.Extension,
-            FileSize = (uint)fileInfo.Length,
-            Paratexts = [dbParatext]
-        };
-
-        dbParatext.DigitalObject = digitalObject;
-
-        var tags = new Dictionary<string, string>()
-        {
-            { "Tag", "Paratext" },
-            { "DataType", "File" }
-        };
-        var putObjectArgs = new PutObjectArgs()
-            .WithBucket(_bucketName)
-            .WithFileName(tmpFile)
-            .WithTagging(new Tagging(tags, true))
-            .WithObject(dbParatext.Id.ToString());
-        await _minioClient.PutObjectAsync(putObjectArgs);
-        //dbParatext.Downloadable = true;
-        //dbParatext.Filename = filename;
-        System.IO.File.Delete(tmpFile);
-
-        _dbContext.DigitalObjects.Add(digitalObject);
-        await _dbContext.SaveChangesAsync();
-
-        return Ok(Paratext.FromDBEntity(dbParatext));
-    }
-
-    /// <summary>
-    /// Download the file of the specified paratext.
-    /// </summary>
-    /// <param name="paratextId">ID of the paratext to download the file of</param>
-    /// <returns>Stream of the paratext's file as application/octet-stream</returns>
-    [HttpGet("{paratextId}/download")]
-    public async Task<IActionResult> DownloadParatextFile(string paratextId)
-    {
-        var id = Guid.Parse(paratextId);
-        var dbParatext = await _dbContext.Paratexts.FindAsync(id);
-        if (dbParatext == null)
-            return NotFound();
-
-        //if (!dbParatext.Downloadable)
-        return BadRequest(); // TODO: currently always a bad request, support pending due to database model changes.
-
-        /*
-        // TODO: use some kind of proxy for direct access instead of
-        // caching the file ourselves.
-        var tmpFile = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-        var getObjectArgs = new GetObjectArgs()
-            .WithBucket(_bucketName)
-            .WithObject(dbParatext.Id.ToString())
-            .WithFile(tmpFile);
-        Response.OnCompleted(() =>
-        {
-            if (Path.Exists(tmpFile))
-                System.IO.File.Delete(tmpFile);
-            return Task.CompletedTask;
-        });
-        await _minioClient.GetObjectAsync(getObjectArgs);
-        return PhysicalFile(tmpFile, "application/octet-stream", dbParatext.Filename, true);
-        */
+        return Ok(ViewModels.Paratext.FromDBEntity(dbParatext));
     }
 }
