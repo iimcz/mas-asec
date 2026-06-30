@@ -46,7 +46,7 @@ public class DigitalizationController : ControllerBase
     [Produces(typeof(IEnumerable<DigitalizationTool>))]
     public IActionResult GetDigitalizationTools()
     {
-        var result = _tools.GetDigitalizationTools().Select(tool => new DigitalizationTool (
+        var result = _tools.GetDigitalizationTools().Select(tool => new DigitalizationTool(
             tool.Id.ToString(),
             tool.Slug,
             tool.Name,
@@ -256,7 +256,7 @@ public class DigitalizationController : ControllerBase
     /// <returns>Detail of the process for which the file was uploaded</returns>
     [HttpPost("{processId}/upload/{uploadId}")]
     [Produces(typeof(DigitalizationProcess))]
-    public async Task<IActionResult> UploadDigitalizationFile(string processId, string uploadId, [FromForm] IFormFile file)
+    public async Task<IActionResult> UploadDigitalizationFile(string processId, string uploadId, IFormFile file)
     {
         // TODO: proper upload handling
         var process = _processManager.GetProcess(Guid.Parse(processId));
@@ -270,12 +270,5 @@ public class DigitalizationController : ControllerBase
         }
 
         return Ok(DigitalizationProcess.FromProcess(process));
-    }
-
-    // TODO: implement a way to get the currently running processes in case the client
-    // doesn't have a specific ID stored
-    public void GetRunningProcesses()
-    {
-        // TODO...
     }
 }
