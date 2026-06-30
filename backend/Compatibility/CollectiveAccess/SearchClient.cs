@@ -4,7 +4,7 @@ namespace asec.Compatibility.CollectiveAccess;
 
 public class SearchClient : BaseCollectiveAccessClient
 {
-    private const string SEARCH_WORKS_QUERY = """
+    private const string SEARCH_QUERY = """
         query search($jwt: String, $search: String, $table: String, $types: [String], $bundles: [String])
         {
             search(jwt: $jwt, search: $search, table: $table, restrictToTypes: $types, bundles: $bundles)
@@ -22,14 +22,16 @@ public class SearchClient : BaseCollectiveAccessClient
 
     public SearchClient(IConfiguration configuration, IHttpClientFactory clientFactory, CollectiveAccessAuth auth) : base(configuration, clientFactory, auth)
     {
-        
+
     }
 
-    public async Task<IList<Work>> GetWorks(string searchTerm = null, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<IList<Work>> GetWorks(string searchTerm = null, CancellationToken cancellationToken = default)
     {
-        var request = new GraphQLRequest<SearchVars>() {
-            Query = SEARCH_WORKS_QUERY,
-            Variables = new() {
+        var request = new GraphQLRequest<SearchVars>()
+        {
+            Query = SEARCH_QUERY,
+            Variables = new()
+            {
                 Search = searchTerm ?? "*",
                 Table = Tables.Occurrences,
                 Types = new() { Types.Work },
@@ -37,28 +39,47 @@ public class SearchClient : BaseCollectiveAccessClient
             }
         };
 
-        var result = await PostAuthenticatedAsync<SearchVars,SearchRoot<Work>>(ENDPOINT, request, cancellationToken);
-        
+        var result = await PostAuthenticatedAsync<SearchVars, SearchRoot<Work>>(ENDPOINT, request, cancellationToken);
+
+        return result.Data.Search.Result;
+    }
+
+    public async Task<IList<Paratext>> GetParatexts(string searchTerm = null, CancellationToken cancellationToken = default)
+    {
+        var request = new GraphQLRequest<SearchVars>()
+        {
+            Query = SEARCH_QUERY,
+            Variables = new()
+            {
+                Search = searchTerm ?? "*",
+                Table = Tables.Occurrences,
+                Types = new() { Types.Paratext },
+                Bundles = new() { BundleCodes.OccurrenceLabel, BundleCodes.OccurrenceId, BundleCodes.OccurrenceFilledOutBy }
+            }
+        };
+
+        var result = await PostAuthenticatedAsync<SearchVars, SearchRoot<Paratext>>(ENDPOINT, request, cancellationToken);
+
         return result.Data.Search.Result;
     }
 
     public class SearchVars : GraphQLAuthVars
     {
         // TODO: add start and count for pagination support
-        public string Search {get; set;}
-        public string Table {get; set;}
-        public List<string> Types {get; set;}
-        public List<string> Bundles {get; set;}
+        public string Search { get; set; }
+        public string Table { get; set; }
+        public List<string> Types { get; set; }
+        public List<string> Bundles { get; set; }
     }
 
     public class SearchResults<T>
     {
-        public int Count {get; set;}
-        public IList<T> Result {get; set;}
+        public int Count { get; set; }
+        public IList<T> Result { get; set; }
     }
 
     public class SearchRoot<T>
     {
-        public SearchResults<T> Search {get; set;}
+        public SearchResults<T> Search { get; set; }
     }
 }
