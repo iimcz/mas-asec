@@ -85,7 +85,7 @@ public class EmulationController : ControllerBase
                     Label = $"{package.Label} gameplay",
                     InternalNote = $"{videoFile.Type} recording for emulationId: {emulationId}",
                     CanExport = true,
-                    Date = DateOnly.FromDateTime(DateTime.Now),
+                    Date = DateTime.Now.ToString(),
                 };
 
                 var fileInfo = new FileInfo(videoFile.Path);

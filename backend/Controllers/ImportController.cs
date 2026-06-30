@@ -98,11 +98,11 @@ public class ImportController : ControllerBase
             RemoteId = paratext.Id,
             Label = paratext.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel),
             Language = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceLanguage),
-            Date = DateOnly.Parse(paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceDate)),
+            Date = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceDate),
             InternalNote = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceInternalNote),
             FilledOutBy = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceFilledOutBy),
             WebsiteUrl = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceWebsiteUrl),
-            EmissionSize = uint.Parse(paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceEmissionSize)),
+            EmissionSize = paratext.Bundles.GetOptionalBundleUintValue(BundleCodes.OccurrenceEmissionSize) ?? 0,
             IdentificationNumber = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceIdentificationNumber),
             ParatextType = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceParatextType),
 
@@ -135,11 +135,11 @@ public class ImportController : ControllerBase
 
         dbParatext.Label = paratext.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel);
         dbParatext.Language = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceLanguage);
-        dbParatext.Date = DateOnly.Parse(paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceDate));
+        dbParatext.Date = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceDate);
         dbParatext.InternalNote = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceInternalNote);
         dbParatext.FilledOutBy = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceFilledOutBy);
         dbParatext.WebsiteUrl = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceWebsiteUrl);
-        dbParatext.EmissionSize = uint.Parse(paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceEmissionSize));
+        dbParatext.EmissionSize = paratext.Bundles.GetOptionalBundleUintValue(BundleCodes.OccurrenceEmissionSize) ?? 0;
         dbParatext.IdentificationNumber = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceIdentificationNumber);
         dbParatext.ParatextType = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceParatextType);
         dbParatext.ImportedAt = DateTime.Now;
