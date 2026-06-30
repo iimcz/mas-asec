@@ -1,5 +1,5 @@
 {
-    "Configurations": [
+    "Emulators": [
         {
             "Name": "DOSBox",
             "Homepage": "https://www.dosbox.com/",
@@ -18,6 +18,21 @@
                             "ConversionSuffix": ".img"
                         }
                     ]
+                }
+            ]
+        }
+    ],
+    "ExplorationEnvironments": [
+        {
+            "Name": "CachyOS",
+            "Note": "Testing environment definition",
+            "Version": "v0.0.1",
+            "EaasId": "abcd-efgh-ijkl-mnop",
+            "Slug": "emulator-1",
+            "InternetConnected": true,
+            "Converters": [
+                {
+                    "$type": "copy"
                 }
             ]
         }
