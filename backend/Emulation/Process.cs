@@ -174,7 +174,7 @@ public abstract class BaseProcess : IProcess<EmulationResult, EmulationProcessDe
             Task.Run(() => RecordWebcam(Path.Combine(SubprocessLogsDir, "ffmpeg-webcam.txt"), Path.Combine(RecordingsDir, "webcam.mp4"), _config.WebcamDevice), cancellationToken)
         };
 
-        bool saveMachineState = true;
+        bool saveMachineState = false;
         bool keepRunning = true;
 
         while (keepRunning && !cancellationToken.IsCancellationRequested)
