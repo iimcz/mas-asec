@@ -97,6 +97,15 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
     public async Task Cleanup(CancellationToken cancellationToken = default)
     {
+        using var scope = _serviceProvider.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Process>>();
+        var envMetadataClient = scope.ServiceProvider.GetRequiredService<EmilEnvironmentDataClient>();
+
+        var result = await envMetadataClient.DeleteEnvironment(new(true, true, _prepSnapshotId, false));
+        if (result == null || result.status != "0")
+        {
+            logger.LogWarning("Failed to remove snapshot!");
+        }
     }
 
     public async Task<ExplorationResult> Start(CancellationToken cancellationToken)
@@ -144,7 +153,8 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
         if (StatusDetail.State == ExplorationState.Done)
         {
-            return new() {
+            return new()
+            {
                 IncludedArtefactIds = _artefacts.Select(a => a.Id).ToList(),
                 VersionId = _version.Id,
                 PlayableObject = LatestPlayableObject
@@ -194,7 +204,8 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
         var section = _configuration.GetSection("Exploration");
         var defaultEmuSlug = section.GetValue<string>("DefaultEmulatorSlug");
-        var defaultJson = new PlayableObjectDef() {
+        var defaultJson = new PlayableObjectDef()
+        {
             EmulatorSlug = defaultEmuSlug
         };
 
@@ -236,10 +247,10 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         LatestPlayableObject = null;
 
         var emulationProcessManager = scope.ServiceProvider.GetRequiredService<IProcessManager<BaseProcess, EmulationResult, EmulationProcessDetail>>();
-        var emulationProcess = new ExplorationProcess(_explorationEnvironmentId, _prepEaasImageId, _prepEaasOuptutImageId, _serviceProvider, _emulationProcessConfig, true);
+        var emulationProcess = new ExplorationProcess(_explorationEnvironmentId, _prepSnapshotId, _prepEaasImageId, _prepEaasOuptutImageId, _serviceProvider, _emulationProcessConfig, true);
 
         emulationProcessManager.StartProcess(emulationProcess);
-        CurrentStreamUrl =_emulationStreamBaseUrl + emulationProcess.Id.ToString();
+        CurrentStreamUrl = _emulationStreamBaseUrl + emulationProcess.Id.ToString();
 
         while (_inputChannel.Reader.TryRead(out _)) ;
 
@@ -326,7 +337,8 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
 
                 _kioskEnvironmentId = environment?.Id ?? Guid.Empty;
 
-                LatestPlayableObject = new() {
+                LatestPlayableObject = new()
+                {
                     Id = Guid.Empty,
                     Label = jsonData.Label,
                     InternalNote = jsonData.Note,
@@ -428,7 +440,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
                 await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.NoSaveMachineState);
                 await emulationProcess.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Quit);
                 await emulationProcessManager.FinishProcessAsync(emulationProcess.Id);
-                return (ExplorationState) nextState;
+                return (ExplorationState)nextState;
             }
         }
 

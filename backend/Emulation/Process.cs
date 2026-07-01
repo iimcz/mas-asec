@@ -403,36 +403,45 @@ public abstract class BaseProcess : IProcess<EmulationResult, EmulationProcessDe
 
 public class ExplorationProcess : BaseProcess
 {
-    public Guid EnvironmentId { get; private set; }
-    public string DigitalObjectsImageId { get; private set; }
-    public string OutputImageId { get; private set; }
+    private readonly Guid _environmentId;
+    private readonly string _snapshotEaasId;
+    private readonly string _digitalObjectsImageId;
+    private readonly string _outputImageId;
 
-    public ExplorationProcess(Guid environmentId, string digitalObjectsImageId, string outputImageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
+    public ExplorationProcess(Guid environmentId, string snapshotEaasId, string digitalObjectsImageId, string outputImageId, IServiceScopeFactory serviceScopeFactory, EmulationConfig config, bool isSubprocess = false) : base(serviceScopeFactory, config, isSubprocess)
     {
-        EnvironmentId = environmentId;
-        DigitalObjectsImageId = digitalObjectsImageId;
-        OutputImageId = outputImageId;
+        _environmentId = environmentId;
+        _digitalObjectsImageId = digitalObjectsImageId;
+        _outputImageId = outputImageId;
+        _snapshotEaasId = snapshotEaasId;
     }
 
     protected override async Task<EmulationEnvironment> ResolveEnvironment(CancellationToken cancellationToken)
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AsecDBContext>();
-        _logWriter.WriteLine($"Looking up exploration environment: {EnvironmentId}");
+        _logWriter.WriteLine($"Looking up exploration environment: {_environmentId}");
         var environment = await dbContext.Environments
             .Where(e => e.Type == EnvironmentType.Exploration)
-            .FirstOrDefaultAsync(e => e.Id == EnvironmentId);
+            .FirstOrDefaultAsync(e => e.Id == _environmentId);
+        dbContext.ChangeTracker.Clear(); // Explicitly clear change tracker as we do not want the following changes to ever be tracked.
+
+        if (!_snapshotEaasId.IsNullOrEmpty())
+        {
+            environment.EaasId = _snapshotEaasId;
+        }
+
         return environment;
     }
 
     protected override string ResolveInputImageId()
     {
-        return DigitalObjectsImageId;
+        return _digitalObjectsImageId;
     }
 
     protected override string ResolveOutputImageId()
     {
-        return OutputImageId;
+        return _outputImageId;
     }
 }
 
