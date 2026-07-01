@@ -41,6 +41,7 @@ public static class IServiceCollectionExtensions
         services.AddScoped<ComponentsClient>();
         services.AddScoped<NetworksClient>();
         services.AddScoped<SessionsClient>();
+        services.AddScoped<EmilEnvironmentDataClient>();
 
         // CollectiveAccess clients
         services.AddSingleton<CollectiveAccessAuth>();
