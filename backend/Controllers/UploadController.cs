@@ -45,10 +45,10 @@ namespace asec.Controllers
         {
             Request.Headers.TryGetValue("VersionId", out var versionId);
             Models.Archive.WorkVersion version = null;
-            if (!versionId.IsNullOrEmpty()) version = await _dbContext.WorkVersions.FindAsync(Guid.Parse(versionId.ToString()));
+            if (!string.IsNullOrEmpty(versionId)) version = await _dbContext.WorkVersions.FindAsync(Guid.Parse(versionId.ToString()));
             Request.Headers.TryGetValue("ParatextId", out var paratextId);
             Models.Archive.Paratext paratext = null;
-            if (!paratextId.IsNullOrEmpty()) paratext = await _dbContext.Paratexts.FindAsync(Guid.Parse(paratextId.ToString()));
+            if (!string.IsNullOrEmpty(paratextId)) paratext = await _dbContext.Paratexts.FindAsync(Guid.Parse(paratextId.ToString()));
             if (version == null && paratext == null) return NotFound();
 
             var boundary = HeaderUtilities.RemoveQuotes(MediaTypeHeaderValue.Parse(Request.ContentType).Boundary).Value;

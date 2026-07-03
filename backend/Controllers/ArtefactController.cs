@@ -94,14 +94,14 @@ public class ArtefactController : ControllerBase
             .FirstOrDefaultAsync<Artefact>(a => a.Id == id);
         if (artefact == null)
             return NotFound();
-        if (!String.IsNullOrEmpty(iartefact.Type))
+        if (!string.IsNullOrEmpty(iartefact.Type))
         {
             if (!Enum.TryParse<ArtefactType>(iartefact.Type, out var artefactType))
                 return BadRequest();
             if (artefact.PhysicalMediaType == PhysicalMediaType.None)
                 artefact.Type = artefactType;
         }
-        if (!String.IsNullOrEmpty(iartefact.WebsiteUrl))
+        if (!string.IsNullOrEmpty(iartefact.WebsiteUrl))
         {
             if (!Uri.TryCreate(iartefact.WebsiteUrl, UriKind.Absolute, out var artefactUrl))
                 return BadRequest();

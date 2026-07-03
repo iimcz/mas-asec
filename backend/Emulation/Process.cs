@@ -426,7 +426,7 @@ public class ExplorationProcess : BaseProcess
             .FirstOrDefaultAsync(e => e.Id == _environmentId);
         dbContext.ChangeTracker.Clear(); // Explicitly clear change tracker as we do not want the following changes to ever be tracked.
 
-        if (!_snapshotEaasId.IsNullOrEmpty())
+        if (!string.IsNullOrEmpty(_snapshotEaasId))
         {
             environment.EaasId = _snapshotEaasId;
         }
