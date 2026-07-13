@@ -21,9 +21,9 @@ public class ResultUploader
         _baseDirectory = baseDirectory;
     }
 
-    public async Task<string> UploadImageToEaaS(IList<ConvertedFile> files, string name, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<string> UploadImageToEaaS(IList<ConvertedFile> files, string name, string imageLabel = "empty", CancellationToken cancellationToken = default(CancellationToken))
     {
-        var diskImagePath = await CreateDiskImageFromFiles(files, name, cancellationToken);
+        var diskImagePath = await CreateDiskImageFromFiles(files, name, imageLabel, cancellationToken);
         return await UploadImageToEaaS(diskImagePath, name, cancellationToken);
     }
 
@@ -73,7 +73,7 @@ public class ResultUploader
         return eaasObjectId;
     }
 
-    private async Task<string> CreateDiskImageFromFiles(IList<ConvertedFile> files, string name, CancellationToken cancellationToken = default(CancellationToken))
+    private async Task<string> CreateDiskImageFromFiles(IList<ConvertedFile> files, string name, string label = "empty", CancellationToken cancellationToken = default(CancellationToken))
     {
         // TODO: for now, this will only work on linux due to the filesystem used and the availability of the tools.
         // In the future, this could be extended to be at least configurable, maybe include some tool checks somewhere
@@ -83,7 +83,7 @@ public class ResultUploader
         Directory.CreateDirectory(mountPath);
 
         var imageSize = files.Select(f => new FileInfo(f.Filename).Length).Sum();
-        var output = await Linux.MakeQcow2Image(imageSize, imagePath, FileSystem.Ext4, cancellationToken: cancellationToken);
+        var output = await Linux.MakeQcow2Image(imageSize, imagePath, FileSystem.Ext4, label, cancellationToken);
         _logger?.LogInformation(output);
 
         output = await Linux.MountQcow2Image(imagePath, mountPath, cancellationToken);

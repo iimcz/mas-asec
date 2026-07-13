@@ -243,7 +243,7 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
         Directory.CreateDirectory(conversionBaseDir);
 
         _prepEaasImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvironmentRepoClient, conversionBaseDir, logger)
-            .UploadImageToEaaS(_initialConversionResult.Files, $"exploration[{Id}]");
+            .UploadImageToEaaS(_initialConversionResult.Files, $"exploration[{Id}]", "artefact");
 
         _prepEaasOuptutImageId = await new ResultUploader(eaasUploadClient, null, eaasEnvironmentRepoClient, null, logger)
             .UploadImageToEaaS(_outputImage, $"output[{Id}]");
