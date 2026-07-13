@@ -209,9 +209,20 @@ public class Process : IProcess<ExplorationResult, ExplorationProcessDetail>
             EmulatorSlug = defaultEmuSlug
         };
 
-        using (FileStream fs = new(Path.Combine(outputImageMount, "game.json"), FileMode.CreateNew))
+        string gameJsonPath = Path.Combine(outputImageMount, "game.json");
+        using (FileStream fs = new(gameJsonPath, FileMode.CreateNew))
         {
             System.Text.Json.JsonSerializer.Serialize(fs, defaultJson);
+        }
+
+        // TODO: better solve this, also guard in other places - currently the application only supports linux anyway
+        if (OperatingSystem.IsLinux()) {
+            UnixFileMode fileMode =
+                UnixFileMode.UserWrite | UnixFileMode.UserRead |
+                UnixFileMode.GroupWrite | UnixFileMode.GroupRead |
+                UnixFileMode.OtherWrite | UnixFileMode.OtherRead;
+            File.SetUnixFileMode(gameJsonPath, fileMode);
+
         }
 
         log = await Linux.UnmountQcow2Image(outputImageMount);
