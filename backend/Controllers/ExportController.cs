@@ -39,7 +39,7 @@ public class ExportController : ControllerBase
 
         _localMinioClient = localMinioClient;
         _archiveMinioClient = archiveMinioClient;
-        
+
         var storageSection = configuration.GetSection("LocalObjectStorage");
         _artefactBucket = storageSection.GetValue<string>("ArtefactBucket");
         _localCacheDir = storageSection.GetValue<string>("CacheDir");
@@ -76,7 +76,7 @@ public class ExportController : ControllerBase
     {
         var guid = Guid.Parse(id);
         var paratext = await _dbContext.Paratexts
-            .Include(p => p.DigitalObject)
+            .Include(p => p.DigitalObjects)
             .FirstOrDefaultAsync(p => p.Id == guid, cancellationToken);
         if (paratext == null)
         {
@@ -99,7 +99,7 @@ public class ExportController : ControllerBase
 
     private void PrepareParatext(Paratext paratext)
     {
-        
+
     }
 
     private async Task PrepareArtefact(Artefact artefact, CancellationToken cancellationToken = default)
@@ -138,9 +138,8 @@ public class ExportController : ControllerBase
             .WithFileName(tmpFilename);
         // TODO: can we stream the data directly instead of creating a temporary file?
         await _archiveMinioClient.PutObjectAsync(putArgs, cancellationToken);
-
         _logger.LogInformation($"Transfer of artefact {artefact.FileName} done.");
-        artefact.FedoraUrl = artefact.ObjectId.ToString();
+        artefact.RepoUrl = artefact.ObjectId.ToString();
 
     }
 }

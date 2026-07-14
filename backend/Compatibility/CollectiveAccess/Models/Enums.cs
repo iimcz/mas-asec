@@ -42,7 +42,8 @@ public struct BundleNames
     public static readonly string PreferredLabels                  = "preferred_labels";
     public static readonly string DigitalObjectType                = "digital_object_type";
     public static readonly string Format                           = "format";
-    public static readonly string Quality                          = "quality";
+    public static readonly string Version                          = "version_do";
+    public static readonly string MediaInfoReport                  = "quality";
     public static readonly string File                             = "file";
     public static readonly string FileName                         = "file_name";
     public static readonly string FileSize                         = "file_size";

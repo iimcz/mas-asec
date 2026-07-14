@@ -1,6 +1,7 @@
 ﻿using asec.LongRunning;
 using asec.Models;
 using asec.Models.Digitalization;
+using asec.Platforms;
 using asec.Upload;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -69,7 +70,7 @@ namespace asec.Controllers
         /// <returns>The created artefact</returns>
         [HttpPost("{processId}/finalize")]
         [Produces(typeof(ViewModels.Artefact))]
-        public async Task<IActionResult> FinalizeArtefactUpload(string processId, [FromBody] ViewModels.Artefact artefact)
+        public async Task<IActionResult> FinalizeArtefactUpload(string processId, [FromBody] ViewModels.ArtefactUpdate artefact)
         {
             var id = Guid.Parse(processId);
             var process = _processManager.GetProcess(id);
@@ -106,7 +107,8 @@ namespace asec.Controllers
             dbArtefact.InternalNote = artefact.InternalNote;
             dbArtefact.Label = artefact.Label;
             dbArtefact.FileSize = fileSize;
-            dbArtefact.DigitalObjectType = "Text"; // TODO change to the correct type
+            dbArtefact.DigitalObjectType = Models.Archive.DigitalObjectType.GameArtefact; // TODO change to the correct type
+            dbArtefact.MediaInfoReport = await Linux.MediaInfo(["--Output=JSON", processResult.Filename]);
             dbArtefact.Format = "PDF"; // TODO: change to the correct format
 
             var paratext = await _dbContext.Paratexts.FindAsync(process.ParatextId);

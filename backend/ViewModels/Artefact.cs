@@ -3,40 +3,57 @@ using asec.Models.Digitalization;
 
 namespace asec.ViewModels;
 
-public record Artefact
+public record ArtefactListOptions
 {
-    public string Id { get; set; }
+    public List<string> Formats { get; set; }
+}
+
+public record ArtefactUpdate
+{
     public string Label { get; set; }
-    public string FileName { get; set; }
-    public string InternalNote { get; set; }
-    public string WebsiteUrl { get; set; }
-    public string DigitalObjectType { get; set; }
+    public string Version { get; set; }
     public string Format { get; set; }
-    public long FileSize { get; set; }
-    public string Quality { get; set; }
-    public string FedoraUrl { get; set; }
+    public string InternalNote { get; set; }
 
-    public string Type { get; set;}
+    public string Type { get; set; }
     public string PhysicalMediaType { get; set; }
-
-    public List<string> ParatextIds { get; set; }
-    public List<string> VersionIds { get; set; }
 
     public async Task<Models.Digitalization.Artefact> ToDBEntity(AsecDBContext context)
     {
         var artefactType = ArtefactType.Unknown;
         if (Type != null)
             Enum.TryParse(Type, true, out artefactType);
-        
+
         return new() {
             Id = Guid.Empty,
-            ArchivationDate = DateTime.Now,
+            Label = Label,
+            Version = Version,
+            Format = Format,
             InternalNote = InternalNote,
-            Type = artefactType,
-            FileName = FileName,
-            Label = Label
+            ArchivationDate = DateTime.Now,
+            Type = artefactType
         };
     }
+}
+
+public record Artefact
+{
+    public string Id { get; set; }
+    public string Label { get; set; }
+    public string Version { get; set; }
+    public string FileName { get; set; }
+    public string RepoUrl { get; set; }
+    public string DigitalObjectType { get; set; }
+    public string Format { get; set; }
+    public long FileSize { get; set; }
+    public string MediaInfoReport { get; set; }
+    public string InternalNote { get; set; }
+
+    public string Type { get; set;}
+    public string PhysicalMediaType { get; set; }
+
+    public List<string> ParatextIds { get; set; }
+    public List<string> VersionIds { get; set; }
 
     public static Artefact FromDBEntity(Models.Digitalization.Artefact artefact)
     {
@@ -45,15 +62,15 @@ public record Artefact
             VersionIds = artefact.WorkVersions?.Select(v => v.Id.ToString()).ToList(),
             ParatextIds = artefact.Paratexts?.Select(p => p.Id.ToString()).ToList(),
 
-            FileName = artefact.FileName,
             Label = artefact.Label,
-            InternalNote = artefact.InternalNote,
-            WebsiteUrl = artefact.WebsiteUrl?.ToString(),
-            DigitalObjectType = artefact.DigitalObjectType,
+            Version = artefact.Version,
+            FileName = artefact.FileName,
+            RepoUrl = artefact.RepoUrl,
+            DigitalObjectType = artefact.DigitalObjectType.ToString(),
             Format = artefact.Format,
             FileSize = artefact.FileSize,
-            Quality = artefact.Quality,
-            FedoraUrl = artefact.FedoraUrl,
+            MediaInfoReport = artefact.MediaInfoReport,
+            InternalNote = artefact.InternalNote,
 
             Type = artefact.Type.ToString(),
             PhysicalMediaType = artefact.PhysicalMediaType.ToString()

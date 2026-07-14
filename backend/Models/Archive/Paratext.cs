@@ -26,7 +26,7 @@ public class Paratext
     public bool Deleted { get; set; } = false;
 
     // Relationships
-    public DigitalObject DigitalObject { get; set; }
-    public PhysicalObject PhysicalObject { get; set; }
+    public IList<DigitalObject> DigitalObjects { get; set; }
+    public IList<PhysicalObject> PhysicalObjects { get; set; }
     public IList<WorkVersion> WorkVersions { get; set; }
 }

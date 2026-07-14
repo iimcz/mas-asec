@@ -2,6 +2,7 @@ using asec.Emulation;
 using asec.LongRunning;
 using asec.Models;
 using asec.Models.Recording;
+using asec.Platforms;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -96,8 +97,8 @@ public class EmulationController : ControllerBase
                     FileName = $"{emulationId}-{fileInfo.Name}",
                     Format = "mp4",
                     FileSize = fileInfo.Length,
-                    DigitalObjectType = "Video",
-                    Quality = "",
+                    DigitalObjectType = Models.Archive.DigitalObjectType.UnplayableParatext,
+                    MediaInfoReport = await Linux.MediaInfo(["--Output=JSON", videoFile.Path]),
                     Label = $"Video of {package.Label}",
                     RecordingType = videoFile.Type,
                     Paratexts = [paratext]

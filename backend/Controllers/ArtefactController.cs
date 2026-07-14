@@ -83,7 +83,7 @@ public class ArtefactController : ControllerBase
     /// <returns>The updated artefact</returns>
     [HttpPost("{artefactId}")]
     [Produces(typeof(ViewModels.Artefact))]
-    public async Task<IActionResult> UpdateArtefact(string artefactId, [FromBody] ViewModels.Artefact iartefact)
+    public async Task<IActionResult> UpdateArtefact(string artefactId, [FromBody] ViewModels.ArtefactUpdate iartefact)
     {
         var id = Guid.Parse(artefactId);
         var artefact = await _dbContext.DigitalObjects
@@ -101,16 +101,11 @@ public class ArtefactController : ControllerBase
             if (artefact.PhysicalMediaType == PhysicalMediaType.None)
                 artefact.Type = artefactType;
         }
-        if (!string.IsNullOrEmpty(iartefact.WebsiteUrl))
-        {
-            if (!Uri.TryCreate(iartefact.WebsiteUrl, UriKind.Absolute, out var artefactUrl))
-                return BadRequest();
-            artefact.WebsiteUrl = artefactUrl;
-        }
-        // TODO: move to viewmodel? also fixup according to CA management
+        // TODO: move to viewmodel?
         artefact.Label = iartefact.Label;
+        artefact.Version = iartefact.Version;
+        artefact.Format = iartefact.Format;
         artefact.InternalNote = iartefact.InternalNote;
-        artefact.Quality = iartefact.Quality;
 
         await _dbContext.SaveChangesAsync();
 

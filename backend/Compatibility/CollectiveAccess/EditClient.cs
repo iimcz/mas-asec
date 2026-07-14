@@ -1,6 +1,8 @@
 using asec.Compatibility.CollectiveAccess.Models;
 using System.Text.Json.Nodes;
 using CSharpVitamins;
+using Microsoft.IdentityModel.Tokens;
+using asec.Models.Archive;
 
 namespace asec.Compatibility.CollectiveAccess;
 
@@ -32,10 +34,13 @@ public class EditClient : BaseCollectiveAccessClient
     public async Task<int> AddOrUpdateParatext(asec.Models.Archive.Paratext paratext, CancellationToken cancellationToken = default(CancellationToken))
     {
         var relationships = new List<SubjectRelationship>();
-        if (paratext.DigitalObject != null)
+        if (!paratext.DigitalObjects.IsNullOrEmpty())
         {
-            int digitalObjectId = await AddOrUpdateDigitalObject(paratext.DigitalObject, cancellationToken);
-            relationships.Add(new(SubjectRelationshipTypes.ManifestationOf, Tables.Objects, digitalObjectId));
+            foreach (var dObject in paratext.DigitalObjects)
+            {
+                int digitalObjectId = await AddOrUpdateDigitalObject(dObject, cancellationToken);
+                relationships.Add(new(SubjectRelationshipTypes.ManifestationOf, Tables.Objects, digitalObjectId));
+            }
         }
 
         // We do not expect an exported paratext to have a physical object.
@@ -147,28 +152,23 @@ public class EditClient : BaseCollectiveAccessClient
                     ),
                     new(
                         Locales.Czech,
+                        BundleNames.Version,
+                        digitalObject.Version
+                    ),
+                    new(
+                        Locales.Czech,
                         BundleNames.FileName,
                         digitalObject.FileName
                     ),
                     new(
                         Locales.Czech,
-                        BundleNames.Quality,
-                        digitalObject.Quality
-                    ),
-                    new(
-                        Locales.Czech,
-                        BundleNames.FileSize,
-                        digitalObject.FileSize.ToString()
+                        BundleNames.FedoraUrl,
+                        digitalObject.RepoUrl
                     ),
                     new(
                         Locales.Czech,
                         BundleNames.DigitalObjectType,
-                        digitalObject.DigitalObjectType
-                    ),
-                    new(
-                        Locales.Czech,
-                        BundleNames.InternalNotes,
-                        digitalObject.InternalNote
+                        ConvertDOTypeValue(digitalObject.DigitalObjectType)
                     ),
                     new(
                         Locales.Czech,
@@ -177,9 +177,19 @@ public class EditClient : BaseCollectiveAccessClient
                     ),
                     new(
                         Locales.Czech,
-                        BundleNames.FedoraUrl,
-                        digitalObject.FedoraUrl
-                    )
+                        BundleNames.FileSize,
+                        digitalObject.FileSize.ToString()
+                    ),
+                    new(
+                        Locales.Czech,
+                        BundleNames.MediaInfoReport,
+                        digitalObject.MediaInfoReport
+                    ),
+                    new(
+                        Locales.Czech,
+                        BundleNames.InternalNotes,
+                        digitalObject.InternalNote
+                    ),
                 ],
                 Relationships = allRelationships
             }
@@ -202,6 +212,15 @@ public class EditClient : BaseCollectiveAccessClient
 
         return response.Data.Add.Id.Single();
     }
+
+    private static string ConvertDOTypeValue(DigitalObjectType digitalObjectType) => digitalObjectType switch
+    {
+        DigitalObjectType.GameArtefact => "game_artifact",
+        DigitalObjectType.Modification => "modification",
+        DigitalObjectType.PlayableObject => "playable_object",
+        DigitalObjectType.UnplayableParatext => "unplayable_paratexts",
+        _ => throw new NotImplementedException()
+    };
 
     public class AddArgs : GraphQLAuthVars
     {

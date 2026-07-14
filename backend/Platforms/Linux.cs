@@ -55,6 +55,10 @@ public static class Linux
     public static async Task<string> Chmod(bool sudo, List<string> args, CancellationToken cancellationToken = default)
         => await Execute(sudo, "chmod", args, cancellationToken);
 
+    // NOTE: sudo mediainfo not supported on purpose - there is no reason mediainfo should ever be run as root
+    public static async Task<string> MediaInfo(List<string> args, CancellationToken cancellationToken = default)
+        => await Execute(false, "mediainfo", args, cancellationToken);
+
     public static async Task<string> MakeQcow2Image(long sizeBytes, string path, FileSystem fs = FileSystem.Ext4, string label = "empty", CancellationToken cancellationToken = default)
     {
         // NOTE: could be 1024^2 but this will suffice for now...

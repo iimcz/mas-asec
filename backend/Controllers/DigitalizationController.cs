@@ -1,6 +1,7 @@
 using asec.Digitalization;
 using asec.LongRunning;
 using asec.Models;
+using asec.Platforms;
 using asec.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Minio;
@@ -110,7 +111,7 @@ public class DigitalizationController : ControllerBase
     /// <returns>The created artefact</returns>
     [HttpPost("{processId}/finalize")]
     [Produces(typeof(Artefact))]
-    public async Task<IActionResult> FinalizeVersionArtifact(string processId, [FromBody] Artefact artefact)
+    public async Task<IActionResult> FinalizeVersionArtifact(string processId, [FromBody] ArtefactUpdate artefact)
     {
         var id = Guid.Parse(processId);
         var process = _processManager.GetProcess(id);
@@ -134,6 +135,8 @@ public class DigitalizationController : ControllerBase
 
         var dbArtefact = await artefact.ToDBEntity(_dbContext);
         dbArtefact.ObjectId = objectId;
+        dbArtefact.DigitalObjectType = Models.Archive.DigitalObjectType.GameArtefact;
+        dbArtefact.MediaInfoReport = await Linux.MediaInfo(["--Output=JSON", processResult.Filename]);
         dbArtefact.Type = processResult.Type;
         dbArtefact.FileName = Path.GetFileName(processResult.Filename);
         dbArtefact.ArchivationDate = process.StartTime;

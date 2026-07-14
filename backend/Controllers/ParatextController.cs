@@ -104,8 +104,8 @@ public class ParatextController : ControllerBase
     {
         var id = Guid.Parse(paratextId);
         var dbParatext = await _dbContext.Paratexts
-            .Include(p => p.PhysicalObject)
-            .Include(p => p.DigitalObject)
+            .Include(p => p.PhysicalObjects)
+            .Include(p => p.DigitalObjects)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (dbParatext == null)
             return NotFound();

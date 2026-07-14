@@ -56,8 +56,8 @@ public class ImportController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> ImportFullWork([FromBody] ImportableWork iwork, CancellationToken cancellationToken = default(CancellationToken))
     {
-        var work = await _itemClient.GetWork(iwork.Id);
-        var versions = await _itemClient.GetVersionsForWork(work);
+        var work = await _itemClient.GetWork(iwork.Id, cancellationToken);
+        var versions = await _itemClient.GetVersionsForWork(work, cancellationToken);
         var alreadyImported = _dbContext.Works.Include(w => w.WorkVersions).FirstOrDefault(w => w.RemoteId == iwork.Id);
 
         if (alreadyImported != null)
@@ -74,7 +74,7 @@ public class ImportController : ControllerBase
     public async Task<IActionResult> SyncExistingWork(string id, CancellationToken cancellationToken = default(CancellationToken))
     {
         var guid = Guid.Parse(id);
-        var work = await _dbContext.Works.Include(w => w.WorkVersions).FirstOrDefaultAsync(w => w.Id == guid);
+        var work = await _dbContext.Works.Include(w => w.WorkVersions).FirstOrDefaultAsync(w => w.Id == guid, cancellationToken: cancellationToken);
 
         if (work == null)
         {
@@ -82,16 +82,38 @@ public class ImportController : ControllerBase
         }
 
         // TODO: handle case where the work on the CA side is deleted
-        var caWork = await _itemClient.GetWork(work.RemoteId);
-        var caVersions = await _itemClient.GetVersionsForWork(caWork);
+        var caWork = await _itemClient.GetWork(work.RemoteId, cancellationToken);
+        var caVersions = await _itemClient.GetVersionsForWork(caWork, cancellationToken);
 
         return await UpdateExistingWork(work, caWork, caVersions, cancellationToken);
     }
 
     private async Task<Models.Archive.Paratext> CreateNewParatext(CAParatext paratext, CancellationToken cancellationToken = default(CancellationToken))
     {
-        var physicalObject = (await _itemClient.GetPhysicalObjectsForParatext(paratext, cancellationToken)).FirstOrDefault();
+        var physicalObjects = (await _itemClient.GetPhysicalObjectsForParatext(paratext, cancellationToken)).ToList();
         // physical objects are the last layer, so we don't need another function to handle those.
+
+        IList<Models.Archive.PhysicalObject> importPhysicalObjects = [];
+        foreach (var physObject in physicalObjects)
+        {
+            importPhysicalObjects.Add(new()
+            {
+                RemoteId = physObject.Id,
+                Label = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel),
+                Description = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDescription),
+                Date = DateOnly.Parse(physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDate)),
+                InternalNote = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectInternalNote),
+                FilledOutBy = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectFilledOutBy),
+                PhysicalObjectType = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectPhysicalObjectType),
+                CountryOfOrigin = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCountryOfOrigin),
+                EAN = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectEAN),
+                ISBN = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectISBN),
+                Condition = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCondition),
+                Location = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLocation),
+                Size = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectSize),
+                Owner = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectOwner)
+            });
+        }
 
         return new()
         {
@@ -106,31 +128,15 @@ public class ImportController : ControllerBase
             IdentificationNumber = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceIdentificationNumber),
             ParatextType = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceParatextType),
 
-            PhysicalObject = physicalObject != null ? new()
-            {
-                RemoteId = physicalObject.Id,
-                Label = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel),
-                Description = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDescription),
-                Date = DateOnly.Parse(physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDate)),
-                InternalNote = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectInternalNote),
-                FilledOutBy = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectFilledOutBy),
-                PhysicalObjectType = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectPhysicalObjectType),
-                CountryOfOrigin = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCountryOfOrigin),
-                EAN = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectEAN),
-                ISBN = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectISBN),
-                Condition = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCondition),
-                Location = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLocation),
-                Size = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectSize),
-                Owner = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectOwner)
-            } : null
+            PhysicalObjects = importPhysicalObjects
         };
     }
 
     private async Task UpdateExistingParatext(Models.Archive.Paratext dbParatext, CAParatext paratext, CancellationToken cancellationToken = default(CancellationToken))
     {
-        var physicalObject = (await _itemClient.GetPhysicalObjectsForParatext(paratext, cancellationToken)).FirstOrDefault();
-        if (dbParatext.PhysicalObject == null)
-            await _dbContext.Entry(dbParatext).Reference(p => p.PhysicalObject).LoadAsync();
+        var physicalObjects = (await _itemClient.GetPhysicalObjectsForParatext(paratext, cancellationToken)).ToList();
+        if (dbParatext.PhysicalObjects == null)
+            await _dbContext.Entry(dbParatext).Collection(p => p.PhysicalObjects).LoadAsync(cancellationToken);
 
 
         dbParatext.Label = paratext.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel);
@@ -144,47 +150,52 @@ public class ImportController : ControllerBase
         dbParatext.ParatextType = paratext.Bundles.GetOptionalBundleValue(BundleCodes.OccurrenceParatextType);
         dbParatext.ImportedAt = DateTime.Now;
 
+        foreach (var dbPhysObject in dbParatext.PhysicalObjects!)
+        {
+            if (!physicalObjects.Exists(p => p.Id == dbPhysObject.RemoteId))
+                dbPhysObject.Deleted = true;
+        }
 
-        if (dbParatext.PhysicalObject == null && physicalObject != null)
+        foreach (var physObject in physicalObjects)
         {
-            dbParatext.PhysicalObject = new()
+            var existingPhysicalObject = dbParatext.PhysicalObjects!.Where(p => p.RemoteId == physObject.Id).FirstOrDefault();
+
+            if (existingPhysicalObject != null)
             {
-                RemoteId = physicalObject.Id,
-                Label = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel),
-                Description = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDescription),
-                Date = DateOnly.Parse(physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDate)),
-                InternalNote = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectInternalNote),
-                FilledOutBy = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectFilledOutBy),
-                PhysicalObjectType = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectPhysicalObjectType),
-                CountryOfOrigin = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCountryOfOrigin),
-                EAN = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectEAN),
-                ISBN = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectISBN),
-                Condition = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCondition),
-                Location = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLocation),
-                Size = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectSize),
-                Owner = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectOwner)
-            };
-        }
-        else if (dbParatext.PhysicalObject != null && physicalObject != null)
-        {
-            dbParatext.PhysicalObject.RemoteId = physicalObject.Id;
-            dbParatext.PhysicalObject.Label = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel);
-            dbParatext.PhysicalObject.Description = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDescription);
-            dbParatext.PhysicalObject.Date = DateOnly.Parse(physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDate));
-            dbParatext.PhysicalObject.InternalNote = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectInternalNote);
-            dbParatext.PhysicalObject.FilledOutBy = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectFilledOutBy);
-            dbParatext.PhysicalObject.PhysicalObjectType = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectPhysicalObjectType);
-            dbParatext.PhysicalObject.CountryOfOrigin = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCountryOfOrigin);
-            dbParatext.PhysicalObject.EAN = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectEAN);
-            dbParatext.PhysicalObject.ISBN = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectISBN);
-            dbParatext.PhysicalObject.Condition = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCondition);
-            dbParatext.PhysicalObject.Location = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLocation);
-            dbParatext.PhysicalObject.Size = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectSize);
-            dbParatext.PhysicalObject.Owner = physicalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectOwner);
-        }
-        else if (dbParatext.PhysicalObject != null && physicalObject == null)
-        {
-            dbParatext.PhysicalObject.Deleted = true;
+                existingPhysicalObject.RemoteId = physObject.Id;
+                existingPhysicalObject.Label = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel);
+                existingPhysicalObject.Description = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDescription);
+                existingPhysicalObject.Date = DateOnly.Parse(physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDate));
+                existingPhysicalObject.InternalNote = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectInternalNote);
+                existingPhysicalObject.FilledOutBy = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectFilledOutBy);
+                existingPhysicalObject.PhysicalObjectType = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectPhysicalObjectType);
+                existingPhysicalObject.CountryOfOrigin = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCountryOfOrigin);
+                existingPhysicalObject.EAN = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectEAN);
+                existingPhysicalObject.ISBN = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectISBN);
+                existingPhysicalObject.Condition = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCondition);
+                existingPhysicalObject.Location = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLocation);
+                existingPhysicalObject.Size = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectSize);
+                existingPhysicalObject.Owner = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectOwner);
+            }
+            else
+            {
+                dbParatext.PhysicalObjects!.Add(new() {
+                    RemoteId = physObject.Id,
+                    Label = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel),
+                    Description = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDescription),
+                    Date = DateOnly.Parse(physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectDate)),
+                    InternalNote = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectInternalNote),
+                    FilledOutBy = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectFilledOutBy),
+                    PhysicalObjectType = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectPhysicalObjectType),
+                    CountryOfOrigin = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCountryOfOrigin),
+                    EAN = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectEAN),
+                    ISBN = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectISBN),
+                    Condition = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectCondition),
+                    Location = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLocation),
+                    Size = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectSize),
+                    Owner = physObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectOwner)
+                });
+            }
         }
     }
 
@@ -212,7 +223,7 @@ public class ImportController : ControllerBase
     private async Task UpdateExistingVersion(Models.Archive.WorkVersion dbVersion, CAWorkVersion version, CancellationToken cancellationToken = default(CancellationToken))
     {
         if (dbVersion.Paratexts == null)
-            await _dbContext.Entry(dbVersion).Collection(v => v.Paratexts).LoadAsync();
+            await _dbContext.Entry(dbVersion).Collection(v => v.Paratexts).LoadAsync(cancellationToken);
         if (dbVersion.Paratexts == null)
             dbVersion.Paratexts = new List<Models.Archive.Paratext>();
 
@@ -277,7 +288,7 @@ public class ImportController : ControllerBase
         var newVersions = versions.Where(v => !importedIds.Contains(v.Id));
         foreach (var caWorkVersion in newVersions)
         {
-            dbWork.WorkVersions.Add(await CreateNewVersion(caWorkVersion));
+            dbWork.WorkVersions.Add(await CreateNewVersion(caWorkVersion, cancellationToken));
         }
 
         var updatedVersions = versions.Where(v => importedIds.Contains(v.Id)).ToDictionary(v => v.Id);
@@ -290,7 +301,7 @@ public class ImportController : ControllerBase
             await UpdateExistingVersion(workVersion, caVersion, cancellationToken);
         }
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return Ok(ViewModels.Work.FromDbEntity(dbWork));
     }
