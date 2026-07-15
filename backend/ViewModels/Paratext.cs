@@ -3,6 +3,7 @@ namespace asec.ViewModels;
 public record Paratext
 {
     public string Id { get; set; }
+    public string Label { get; set; }
     public string Language { get; set; }
     public string Date { get; set; }
     public string InternalNote { get; set; }
@@ -20,6 +21,7 @@ public record Paratext
         return new Paratext()
         {
             Id = paratext.Id.ToString(),
+            Label = paratext.Label,
             Language = paratext.Language,
             Date = paratext.Date,
             InternalNote = paratext.InternalNote,
