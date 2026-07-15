@@ -127,6 +127,7 @@ public class ParatextController : ControllerBase
         if (dbParatext == null)
             return NotFound();
 
+        dbParatext.Label = paratext.Label;
         dbParatext.Language = paratext.Language;
         dbParatext.Date = paratext.Date;
         dbParatext.InternalNote = paratext.InternalNote;
