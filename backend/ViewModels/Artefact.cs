@@ -5,7 +5,7 @@ namespace asec.ViewModels;
 
 public record ArtefactListOptions
 {
-    public List<string> Formats { get; set; }
+    public Dictionary<string, string> Formats { get; set; }
 }
 
 public record ArtefactUpdate

@@ -35,6 +35,8 @@ public struct BundleCodes
     public static readonly string ObjectSize                       = "ca_objects.size";
     public static readonly string ObjectOwner                      = "ca_objects.owner";
 
+    public static readonly string ListItemsPreferredLabel           = "ca_list_items.preferred_labels";
+    public static readonly string ListItemsItemValue                = "ca_list_items.item_value";
 }
 
 public struct BundleNames

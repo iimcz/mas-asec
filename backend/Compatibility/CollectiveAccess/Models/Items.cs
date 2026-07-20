@@ -29,3 +29,9 @@ public record PhysicalObject(
     string Idno,
     IList<Bundle> Bundles
 );
+
+public record ListItem(
+    int Id,
+    string Idno,
+    IList<Bundle> Bundles
+);

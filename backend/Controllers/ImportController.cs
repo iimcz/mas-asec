@@ -17,14 +17,20 @@ public class ImportController : ControllerBase
     private readonly ILogger<ImportController> _logger;
     private readonly SearchClient _searchClient;
     private readonly ItemClient _itemClient;
+    private readonly ListClient _listClient;
     private readonly Models.AsecDBContext _dbContext;
 
-    public ImportController(SearchClient searchClient, ItemClient itemClient, Models.AsecDBContext dbContext, ILogger<ImportController> logger)
+    private readonly int _digiObjectFormatsListId;
+
+    public ImportController(SearchClient searchClient, ItemClient itemClient, ListClient listClient, Models.AsecDBContext dbContext, IConfiguration configuration, ILogger<ImportController> logger)
     {
         _searchClient = searchClient;
         _itemClient = itemClient;
+        _listClient = listClient;
         _dbContext = dbContext;
         _logger = logger;
+
+        _digiObjectFormatsListId = configuration.GetSection("CollectiveAccessAPI").GetValue<int>("DigitalObjectFormatListId");
     }
 
     [HttpGet("available")]
@@ -53,7 +59,31 @@ public class ImportController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost]
+    [HttpGet("digiobj-listoptions")]
+    [Produces(typeof(ViewModels.ArtefactListOptions))]
+    public async Task<IActionResult> GetDigitalObjectListOptions(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Querying CA for defined lists used in digital objects.");
+
+        // Right now we only have the digital object format as a dynamic list, so query that.
+        // If we ever need more, there should be a list defined somewhere we would iterate
+        // through here.
+        var formatList = await _listClient.GetListItems(_digiObjectFormatsListId, cancellationToken);
+        var formats = new Dictionary<string, string>();
+        foreach (var format in formatList)
+        {
+            formats.Add(
+                format.Bundles.GetOptionalBundleValue(BundleCodes.ListItemsItemValue),
+                format.Bundles.GetOptionalBundleValue(BundleCodes.ListItemsPreferredLabel)
+            );
+        }
+
+        return Ok(new ViewModels.ArtefactListOptions {
+            Formats = formats
+        });
+    }
+
+    [HttpPost("full")]
     public async Task<IActionResult> ImportFullWork([FromBody] ImportableWork iwork, CancellationToken cancellationToken = default(CancellationToken))
     {
         var work = await _itemClient.GetWork(iwork.Id, cancellationToken);

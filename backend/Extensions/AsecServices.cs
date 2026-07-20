@@ -48,6 +48,7 @@ public static class IServiceCollectionExtensions
         services.AddScoped<SearchClient>();
         services.AddScoped<ItemClient>();
         services.AddScoped<EditClient>();
+        services.AddScoped<ListClient>();
 
         return services;
     }
