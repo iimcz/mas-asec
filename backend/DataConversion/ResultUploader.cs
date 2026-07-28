@@ -83,6 +83,8 @@ public class ResultUploader
         Directory.CreateDirectory(mountPath);
 
         var imageSize = files.Select(f => new FileInfo(f.Filename).Length).Sum();
+        // Add a safety margin of 10% (or at least 1 MB)
+        imageSize += Math.Max(imageSize / 10, 1_000_000);
         var output = await Linux.MakeQcow2Image(imageSize, imagePath, FileSystem.Ext4, label, cancellationToken);
         _logger?.LogInformation(output);
 
