@@ -3,6 +3,8 @@ using System.Text.Json.Nodes;
 using CSharpVitamins;
 using Microsoft.IdentityModel.Tokens;
 using asec.Models.Archive;
+using asec.Models.Digitalization;
+using asec.Models.Emulation;
 
 namespace asec.Compatibility.CollectiveAccess;
 
@@ -115,14 +117,22 @@ public class EditClient : BaseCollectiveAccessClient
 
     public async Task<int> AddOrUpdateDigitalObject(asec.Models.Archive.DigitalObject digitalObject, CancellationToken cancellationToken = default(CancellationToken))
     {
-        var workVersionRelationships = digitalObject.WorkVersions?.Select(
-            wv => new SubjectRelationship(
-                SubjectRelationshipTypes.ManifestationOf,
-                Tables.Occurrences,
-                wv.RemoteId
-            )
-        ).ToList() ?? new List<SubjectRelationship>();
-        var allRelationships = workVersionRelationships;
+        List<SubjectRelationship> relationships = [];
+        switch (digitalObject.DigitalObjectType)
+        {
+            case DigitalObjectType.GameArtefact:
+                relationships.AddRange(MakeArtefactRelationships(digitalObject as Artefact));
+                break;
+            case DigitalObjectType.PlayableObject:
+                relationships.AddRange(MakePlayableObjectRelationships(digitalObject as PlayableObject));
+                break;
+            case DigitalObjectType.Modification:
+                relationships.AddRange(MakeModificationRelationships(digitalObject));
+                break;
+            case DigitalObjectType.UnplayableParatext:
+                relationships.AddRange(MakeUnplayableParatextRelationships(digitalObject));
+                break;
+        }
         if (digitalObject.PhysicalObject != null)
         {
             var physicalObjectRelationship = new SubjectRelationship(
@@ -130,7 +140,7 @@ public class EditClient : BaseCollectiveAccessClient
                 Tables.Objects,
                 digitalObject.PhysicalObject.RemoteId
             );
-            allRelationships.Add(physicalObjectRelationship);
+            relationships.Add(physicalObjectRelationship);
         }
 
         // Since CollectiveAccess idno is only 30 chars long, modify our UUID to fit.
@@ -191,7 +201,7 @@ public class EditClient : BaseCollectiveAccessClient
                         digitalObject.InternalNote
                     ),
                 ],
-                Relationships = allRelationships
+                Relationships = relationships
             }
         };
 
@@ -211,6 +221,48 @@ public class EditClient : BaseCollectiveAccessClient
         }
 
         return response.Data.Add.Id.Single();
+    }
+
+    private List<SubjectRelationship> MakeUnplayableParatextRelationships(asec.Models.Archive.DigitalObject digitalObject)
+    {
+        throw new NotImplementedException();
+    }
+
+    private List<SubjectRelationship> MakeModificationRelationships(asec.Models.Archive.DigitalObject digitalObject)
+    {
+        throw new NotImplementedException();
+    }
+
+    private List<SubjectRelationship> MakePlayableObjectRelationships(PlayableObject playableObject)
+    {
+        var workVersionRelationship = playableObject.WorkVersions?.Select(
+            wv => new SubjectRelationship(
+                SubjectRelationshipTypes.ManifestationOf,
+                Tables.Occurrences,
+                wv.RemoteId
+            )
+        ) ?? [];
+
+        var artefactRelationships = playableObject.IncludedDigitalObjects.Select(
+            dio => new SubjectRelationship(
+                SubjectRelationshipTypes.Source,
+                Tables.Objects,
+                dio.RemoteId
+            )
+        );
+
+        return [.. workVersionRelationship, .. artefactRelationships];
+    }
+
+    private static List<SubjectRelationship> MakeArtefactRelationships(asec.Models.Archive.DigitalObject digitalObject)
+    {
+        return digitalObject.WorkVersions?.Select(
+            wv => new SubjectRelationship(
+                SubjectRelationshipTypes.ManifestationOf,
+                Tables.Occurrences,
+                wv.RemoteId
+            )
+        ).ToList() ?? [];
     }
 
     private static string ConvertDOTypeValue(DigitalObjectType digitalObjectType) => digitalObjectType switch
