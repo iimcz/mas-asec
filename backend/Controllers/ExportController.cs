@@ -6,6 +6,7 @@ using asec.Compatibility.CollectiveAccess;
 using asec.Models;
 using asec.Models.Archive;
 using asec.Models.Digitalization;
+using asec.Models.Emulation;
 
 namespace asec.Controllers;
 
@@ -20,9 +21,12 @@ public class ExportController : ControllerBase
     private readonly IMinioClient _localMinioClient;
     private readonly IMinioClient _archiveMinioClient;
 
-    private readonly string _artefactBucket;
-    private readonly string _archiveArtefactBucket;
-
+    private readonly string _digitalObjectBucket;
+    private readonly string _artefactFolder;
+    private readonly string _playableFolder;
+    private readonly string _archiveDigitalObjectBucket;
+    private readonly string _archiveArtefactFolder;
+    private readonly string _archivePlayableFolder;
     private readonly string _localCacheDir;
 
     public ExportController(
@@ -41,11 +45,16 @@ public class ExportController : ControllerBase
         _archiveMinioClient = archiveMinioClient;
 
         var storageSection = configuration.GetSection("LocalObjectStorage");
-        _artefactBucket = storageSection.GetValue<string>("ArtefactBucket");
+        _digitalObjectBucket = storageSection.GetValue<string>("DigitalObjectBucket");
+        _artefactFolder = storageSection.GetValue<string>("ArtefactFolder");
+        _playableFolder = storageSection.GetValue<string>("PlayableFolder");
+
         _localCacheDir = storageSection.GetValue<string>("CacheDir");
 
         var archiveStorageSection = configuration.GetSection("ArchiveObjectStorage");
-        _archiveArtefactBucket = archiveStorageSection.GetValue<string>("ArtefactBucket");
+        _archiveDigitalObjectBucket = archiveStorageSection.GetValue<string>("DigitalObjectBucket");
+        _archiveArtefactFolder = archiveStorageSection.GetValue<string>("ArtefactFolder");
+        _archivePlayableFolder = archiveStorageSection.GetValue<string>("PlayableFolder");
     }
 
     [HttpPost("artefact/{id}")]
@@ -97,34 +106,99 @@ public class ExportController : ControllerBase
         return Ok(ViewModels.Paratext.FromDBEntity(paratext));
     }
 
+    [HttpPost("playable/{id}")]
+    public async Task<IActionResult> ExportPlayableObject(Guid guid, CancellationToken cancellationToken = default)
+    {
+        var playableObject = _dbContext.DigitalObjects
+            .Include(d => d.WorkVersions)
+            .Include(d => d.PhysicalObject)
+            .OfType<PlayableObject>()
+            .FirstOrDefault(a => a.Id == guid);
+        if (playableObject == null)
+        {
+            return NotFound();
+        }
+
+        await PreparePlayableObject(playableObject);
+        var remoteId = await _editClient.AddOrUpdateDigitalObject(playableObject, cancellationToken);
+        playableObject.RemoteId = remoteId;
+        playableObject.ExportedAt = DateTime.Now;
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(ViewModels.PlayableObject.FromDBEntity(playableObject));
+    }
+
     private void PrepareParatext(Paratext paratext)
     {
 
     }
 
-    private async Task PrepareArtefact(Artefact artefact, CancellationToken cancellationToken = default)
+    private async Task PreparePlayableObject(PlayableObject playableObject, CancellationToken cancellationToken = default)
     {
+        // TODO: this is currently identical to artefact preparation. We should merge those.
+        // This will involve moving at least ObjectId to the parent DigitalObject class, but that
+        // is probably sensible to do anyway.
+
         Directory.CreateDirectory(_localCacheDir);
-        artefact.InternalNote = "Digitalized version";
 
         // Push our local minio object to the remote/archive storage.
 
         var getTagsArgs = new GetObjectTagsArgs()
-            .WithBucket(_artefactBucket)
-            .WithObject(artefact.ObjectId.ToString());
+            .WithBucket(_digitalObjectBucket)
+            .WithObject($"{_playableFolder}/{playableObject.ObjectId}");
         var artefactTags = await _localMinioClient.GetObjectTagsAsync(getTagsArgs, cancellationToken);
 
         var statArgs = new StatObjectArgs()
-            .WithBucket(_artefactBucket)
-            .WithObject(artefact.ObjectId.ToString());
+            .WithBucket(_digitalObjectBucket)
+            .WithObject($"{_playableFolder}/{playableObject.ObjectId}");
+        var artefactStats = await _localMinioClient.StatObjectAsync(statArgs, cancellationToken);
+
+        var tmpFilename = Path.Combine(_localCacheDir, playableObject.FileName);
+
+        _logger.LogInformation($"Downloading artefact {playableObject.FileName} with {artefactTags.Tags.Count()} tags of size {artefactStats.Size} bytes from local storage.");
+        var getArgs = new GetObjectArgs()
+            .WithBucket(_digitalObjectBucket)
+            .WithObject($"{_playableFolder}/{playableObject.ObjectId}")
+            .WithFile(tmpFilename);
+        await _localMinioClient.GetObjectAsync(getArgs, cancellationToken);
+
+        _logger.LogInformation($"{_archiveMinioClient.Config.Secure}");
+
+        _logger.LogInformation($"Uploading artefact {playableObject.FileName} (cached at '{tmpFilename}') to remote storage.");
+        var putArgs = new PutObjectArgs()
+            .WithBucket(_archiveDigitalObjectBucket)
+            .WithTagging(artefactTags)
+            .WithObject($"{_archivePlayableFolder}/{playableObject.ObjectId}")
+            .WithFileName(tmpFilename);
+        // TODO: can we stream the data directly instead of creating a temporary file?
+        await _archiveMinioClient.PutObjectAsync(putArgs, cancellationToken);
+        _logger.LogInformation($"Transfer of artefact {playableObject.FileName} done.");
+        playableObject.RepoUrl = playableObject.ObjectId.ToString();
+    }
+
+
+    private async Task PrepareArtefact(Artefact artefact, CancellationToken cancellationToken = default)
+    {
+        Directory.CreateDirectory(_localCacheDir);
+
+        // Push our local minio object to the remote/archive storage.
+
+        var getTagsArgs = new GetObjectTagsArgs()
+            .WithBucket(_digitalObjectBucket)
+            .WithObject($"{_artefactFolder}/{artefact.ObjectId}");
+        var artefactTags = await _localMinioClient.GetObjectTagsAsync(getTagsArgs, cancellationToken);
+
+        var statArgs = new StatObjectArgs()
+            .WithBucket(_digitalObjectBucket)
+            .WithObject($"{_artefactFolder}/{artefact.ObjectId}");
         var artefactStats = await _localMinioClient.StatObjectAsync(statArgs, cancellationToken);
 
         var tmpFilename = Path.Combine(_localCacheDir, artefact.FileName);
 
         _logger.LogInformation($"Downloading artefact {artefact.FileName} with {artefactTags.Tags.Count()} tags of size {artefactStats.Size} bytes from local storage.");
         var getArgs = new GetObjectArgs()
-            .WithBucket(_artefactBucket)
-            .WithObject(artefact.ObjectId.ToString())
+            .WithBucket(_digitalObjectBucket)
+            .WithObject($"{_artefactFolder}/{artefact.ObjectId}")
             .WithFile(tmpFilename);
         await _localMinioClient.GetObjectAsync(getArgs, cancellationToken);
 
@@ -132,14 +206,13 @@ public class ExportController : ControllerBase
 
         _logger.LogInformation($"Uploading artefact {artefact.FileName} (cached at '{tmpFilename}') to remote storage.");
         var putArgs = new PutObjectArgs()
-            .WithBucket(_archiveArtefactBucket)
+            .WithBucket(_archiveDigitalObjectBucket)
             .WithTagging(artefactTags)
-            .WithObject(artefact.ObjectId.ToString())
+            .WithObject($"{_archiveArtefactFolder}/{artefact.ObjectId}")
             .WithFileName(tmpFilename);
         // TODO: can we stream the data directly instead of creating a temporary file?
         await _archiveMinioClient.PutObjectAsync(putArgs, cancellationToken);
         _logger.LogInformation($"Transfer of artefact {artefact.FileName} done.");
         artefact.RepoUrl = artefact.ObjectId.ToString();
-
     }
 }

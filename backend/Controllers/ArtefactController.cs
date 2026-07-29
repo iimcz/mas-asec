@@ -17,13 +17,17 @@ public class ArtefactController : ControllerBase
 {
     private readonly AsecDBContext _dbContext;
     private readonly IMinioClient _minioClient;
-    private readonly string _minioArtefactBucket;
+    private readonly string _minioDigitalObjectBucket;
+    private readonly object _minioArtefactFolder;
 
     public ArtefactController(AsecDBContext dbContext, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _minioClient = minioClient;
-        _minioArtefactBucket = configuration.GetSection("LocalObjectStorage").GetValue<string>("ArtefactBucket");
+
+        var section = configuration.GetSection("LocalObjectStorage");
+        _minioDigitalObjectBucket = section.GetValue<string>("DigitalObjectBucket");
+        _minioArtefactFolder = section.GetValue<string>("ArtefactFolder");
     }
 
     /// <summary>
@@ -66,8 +70,8 @@ public class ArtefactController : ControllerBase
         var filename = Path.Combine(Path.GetTempPath(), artefact.FileName);
         var args = new GetObjectArgs()
             .WithFile(filename)
-            .WithBucket(_minioArtefactBucket)
-            .WithObject(artefact.ObjectId.ToString());
+            .WithBucket(_minioDigitalObjectBucket)
+            .WithObject($"{_minioArtefactFolder}/{artefact.ObjectId}");
 
         var minioObject = await _minioClient.GetObjectAsync(args);
         var fileStream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.DeleteOnClose);

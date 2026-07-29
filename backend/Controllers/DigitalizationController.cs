@@ -19,13 +19,14 @@ namespace asec.Controllers;
 [Route("/api/v1/digitalization")]
 public class DigitalizationController : ControllerBase
 {
-    private readonly string _minioArtefactBucket;
     private readonly string _digitalizationDirsBase;
     private readonly ILogger<DigitalizationController> _logger;
     private readonly IToolRepository _tools;
     private readonly IProcessManager<Process, DigitalizationResult, DigitalizationProcessDetail> _processManager;
     private readonly IMinioClient _minioClient;
     private readonly AsecDBContext _dbContext;
+    private readonly string _minioDigitalObjectBucket;
+    private readonly string _minioArtefactFolder;
 
     public DigitalizationController(ILogger<DigitalizationController> logger, IToolRepository tools, IProcessManager<Process, DigitalizationResult, DigitalizationProcessDetail> processManager, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IConfiguration config, AsecDBContext dbContext)
     {
@@ -34,7 +35,11 @@ public class DigitalizationController : ControllerBase
         _processManager = processManager;
         _minioClient = minioClient;
         _dbContext = dbContext;
-        _minioArtefactBucket = config.GetSection("LocalObjectStorage").GetValue<string>("ArtefactBucket");
+
+        var minioSection = config.GetSection("LocalObjectStorage");
+        _minioDigitalObjectBucket = minioSection.GetValue<string>("DigitalObjectBucket");
+        _minioArtefactFolder = minioSection.GetValue<string>("ArtefactFolder");
+
         _digitalizationDirsBase = config.GetSection("Digitalization").GetValue<string>("ProcessBaseDir");
     }
 
@@ -127,9 +132,9 @@ public class DigitalizationController : ControllerBase
         var objectId = Guid.NewGuid();
         var args = new PutObjectArgs()
             .WithFileName(processResult.Filename)
-            .WithBucket(_minioArtefactBucket)
+            .WithBucket(_minioDigitalObjectBucket)
             .WithTagging(new Tagging(tags, true))
-            .WithObject(objectId.ToString());
+            .WithObject($"{_minioArtefactFolder}/{objectId}");
         // TODO: check for success (or maybe exception?)
         var artefactObject = await _minioClient.PutObjectAsync(args);
 

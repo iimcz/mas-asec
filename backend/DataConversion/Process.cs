@@ -46,7 +46,8 @@ public class Process : IProcess<ConversionResult, ConversionProcessDetail>
 
     // TODO: maybe replace with handlers for individual file types?
     private readonly string _unzipBinary;
-    private readonly string _artefactBucket;
+    private readonly string _digitalObjectBucket;
+    private readonly string _artefactFolder;
 
     public Process(IConverter converter, List<Artefact> artefacts, IServiceScopeFactory serviceScopeFactory, IConfiguration configuration, Guid environmentId, Guid versionId, bool isSubprocess = false)
     {
@@ -58,7 +59,9 @@ public class Process : IProcess<ConversionResult, ConversionProcessDetail>
         IsSubprocess = isSubprocess;
 
         var section = configuration.GetSection("Conversion");
-        _artefactBucket = configuration.GetSection("LocalObjectStorage").GetValue<string>("ArtefactBucket");
+        var storageSection = configuration.GetSection("LocalObjectStorage");
+        _digitalObjectBucket = storageSection.GetValue<string>("DigitalObjectBucket");
+        _artefactFolder = storageSection.GetValue<string>("ArtefactFolder");
         _unzipBinary = section.GetValue<string>("UnzipBinary");
         var dirsBase = section.GetValue<string>("ProcessBaseDir") ?? "";
 
@@ -104,8 +107,8 @@ public class Process : IProcess<ConversionResult, ConversionProcessDetail>
         {
             var minioClient = serviceScope.ServiceProvider.GetRequiredKeyedService<IMinioClient>("LocalObjectStorage");
             var args = new GetObjectArgs()
-                .WithBucket(_artefactBucket)
-                .WithObject(artefact.ObjectId.ToString())
+                .WithBucket(_digitalObjectBucket)
+                .WithObject($"{_artefactFolder}/{artefact.ObjectId}")
                 .WithFile(Path.Combine(artefactFetchDir, artefact.FileName));
 
             await minioClient.GetObjectAsync(args, cancellationToken);

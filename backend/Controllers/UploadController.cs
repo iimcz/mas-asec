@@ -20,7 +20,8 @@ namespace asec.Controllers
         private readonly AsecDBContext _dbContext;
         private string _uploadPath;
         private readonly IMinioClient _minioClient;
-        private readonly string _minioArtefactBucket;
+        private readonly string _minioDigitalObjectBucket;
+        private readonly string _minioArtefactFolder;
         private readonly IProcessManager<Process, UploadResult, EmptyProcessDetail> _processManager;
 
         public UploadController(AsecDBContext dbContext, IConfiguration config, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, IProcessManager<Process, UploadResult, EmptyProcessDetail> processManager)
@@ -28,7 +29,10 @@ namespace asec.Controllers
             _processManager = processManager;
             _dbContext = dbContext;
             _minioClient = minioClient;
-            _minioArtefactBucket = config.GetSection("LocalObjectStorage").GetValue<string>("ArtefactBucket");
+
+            var section = config.GetSection("LocalObjectStorage");
+            _minioDigitalObjectBucket = section.GetValue<string>("DigitalObjectBucket");
+            _minioArtefactFolder = section.GetValue<string>("ArtefactFolder");
             CreateDirectory(config.GetSection("Digitalization").GetValue<string>("ProcessBaseDir"));
         }
 
@@ -81,7 +85,6 @@ namespace asec.Controllers
                 return BadRequest();
             }
 
-
             var processResult = await _processManager.FinishProcessAsync(id);
 
             var tags = new Dictionary<string, string>()
@@ -92,9 +95,9 @@ namespace asec.Controllers
             var objectId = Guid.NewGuid();
             var args = new PutObjectArgs()
                 .WithFileName(processResult.Filename)
-                .WithBucket(_minioArtefactBucket)
+                .WithBucket(_minioDigitalObjectBucket)
                 .WithTagging(new Tagging(tags, true))
-                .WithObject(objectId.ToString());
+                .WithObject($"{_minioArtefactFolder}/{objectId}");
             var artefactObject = await _minioClient.PutObjectAsync(args);
             var fileSize = new FileInfo(processResult.Filename).Length;
 
@@ -109,7 +112,7 @@ namespace asec.Controllers
             dbArtefact.FileSize = fileSize;
             dbArtefact.DigitalObjectType = Models.Archive.DigitalObjectType.GameArtefact; // TODO change to the correct type
             dbArtefact.MediaInfoReport = await Linux.MediaInfo(["--Output=JSON", processResult.Filename]);
-            dbArtefact.Format = "PDF"; // TODO: change to the correct format
+            dbArtefact.Format = artefact.Format;
 
             var paratext = await _dbContext.Paratexts.FindAsync(process.ParatextId);
             var version = await _dbContext.WorkVersions.FindAsync(process.VersionId);
