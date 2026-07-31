@@ -143,6 +143,7 @@ public class GameExplorationController : ControllerBase
         playable.Environment = environment;
         playable.IncludedDigitalObjects = artefacts;
         playable.WorkVersions = [version];
+        playable.DigitalObjectType = Models.Archive.DigitalObjectType.PlayableObject;
 
         _dbContext.DigitalObjects.Add(playable);
         await _dbContext.SaveChangesAsync();
