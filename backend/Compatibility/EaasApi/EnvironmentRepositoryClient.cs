@@ -56,7 +56,7 @@ public class EnvironmentRepositoryClient : BaseEaasClient
 
         var outputFile = Path.Combine(outputFolder, imageId);
 
-        using (FileStream outputStream = new FileStream(outputFile, FileMode.CreateNew))
+        using (FileStream outputStream = new FileStream(outputFile, FileMode.Create))
         {
             await stream.CopyToAsync(outputStream);
         }
