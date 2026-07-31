@@ -7,6 +7,7 @@ using asec.Models;
 using asec.Models.Archive;
 using asec.Models.Digitalization;
 using asec.Models.Emulation;
+using asec.Compatibility.EaasApi;
 
 namespace asec.Controllers;
 
@@ -17,6 +18,7 @@ public class ExportController : ControllerBase
     private readonly ILogger<ExportController> _logger;
     private readonly EditClient _editClient;
     private readonly AsecDBContext _dbContext;
+    private readonly EnvironmentRepositoryClient _eaasEnvRepoClient;
 
     private readonly IMinioClient _localMinioClient;
     private readonly IMinioClient _archiveMinioClient;
@@ -32,6 +34,7 @@ public class ExportController : ControllerBase
     public ExportController(
             EditClient editClient,
             AsecDBContext dbContext,
+            EnvironmentRepositoryClient eaasEnvRepoClient,
             ILogger<ExportController> logger,
             IConfiguration configuration,
             [FromKeyedServices("LocalObjectStorage")] IMinioClient localMinioClient,
@@ -40,6 +43,7 @@ public class ExportController : ControllerBase
         _editClient = editClient;
         _logger = logger;
         _dbContext = dbContext;
+        _eaasEnvRepoClient = eaasEnvRepoClient;
 
         _localMinioClient = localMinioClient;
         _archiveMinioClient = archiveMinioClient;
@@ -107,17 +111,19 @@ public class ExportController : ControllerBase
     }
 
     [HttpPost("playable/{id}")]
-    public async Task<IActionResult> ExportPlayableObject(Guid guid, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> ExportPlayableObject(Guid id, CancellationToken cancellationToken = default)
     {
         var playableObject = _dbContext.DigitalObjects
             .Include(d => d.WorkVersions)
             .Include(d => d.PhysicalObject)
             .OfType<PlayableObject>()
-            .FirstOrDefault(a => a.Id == guid);
+            .FirstOrDefault(a => a.Id == id);
         if (playableObject == null)
         {
             return NotFound();
         }
+
+        await _dbContext.Entry(playableObject).Collection(d => d.IncludedDigitalObjects).LoadAsync(cancellationToken);
 
         await PreparePlayableObject(playableObject);
         var remoteId = await _editClient.AddOrUpdateDigitalObject(playableObject, cancellationToken);
@@ -135,39 +141,18 @@ public class ExportController : ControllerBase
 
     private async Task PreparePlayableObject(PlayableObject playableObject, CancellationToken cancellationToken = default)
     {
-        // TODO: this is currently identical to artefact preparation. We should merge those.
-        // This will involve moving at least ObjectId to the parent DigitalObject class, but that
-        // is probably sensible to do anyway.
+        // TODO: this is currently similar to artefact preparation. We might consider merging these.
 
         Directory.CreateDirectory(_localCacheDir);
 
-        // Push our local minio object to the remote/archive storage.
+        // Push our local image from EaaS object to the remote/archive storage.
+        _logger.LogInformation($"Downloading image {playableObject.ObjectId}");
+        var tmpFilename = await _eaasEnvRepoClient.DownloadImage(playableObject.ObjectId, _localCacheDir, cancellationToken);
 
-        var getTagsArgs = new GetObjectTagsArgs()
-            .WithBucket(_digitalObjectBucket)
-            .WithObject($"{_playableFolder}/{playableObject.ObjectId}");
-        var artefactTags = await _localMinioClient.GetObjectTagsAsync(getTagsArgs, cancellationToken);
-
-        var statArgs = new StatObjectArgs()
-            .WithBucket(_digitalObjectBucket)
-            .WithObject($"{_playableFolder}/{playableObject.ObjectId}");
-        var artefactStats = await _localMinioClient.StatObjectAsync(statArgs, cancellationToken);
-
-        var tmpFilename = Path.Combine(_localCacheDir, playableObject.FileName);
-
-        _logger.LogInformation($"Downloading artefact {playableObject.FileName} with {artefactTags.Tags.Count()} tags of size {artefactStats.Size} bytes from local storage.");
-        var getArgs = new GetObjectArgs()
-            .WithBucket(_digitalObjectBucket)
-            .WithObject($"{_playableFolder}/{playableObject.ObjectId}")
-            .WithFile(tmpFilename);
-        await _localMinioClient.GetObjectAsync(getArgs, cancellationToken);
-
-        _logger.LogInformation($"{_archiveMinioClient.Config.Secure}");
-
-        _logger.LogInformation($"Uploading artefact {playableObject.FileName} (cached at '{tmpFilename}') to remote storage.");
+        _logger.LogInformation($"Uploading artefact {playableObject.ObjectId} (cached at '{tmpFilename}') to remote storage.");
         var putArgs = new PutObjectArgs()
             .WithBucket(_archiveDigitalObjectBucket)
-            .WithTagging(artefactTags)
+            //.WithTagging(artefactTags)
             .WithObject($"{_archivePlayableFolder}/{playableObject.ObjectId}")
             .WithFileName(tmpFilename);
         // TODO: can we stream the data directly instead of creating a temporary file?
