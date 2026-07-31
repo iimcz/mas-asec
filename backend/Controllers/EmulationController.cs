@@ -70,10 +70,9 @@ public class EmulationController : ControllerBase
         await process.ChannelWriter.WriteAsync(BaseProcess.EmulationMessage.Quit);
         var result = await _processManager.FinishProcessAsync(id);
 
-        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.PlayableObject>().Include(p => p.WorkVersions).FirstOrDefaultAsync(p => p.Id == process.PackageId);
-        if (package == null)
+        var package = await _dbContext.DigitalObjects.OfType<Models.Emulation.PlayableObject>().Include(p => p.WorkVersions).ThenInclude(wv => wv.Paratexts).FirstOrDefaultAsync(p => p.Id == process.PackageId);
+        if (package == null || package.WorkVersions == null)
             return NotFound();
-        var version = package.WorkVersions?.FirstOrDefault();
 
         foreach (var videoFile in result.VideoFiles)
         {
@@ -103,6 +102,11 @@ public class EmulationController : ControllerBase
                     RecordingType = videoFile.Type,
                     Paratexts = [paratext]
                 };
+
+                foreach (var version in package.WorkVersions)
+                {
+                    version.Paratexts.Add(paratext);
+                }
 
                 var tags = new Dictionary<string, string>()
                 {
