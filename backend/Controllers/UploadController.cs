@@ -46,6 +46,7 @@ namespace asec.Controllers
         [HttpPost("start")]
         [Produces(typeof(UploadProcess))]
         [DisableRequestSizeLimit]
+        [Obsolete("This endpoint is deprecated and will be removed in future versions. Use the new digital object upload endpoint instead.")]
         public async Task<IActionResult> StartUploadProcess()
         {
             Request.Headers.TryGetValue("VersionId", out var versionId);
@@ -74,6 +75,7 @@ namespace asec.Controllers
         /// <returns>The created artefact</returns>
         [HttpPost("{processId}/finalize")]
         [Produces(typeof(ViewModels.Artefact))]
+        [Obsolete("This endpoint is deprecated and will be removed in future versions. Use the new digital object upload endpoint instead.")]
         public async Task<IActionResult> FinalizeArtefactUpload(string processId, [FromBody] ViewModels.ArtefactUpdate artefact)
         {
             var id = Guid.Parse(processId);

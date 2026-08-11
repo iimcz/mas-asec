@@ -23,6 +23,7 @@
     <PackageReference Include="RestSharp" Version="113.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.2" />
     <PackageReference Include="CSharpVitamins.ShortGuid" Version="2.0.0" />
+    <PackageReference Include="tusdotnet" Version="2.11.2" />
   </ItemGroup>
 
 </Project>

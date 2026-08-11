@@ -112,6 +112,20 @@ public class ParatextController : ControllerBase
         return Ok(ViewModels.Paratext.FromDBEntity(dbParatext));
     }
 
+    [HttpGet("{paratextId}/digitalobjects")]
+    [Produces(typeof(List<ViewModels.DigitalObject>))]
+    public async Task<IActionResult> GetDigitalObjects(string paratextId)
+    {
+        var id = Guid.Parse(paratextId);
+        var dbParatext = await _dbContext.Paratexts
+            .AsNoTracking()
+            .Include(p => p.DigitalObjects)
+            .FirstOrDefaultAsync(p => p.Id == id);
+        if (dbParatext == null)
+            return NotFound();
+        return Ok(dbParatext.DigitalObjects.Select(ViewModels.DigitalObject.FromDBEntity));
+    }
+
     /// <summary>
     /// Update the details of the specified paratext.
     /// </summary>

@@ -15,6 +15,7 @@ public record Paratext
     public DateTime ImportedAt { get; set; }
     public DateTime ExportedAt { get; set; }
     public bool CanExport { get; set; }
+    public List<string> DigitalObjectIds { get; set; }
 
     public static Paratext FromDBEntity(Models.Archive.Paratext paratext)
     {
@@ -32,7 +33,8 @@ public record Paratext
             ParatextType = paratext.ParatextType,
             ImportedAt = paratext.ImportedAt,
             ExportedAt = paratext.ExportedAt,
-            CanExport = paratext.CanExport
+            CanExport = paratext.CanExport,
+            DigitalObjectIds = paratext.DigitalObjects?.Select(o => o.Id.ToString()).ToList()
         };
     }
 }

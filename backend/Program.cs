@@ -50,8 +50,12 @@ builder.Services.AddControllers()
     .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.ConfigureOptions<DigitalizationToolsOptionsSetup>();
 builder.Services.ConfigureOptions<EmulatorOptionsSetup>();
+builder.Services.AddOptionsWithValidateOnStart<LocalObjectStorageConfiguration>()
+    .BindConfiguration("LocalObjectStorage")
+    .ValidateDataAnnotations();
 
 var app = builder.Build();
 
@@ -79,5 +83,6 @@ app.UseCors(config =>
 //app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+app.MapTusUpload();
 app.LoadPlatforms();
 app.Run();

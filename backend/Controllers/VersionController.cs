@@ -80,6 +80,25 @@ public class VersionController : ControllerBase
         return Ok(packages.Select(p => PlayableObject.FromDBEntity(p)));
     }
 
+    [HttpGet("{versionId}/digitalobjects")]
+    [Produces(typeof(IEnumerable<DigitalObject>))]
+    public async Task<IActionResult> GetDigitalObjects(string versionId)
+    {
+        var id = Guid.Parse(versionId);
+        var version = await _dbContext.WorkVersions
+            .AsNoTrackingWithIdentityResolution()
+            .Include(v => v.DigitalObjects)
+            .Include(v => v.Paratexts).ThenInclude(p => p.DigitalObjects)
+            .FirstOrDefaultAsync(v => v.Id == id);
+        if (version == null)
+            return NotFound();
+
+        var digitalObjects = version.DigitalObjects.Select(d => DigitalObject.FromDBEntity(d)).ToList();
+        digitalObjects.AddRange(version.Paratexts.SelectMany(p => p.DigitalObjects).Select(d => DigitalObject.FromDBEntity(d)));
+
+        return Ok(digitalObjects);
+    }
+
     [HttpGet("{versionId}/paratexts")]
     [Produces(typeof(IEnumerable<Paratext>))]
     public async Task<IActionResult> GetParatexts(string versionId)

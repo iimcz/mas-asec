@@ -31,6 +31,9 @@ public class DigitalObject
     public DateTime ImportedAt { get; set; } = DateTime.Now;
     public DateTime ExportedAt { get; set; } = DateTime.MinValue;
 
+    // Local DB data
+    public Guid ObjectId { get; set; }
+
     // Relationships
     public IList<WorkVersion> WorkVersions { get; set; }
     public IList<Paratext> Paratexts { get; set; }
