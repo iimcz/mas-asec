@@ -15,21 +15,15 @@ namespace asec.Controllers;
 [Route("/api/v1/paratexts")]
 public class ParatextController : ControllerBase
 {
-    private readonly string _bucketName;
-
     private readonly AsecDBContext _dbContext;
-    private readonly IMinioClient _minioClient;
     private readonly SearchClient _caSearchClient;
     private readonly ItemClient _caItemClient;
 
-    public ParatextController(AsecDBContext dbContext, [FromKeyedServices("LocalObjectStorage")] IMinioClient minioClient, SearchClient searchClient, ItemClient itemClient, IConfiguration configuration)
+    public ParatextController(AsecDBContext dbContext, SearchClient searchClient, ItemClient itemClient)
     {
         _dbContext = dbContext;
-        _minioClient = minioClient;
         _caSearchClient = searchClient;
         _caItemClient = itemClient;
-
-        _bucketName = configuration.GetSection("LocalObjectStorage").GetValue<string>("ParatextBucket");
     }
 
     /// <summary>
@@ -124,6 +118,39 @@ public class ParatextController : ControllerBase
         if (dbParatext == null)
             return NotFound();
         return Ok(dbParatext.DigitalObjects.Select(ViewModels.DigitalObject.FromDBEntity));
+    }
+
+    public sealed record CreateParatextCommand(ViewModels.Paratext Paratext, List<Guid> WorkVersions);
+
+    [HttpPost("")]
+    [Produces(typeof(ViewModels.Paratext))]
+    public async Task<IActionResult> CreateParatext([FromBody] CreateParatextCommand command)
+    {
+        var dbParatext = new Models.Archive.Paratext()
+        {
+            Label = command.Paratext.Label,
+            Language = command.Paratext.Language,
+            Date = command.Paratext.Date,
+            InternalNote = command.Paratext.InternalNote,
+            FilledOutBy = command.Paratext.FilledOutBy,
+            WebsiteUrl = command.Paratext.WebsiteUrl,
+            ParatextType = command.Paratext.ParatextType
+        };
+
+        var workVersions = await _dbContext.WorkVersions
+            .Where(p => command.WorkVersions.Contains(p.Id))
+            .ToListAsync();
+
+        if (workVersions.Count != command.WorkVersions.Count)
+        {
+            return BadRequest("One or more work versions not found");
+        }
+
+        dbParatext.WorkVersions = workVersions;
+
+        _dbContext.Paratexts.Add(dbParatext);
+        await _dbContext.SaveChangesAsync();
+        return Ok(ViewModels.Paratext.FromDBEntity(dbParatext));
     }
 
     /// <summary>
