@@ -32,7 +32,7 @@ public class DigitalObject
     public DateTime ExportedAt { get; set; } = DateTime.MinValue;
 
     // Local DB data
-    public Guid ObjectId { get; set; }
+    public string ObjectId { get; set; }
 
     // Relationships
     public IList<WorkVersion> WorkVersions { get; set; }

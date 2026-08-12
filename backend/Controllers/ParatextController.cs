@@ -134,7 +134,8 @@ public class ParatextController : ControllerBase
             InternalNote = command.Paratext.InternalNote,
             FilledOutBy = command.Paratext.FilledOutBy,
             WebsiteUrl = command.Paratext.WebsiteUrl,
-            ParatextType = command.Paratext.ParatextType
+            ParatextType = command.Paratext.ParatextType,
+            CanExport = true // Locally created paratexts can be exported
         };
 
         var workVersions = await _dbContext.WorkVersions
@@ -164,9 +165,15 @@ public class ParatextController : ControllerBase
     public async Task<IActionResult> UpdateParatext(string paratextId, [FromBody] ViewModels.Paratext paratext)
     {
         var id = Guid.Parse(paratextId);
+
         var dbParatext = await _dbContext.Paratexts.FindAsync(id);
         if (dbParatext == null)
             return NotFound();
+
+        if (!dbParatext.CanExport)
+        {
+            return BadRequest("Cannot update a paratext that cannot be exported");
+        }
 
         dbParatext.Label = paratext.Label;
         dbParatext.Language = paratext.Language;

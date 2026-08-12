@@ -7,8 +7,10 @@ using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
 using Minio.DataModel.Tags;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using tusdotnet;
 using tusdotnet.Interfaces;
 using tusdotnet.Models;
@@ -17,6 +19,12 @@ namespace asec.Extensions;
 
 public static class TusUploadExtensions
 {
+    private static JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter(new PascalCaseNamingPolicy()) }
+    };
+
     public sealed record DigitalObjectUploadMetadata
     {
         public string Label { get; init; }
@@ -50,6 +58,8 @@ public static class TusUploadExtensions
                 httpContext.RequestServices.GetRequiredService<IOptions<LocalObjectStorageConfiguration>>()
             );
 
+            var logger = httpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+
             return new DefaultTusConfiguration
             {
                 Store = new tusdotnet.Stores.TusDiskStore(services.StorageConfiguration.Value.CacheDir),
@@ -66,14 +76,12 @@ public static class TusUploadExtensions
 
                         try
                         {
-                            var digitalObjectInfo = JsonSerializer.Deserialize<DigitalObjectUploadMetadata>(metadata.GetString(Encoding.UTF8));
+                            var digitalObjectInfo = JsonSerializer.Deserialize<DigitalObjectUploadMetadata>(metadata.GetString(Encoding.UTF8), _serializerOptions);
                             if (digitalObjectInfo == null)
                             {
                                 context.FailRequest("Missing metadata for digitalObjectInfo");
                                 return;
                             }
-
-                            context.HttpContext.Items["digitalObjectInfo"] = digitalObjectInfo;
 
                             if (digitalObjectInfo.DigitalObjectType == DigitalObjectType.GameArtefact)
                             {
@@ -84,8 +92,6 @@ public static class TusUploadExtensions
                                 }
 
                                 var workVersion = await services.DbContext.WorkVersions.FindAsync(digitalObjectInfo.ArtefactMetadata.WorkVersion);
-                                context.HttpContext.Items["workVersion"] = workVersion;
-
                                 if (workVersion == null)
                                 {
                                     context.FailRequest($"WorkVersion with ID {digitalObjectInfo.ArtefactMetadata.WorkVersion} not found");
@@ -101,14 +107,19 @@ public static class TusUploadExtensions
                     },
                     OnFileCompleteAsync = async context =>
                     {
-                        var digitalObjectInfo = (DigitalObjectUploadMetadata)context.HttpContext.Items["digitalObjectInfo"]!;
-                        var workVersion = (WorkVersion)context.HttpContext.Items["workVersion"]!;
-                        services.DbContext.Attach(workVersion);
-
                         var file = await context.GetFileAsync();
+                        var metadata = await file.GetMetadataAsync(context.CancellationToken);
+                        var digitalObjectInfo = JsonSerializer.Deserialize<DigitalObjectUploadMetadata>(metadata["digitalObjectInfo"].GetString(Encoding.UTF8), _serializerOptions)!;
 
-                        if (digitalObjectInfo.DigitalObjectType == DigitalObjectType.GameArtefact) await CreateArtefact(file, digitalObjectInfo, workVersion, services);
-                        else await CreateDigitalObject(file, digitalObjectInfo, services);
+                        if (digitalObjectInfo.DigitalObjectType == DigitalObjectType.GameArtefact)
+                        {
+                            var workVersion = await services.DbContext.WorkVersions.FindAsync(digitalObjectInfo.ArtefactMetadata.WorkVersion);
+                            await CreateArtefact(file, digitalObjectInfo, workVersion, services);
+                        }
+                        else
+                        {
+                            await CreateDigitalObject(file, digitalObjectInfo, services);
+                        }
 
                         if (context.Store is ITusTerminationStore terminationStore)
                         {
@@ -155,7 +166,7 @@ public static class TusUploadExtensions
             Label = digitalObjectInfo.Label,
             Version = digitalObjectInfo.Version,
             FileName = digitalObjectInfo.FileName,
-            DigitalObjectType = DigitalObjectType.GameArtefact,
+            DigitalObjectType = digitalObjectInfo.DigitalObjectType,
             Format = "", // TODO: Grab from CA?
             FileSize = fileContent.Length,
             MediaInfoReport = await Linux.MediaInfo(["--Output=JSON", digitalObjectInfo.FileName]),
@@ -166,9 +177,9 @@ public static class TusUploadExtensions
         await services.DbContext.SaveChangesAsync();
     }
 
-    private static async Task<Guid> UploadToStorage(Stream fileStream, DigitalObjectUploadMetadata digitalObjectInfo, Services services)
+    private static async Task<string> UploadToStorage(Stream fileStream, DigitalObjectUploadMetadata digitalObjectInfo, Services services)
     {
-        var objectId = Guid.NewGuid();
+        var objectId = Guid.NewGuid().ToString();
         var tags = new Dictionary<string, string>()
         {
             { "Tag", digitalObjectInfo.DigitalObjectType.ToString() },
@@ -186,6 +197,7 @@ public static class TusUploadExtensions
 
         var args = new PutObjectArgs()
                 .WithStreamData(fileStream)
+                .WithObjectSize(fileStream.Length)
                 .WithBucket(services.StorageConfiguration.Value.DigitalObjectBucket)
                 .WithTagging(new Tagging(tags, true))
                 .WithObject($"{folderName}/{objectId}");

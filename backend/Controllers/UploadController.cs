@@ -94,7 +94,7 @@ namespace asec.Controllers
                 { "Tag", "Artefact" },
                 { "DataType", "File" }
             };
-            var objectId = Guid.NewGuid();
+            var objectId = Guid.NewGuid().ToString();
             var args = new PutObjectArgs()
                 .WithFileName(processResult.Filename)
                 .WithBucket(_minioDigitalObjectBucket)

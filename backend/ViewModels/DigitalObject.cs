@@ -1,4 +1,6 @@
-﻿namespace asec.ViewModels;
+﻿using asec.Models.Archive;
+
+namespace asec.ViewModels;
 
 public class DigitalObject
 {
@@ -7,7 +9,7 @@ public class DigitalObject
     public string Version { get; set; }
     public string FileName { get; set; }
     public string RepoUrl { get; set; }
-    public string DigitalObjectType { get; set; }
+    public DigitalObjectType DigitalObjectType { get; set; }
     public string Format { get; set; }
     public long FileSize { get; set; }
     public string MediaInfoReport { get; set; }
@@ -24,7 +26,7 @@ public class DigitalObject
             Version = digitalObject.Version,
             FileName = digitalObject.FileName,
             RepoUrl = digitalObject.RepoUrl,
-            DigitalObjectType = digitalObject.DigitalObjectType.ToString(),
+            DigitalObjectType = digitalObject.DigitalObjectType,
             Format = digitalObject.Format,
             FileSize = digitalObject.FileSize,
             MediaInfoReport = digitalObject.MediaInfoReport,

@@ -3,6 +3,8 @@ using asec.Extensions;
 using asec.Models;
 using Microsoft.EntityFrameworkCore;
 using Minio;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +49,12 @@ builder.Services.AddKeyedMinio("ArchiveObjectStorage", options =>
 builder.Services.AddHttpClient();
 builder.Services.AddAsecServices();
 builder.Services.AddControllers()
-    .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
+    .AddJsonOptions(opt =>
+    {
+        opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(new PascalCaseNamingPolicy()));
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -78,7 +85,8 @@ app.UseCors(config =>
     config
     .AllowAnyHeader()
     .AllowAnyMethod()
-    .AllowAnyOrigin();
+    .AllowAnyOrigin()
+    .WithExposedHeaders(tusdotnet.Helpers.CorsHelper.GetExposedHeaders());
 });
 //app.UseHttpsRedirection();
 app.UseAuthorization();
