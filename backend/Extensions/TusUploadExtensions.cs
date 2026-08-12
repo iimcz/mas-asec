@@ -136,6 +136,7 @@ public static class TusUploadExtensions
     private static async Task CreateArtefact(ITusFile file, DigitalObjectUploadMetadata digitalObjectInfo, WorkVersion workVersion, Services services)
     {
         var fileContent = await file.GetContentAsync(default);
+        var filePath = Path.Combine(services.StorageConfiguration.Value.CacheDir, file.Id);
 
         var artefact = new Artefact
         {
@@ -145,7 +146,7 @@ public static class TusUploadExtensions
             DigitalObjectType = DigitalObjectType.GameArtefact,
             Format = "", // TODO: Grab from CA?
             FileSize = fileContent.Length,
-            MediaInfoReport = await Linux.MediaInfo(["--Output=JSON", digitalObjectInfo.FileName]),
+            MediaInfoReport = await Linux.MediaInfo(["--Output=JSON", filePath]),
             ObjectId = await UploadToStorage(fileContent, digitalObjectInfo, services),
             ArchivationDate = DateTime.Now,
             Type = digitalObjectInfo.ArtefactMetadata.ArtefactType,
@@ -160,6 +161,7 @@ public static class TusUploadExtensions
     private static async Task CreateDigitalObject(ITusFile file, DigitalObjectUploadMetadata digitalObjectInfo, Services services)
     {
         var fileContent = await file.GetContentAsync(default);
+        var filePath = Path.Combine(services.StorageConfiguration.Value.CacheDir, file.Id);
 
         var digitalObject = new DigitalObject
         {
@@ -169,7 +171,7 @@ public static class TusUploadExtensions
             DigitalObjectType = digitalObjectInfo.DigitalObjectType,
             Format = "", // TODO: Grab from CA?
             FileSize = fileContent.Length,
-            MediaInfoReport = await Linux.MediaInfo(["--Output=JSON", digitalObjectInfo.FileName]),
+            MediaInfoReport = await Linux.MediaInfo(["--Output=JSON", filePath]),
             ObjectId = await UploadToStorage(fileContent, digitalObjectInfo, services),
         };
 
