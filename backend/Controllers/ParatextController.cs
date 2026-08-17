@@ -120,40 +120,6 @@ public class ParatextController : ControllerBase
         return Ok(dbParatext.DigitalObjects.Select(ViewModels.DigitalObject.FromDBEntity));
     }
 
-    public sealed record CreateParatextCommand(ViewModels.Paratext Paratext, List<Guid> WorkVersions);
-
-    [HttpPost("")]
-    [Produces(typeof(ViewModels.Paratext))]
-    public async Task<IActionResult> CreateParatext([FromBody] CreateParatextCommand command)
-    {
-        var dbParatext = new Models.Archive.Paratext()
-        {
-            Label = command.Paratext.Label,
-            Language = command.Paratext.Language,
-            Date = command.Paratext.Date,
-            InternalNote = command.Paratext.InternalNote,
-            FilledOutBy = command.Paratext.FilledOutBy,
-            WebsiteUrl = command.Paratext.WebsiteUrl,
-            ParatextType = command.Paratext.ParatextType,
-            CanExport = true // Locally created paratexts can be exported
-        };
-
-        var workVersions = await _dbContext.WorkVersions
-            .Where(p => command.WorkVersions.Contains(p.Id))
-            .ToListAsync();
-
-        if (workVersions.Count != command.WorkVersions.Count)
-        {
-            return BadRequest("One or more work versions not found");
-        }
-
-        dbParatext.WorkVersions = workVersions;
-
-        _dbContext.Paratexts.Add(dbParatext);
-        await _dbContext.SaveChangesAsync();
-        return Ok(ViewModels.Paratext.FromDBEntity(dbParatext));
-    }
-
     /// <summary>
     /// Update the details of the specified paratext.
     /// </summary>

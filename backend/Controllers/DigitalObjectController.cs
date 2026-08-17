@@ -138,6 +138,5 @@ public class DigitalObjectController(AsecDBContext dbContext, [FromKeyedServices
         return Ok();
     }
 
-    public record LinkDigitalObjectCommand(string ParatextId);
-    public record CreateDigitalObjectCommand(ViewModels.DigitalObject Metadata, IFormFile File);
+    public sealed record LinkDigitalObjectCommand(string ParatextId);
 }
