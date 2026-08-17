@@ -63,6 +63,25 @@ public class SearchClient : BaseCollectiveAccessClient
         return result.Data.Search.Result;
     }
 
+    public async Task<IList<DigitalObject>> GetDigitalObjects(string searchTerm = null, CancellationToken cancellationToken = default)
+    {
+        var request = new GraphQLRequest<SearchVars>()
+        {
+            Query = SEARCH_QUERY,
+            Variables = new()
+            {
+                Search = searchTerm ?? "*",
+                Table = Tables.Objects,
+                Types = new() { Types.DigitalObject },
+                Bundles = new() { BundleCodes.ObjectLabel, BundleCodes.ObjectId, BundleCodes.ObjectFilledOutBy }
+            }
+        };
+
+        var result = await PostAuthenticatedAsync<SearchVars, SearchRoot<DigitalObject>>(ENDPOINT, request, cancellationToken);
+
+        return result.Data.Search.Result;
+    }
+
     public class SearchVars : GraphQLAuthVars
     {
         // TODO: add start and count for pagination support

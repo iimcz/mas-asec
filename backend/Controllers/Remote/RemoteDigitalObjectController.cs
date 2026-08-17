@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using asec.Compatibility.CollectiveAccess;
+using asec.Compatibility.CollectiveAccess.Models;
+using asec.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 
 namespace asec.Controllers.Remote;
 
@@ -6,11 +9,25 @@ namespace asec.Controllers.Remote;
 [Route("/api/v1/remotedigitalobjects")]
 public class RemoteDigitalObjectController : ControllerBase
 {
+    private readonly SearchClient _searchClient;
+
+    public RemoteDigitalObjectController(SearchClient searchClient)
+    {
+        _searchClient = searchClient;
+    }
+
     [HttpGet("")]
     [Produces(typeof(List<ViewModels.RemoteDigitalObject>))]
     public async Task<IActionResult> ListRemoteDigitalObjects(string searchTerm)
     {
-        throw new NotImplementedException();
+        var caDigiObjects = await _searchClient.GetDigitalObjects(searchTerm);
+        // TODO: exception handling / handle failed GetDigitalObjects
+        return Ok(caDigiObjects.Select(d => new RemoteDigitalObject() {
+            Id = d.Id,
+            Idno = d.Idno,
+            Label = d.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel),
+            Note = d.Bundles.GetOptionalBundleValue(BundleCodes.ObjectInternalNote)
+        }));
     }
 
     [HttpGet("{id:int}")]

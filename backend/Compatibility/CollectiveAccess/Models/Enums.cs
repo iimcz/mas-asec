@@ -22,6 +22,7 @@ public struct BundleCodes
     public static readonly string OccurrenceWebsiteUrl             = "ca_occurrences.website_url";
 
     public static readonly string ObjectLabel                      = "ca_objects.preferred_labels";
+    public static readonly string ObjectId                         = "ca_objects.object_id";
     public static readonly string ObjectDescription                = "ca_objects.description";
     public static readonly string ObjectDate                       = "ca_objects.date";
     public static readonly string ObjectInternalNote               = "ca_objects.internal_notes";
