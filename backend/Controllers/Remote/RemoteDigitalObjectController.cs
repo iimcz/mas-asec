@@ -11,11 +11,13 @@ public class RemoteDigitalObjectController : ControllerBase
 {
     private readonly SearchClient _searchClient;
     private readonly EditClient _editClient;
+    private readonly ItemClient _itemClient;
 
-    public RemoteDigitalObjectController(SearchClient searchClient, EditClient editClient)
+    public RemoteDigitalObjectController(SearchClient searchClient, EditClient editClient, ItemClient itemClient)
     {
         _searchClient = searchClient;
         _editClient = editClient;
+        _itemClient = itemClient;
     }
 
     [HttpGet("")]
@@ -36,7 +38,13 @@ public class RemoteDigitalObjectController : ControllerBase
     [Produces(typeof(ViewModels.RemoteDigitalObject))]
     public async Task<IActionResult> GetRemoteDigitalObjects(int id)
     {
-        throw new NotImplementedException();
+        var digitalObject = await _itemClient.GetDigitalObject(id);
+        return Ok(new RemoteDigitalObject() {
+            Id = digitalObject.Id,
+            Idno = digitalObject.Idno,
+            Label = digitalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectLabel),
+            Note = digitalObject.Bundles.GetOptionalBundleValue(BundleCodes.ObjectInternalNote)
+        });
     }
 
     [HttpPost("{digitalObjectId:int}/link")]

@@ -11,6 +11,7 @@ public struct BundleCodes
     public static readonly string OccurrenceSystem                 = "ca_occurrences.system";
     public static readonly string OccurrenceCopyProtection         = "ca_occurrences.copy_protection";
     public static readonly string OccurrenceCuratorialDescription  = "ca_occurrences.description_curatorial";
+
     public static readonly string OccurrenceRelLeftId              = "ca_occurrences_x_occurrences.occurrence_left_id";
 
     public static readonly string OccurrenceLanguage               = "ca_occurrences.language";
@@ -20,6 +21,9 @@ public struct BundleCodes
     public static readonly string OccurrenceIdentificationNumber   = "ca_occurrences.identification_number_external";
     public static readonly string OccurrenceParatextType           = "ca_occurrences.paratext_type";
     public static readonly string OccurrenceWebsiteUrl             = "ca_occurrences.website_url";
+
+    public static readonly string ObjectOccurrenceRelOccurrenceId  = "ca_objects_x_occurrences.occurrence_id";
+    public static readonly string ObjectOccurrenceRelObjectId      = "ca_objects_x_occurrences.object_id";
 
     public static readonly string ObjectLabel                      = "ca_objects.preferred_labels";
     public static readonly string ObjectId                         = "ca_objects.object_id";
@@ -35,6 +39,11 @@ public struct BundleCodes
     public static readonly string ObjectLocation                   = "ca_objects.location";
     public static readonly string ObjectSize                       = "ca_objects.size";
     public static readonly string ObjectOwner                      = "ca_objects.owner";
+    public static readonly string ObjectDigitalObjectType                = "ca_objects.digital_object_type";
+    public static readonly string ObjectFormat                           = "ca_objects.format";
+    public static readonly string ObjectVersion                          = "ca_objects.version_do";
+    public static readonly string ObjectMediaInfoReport                  = "ca_objects.quality";
+    public static readonly string ObjectFileName                         = "ca_objects.file_name";
 
     public static readonly string ListItemsPreferredLabel           = "ca_list_items.preferred_labels";
     public static readonly string ListItemsItemValue                = "ca_list_items.item_value";
@@ -62,6 +71,7 @@ public struct Tables
 {
     public static readonly string Occurrences                      = "ca_occurrences";
     public static readonly string OccurrencesXOccurrences          = "ca_occurrences_x_occurrences";
+    public static readonly string ObjectssXOccurrences             = "ca_objects_x_occurrences";
     public static readonly string Objects                          = "ca_objects";
 }
 
@@ -80,6 +90,7 @@ public struct RelationTypes
     public static readonly string WorkVersionRepresentParatext     = "represented_by";
     public static readonly string WorkVersionContextualizeParatext = "contextualized_by";
     public static readonly string ParatextManifestPhysicalObject   = "manifestation_of";
+    public static readonly string DigitalObjectManifestParatext    = "manifestation_of";
 }
 
 public struct SubjectRelationshipTypes

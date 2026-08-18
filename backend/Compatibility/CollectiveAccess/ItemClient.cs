@@ -32,6 +32,25 @@ public class ItemClient : BaseCollectiveAccessClient
     {
     }
 
+    private async Task<IList<MinRelationship>> GetParatextDigitalObjectRelationships(int id, CancellationToken cancellationToken = default)
+    {
+        var request = new GraphQLRequest<GetRelationshipsArgs>()
+        {
+            Query = RELATIONSHIPS_QUERY,
+            Variables = new()
+            {
+                Id = id,
+                Table = Tables.Objects,
+                Target = Tables.Occurrences,
+                RelTypes = new() { RelationTypes.DigitalObjectManifestParatext },
+                TgTypes = new() { Types.Paratext }
+            }
+        };
+
+        var result = await PostAuthenticatedAsync<GetRelationshipsArgs, GetRelationshipsRoot>(ENDPOINT, request, cancellationToken);
+        return result.Data.GetRelationships.Relationships;
+    }
+
     private async Task<IList<MinRelationship>> GetParatextPhysicalObjectRelationships(int id, CancellationToken cancellationToken = default(CancellationToken))
     {
         var request = new GraphQLRequest<GetRelationshipsArgs>()
@@ -247,6 +266,67 @@ public class ItemClient : BaseCollectiveAccessClient
         return paratexts;
     }
 
+    public async Task<IList<DigitalObject>> GetDigitalObjectsForParatext(Paratext paratext, CancellationToken cancellationToken = default)
+        => await GetDigitalObjectsForParatext(paratext.Id, cancellationToken);
+    public async Task<IList<DigitalObject>> GetDigitalObjectsForParatext(int id, CancellationToken cancellationToken = default)
+    {
+        var relationships = await GetParatextDigitalObjectRelationships(id, cancellationToken);
+
+        var relDataRequest = new GraphQLRequest<GetArgs>()
+        {
+            Query = GET_QUERY,
+            Variables = new()
+            {
+                Table = Tables.ObjectssXOccurrences,
+                Bundles = new() { BundleCodes.ObjectOccurrenceRelObjectId }
+            }
+        };
+
+        var objectIds = new List<int>();
+        foreach (var rel in relationships)
+        {
+            relDataRequest.Variables.Id = rel.Id;
+            var response = await PostAuthenticatedAsync<GetArgs, GetRoot<Relationship>>(ENDPOINT, relDataRequest, cancellationToken);
+
+            if (!int.TryParse(response.Data.Get.Bundles[0].Values[0].Value, out int otherId))
+            {
+                // invalid id, skip
+                continue;
+            }
+
+            objectIds.Add(otherId);
+        }
+
+        var objectRequest = new GraphQLRequest<GetArgs>()
+        {
+            Query = GET_QUERY,
+            Variables = new()
+            {
+                Table = Tables.Objects,
+                Bundles = new() {
+                    BundleCodes.ObjectLabel,
+                    BundleCodes.ObjectVersion,
+                    BundleCodes.ObjectFileName,
+                    BundleCodes.ObjectFormat,
+                    BundleCodes.ObjectMediaInfoReport,
+                    BundleCodes.ObjectDigitalObjectType,
+                    BundleCodes.ObjectFilledOutBy,
+                    BundleCodes.ObjectInternalNote
+                }
+            }
+        };
+
+        var objects = new List<DigitalObject>();
+        foreach (var objId in objectIds)
+        {
+            objectRequest.Variables.Id = objId;
+            var response = await PostAuthenticatedAsync<GetArgs, GetRoot<DigitalObject>>(ENDPOINT, objectRequest, cancellationToken);
+            objects.Add(response.Data.Get);
+        }
+
+        return objects;
+    }
+
     public async Task<IList<PhysicalObject>> GetPhysicalObjectsForParatext(Paratext paratext, CancellationToken cancellationToken = default(CancellationToken))
         => await GetPhysicalObjectsForParatext(paratext.Id, cancellationToken);
     public async Task<IList<PhysicalObject>> GetPhysicalObjectsForParatext(int id, CancellationToken cancellationToken = default(CancellationToken))
@@ -341,6 +421,32 @@ public class ItemClient : BaseCollectiveAccessClient
             throw new ApplicationException(response?.Errors?.ToString());
         }
 
+        return response.Data.Get;
+    }
+
+    public async Task<DigitalObject> GetDigitalObject(int id, CancellationToken cancellationToken = default)
+    {
+        var request = new GraphQLRequest<GetArgs>()
+        {
+            Query = GET_QUERY,
+            Variables = new()
+            {
+                Id = id,
+                Table = Tables.Objects,
+                Bundles = new() {
+                    BundleCodes.ObjectLabel,
+                    BundleCodes.ObjectVersion,
+                    BundleCodes.ObjectFileName,
+                    BundleCodes.ObjectFormat,
+                    BundleCodes.ObjectMediaInfoReport,
+                    BundleCodes.ObjectDigitalObjectType,
+                    BundleCodes.ObjectFilledOutBy,
+                    BundleCodes.ObjectInternalNote
+                }
+            }
+        };
+
+        var response = await PostAuthenticatedAsync<GetArgs, GetRoot<DigitalObject>>(ENDPOINT, request, cancellationToken);
         return response.Data.Get;
     }
 

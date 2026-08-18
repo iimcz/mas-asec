@@ -73,7 +73,7 @@ public class SearchClient : BaseCollectiveAccessClient
                 Search = searchTerm ?? "*",
                 Table = Tables.Objects,
                 Types = new() { Types.DigitalObject },
-                Bundles = new() { BundleCodes.ObjectLabel, BundleCodes.ObjectId, BundleCodes.ObjectFilledOutBy }
+                Bundles = new() { BundleCodes.ObjectLabel, BundleCodes.ObjectId, BundleCodes.ObjectFilledOutBy, BundleCodes.ObjectInternalNote }
             }
         };
 
