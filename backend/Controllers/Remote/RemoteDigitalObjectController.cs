@@ -10,10 +10,12 @@ namespace asec.Controllers.Remote;
 public class RemoteDigitalObjectController : ControllerBase
 {
     private readonly SearchClient _searchClient;
+    private readonly EditClient _editClient;
 
-    public RemoteDigitalObjectController(SearchClient searchClient)
+    public RemoteDigitalObjectController(SearchClient searchClient, EditClient editClient)
     {
         _searchClient = searchClient;
+        _editClient = editClient;
     }
 
     [HttpGet("")]
@@ -40,13 +42,21 @@ public class RemoteDigitalObjectController : ControllerBase
     [HttpPost("{digitalObjectId:int}/link")]
     public async Task<IActionResult> LinkRemoteDigitalObject(int digitalObjectId, [FromBody] LinkRemoteDigitalObjectCommand linkCommand)
     {
-        throw new NotImplementedException();
+        var result = await _editClient.LinkObjectManifestationToOccurrance(digitalObjectId, linkCommand.RemoteParatextId);
+        if (result) return Ok();
+
+        // TODO: better error handling?
+        throw new ApplicationException("Failed to link object!");
     }
 
     [HttpPost("{digitalObjectId:int}/unlink")]
     public async Task<IActionResult> UnlinkRemoteDigitalObject(int digitalObjectId, [FromBody] LinkRemoteDigitalObjectCommand linkCommand)
     {
-        throw new NotImplementedException();
+        var result = await _editClient.UnlinkObjectManifestationToOccurrence(digitalObjectId, linkCommand.RemoteParatextId);
+        if (result) return Ok();
+
+        // TODO: better error handling?
+        throw new ApplicationException("Failed to unlink object!");
     }
 
     public sealed record LinkRemoteDigitalObjectCommand(int RemoteParatextId);

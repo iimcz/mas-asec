@@ -25,6 +25,40 @@ public class EditClient : BaseCollectiveAccessClient
             }
         }
     """;
+    private const string ADD_RELATIONSHIP_QUERY = """
+        mutation add_rel($jwt: String, $subject: String, $subjectId: Int, $target: String, $targetId: Int, $relType: String) {
+            addRelationship(
+                jwt: $jwt
+                subject: $subject
+                subjectId: $subjectId
+                target: $target
+                targetId: $targetId
+                relationshipType: $relType
+            ) {
+                id
+                errors { bundle, code, idno, message }
+                info { bundle, code, idno, message }
+                warnings { bundle, code, idno, message }
+            }
+        }
+    """;
+    private const string DEL_RELATIONSHIP_QUERY = """
+        mutation del_rel($jwt: String, $subject: String, $subjectId: Int, $target: String, $targetId: Int, $relType: String) {
+            deleteRelationship(
+                jwt: $jwt
+                subject: $subject
+                subjectId: $subjectId
+                target: $target
+                targetId: $targetId
+                relationshipType: $relType
+            ) {
+                id
+                warnings { bundle, code, idno, message }
+                info { bundle, code, idno, message }
+                errors { bundle, code, idno, message }
+            }
+        }
+    """;
     private const string ENDPOINT = "service.php/edit";
     private readonly ILogger<EditClient> _logger;
 
@@ -32,6 +66,67 @@ public class EditClient : BaseCollectiveAccessClient
     {
         _logger = logger;
     }
+
+    public async Task<bool> LinkObjectManifestationToOccurrance(int objectId, int occurrenceId, CancellationToken cancellationToken = default)
+    {
+        var request = new GraphQLRequest<AddRelationshipArgs>() {
+            Query = ADD_RELATIONSHIP_QUERY,
+            Variables = new() {
+                Subject = Tables.Objects,
+                SubjectId = objectId,
+                Target = Tables.Occurrences,
+                TargetId = occurrenceId,
+                RelType = SubjectRelationshipTypes.ManifestationOf
+            }
+        };
+        var response = await PostAuthenticatedAsync<AddRelationshipArgs, AddRelationshipRoot>(ENDPOINT, request, cancellationToken);
+
+        if (response.Data.AddRelationship.Info.Count > 0)
+        {
+            _logger.LogInformation(response.Data.AddRelationship.Info.ToString());
+        }
+        if (response.Data.AddRelationship.Warnings.Count > 0)
+        {
+            _logger.LogWarning(response.Data.AddRelationship.Warnings.ToString());
+        }
+        if (response.Data.AddRelationship.Errors.Count > 0)
+        {
+            _logger.LogError(response.Data.AddRelationship.Errors.ToString());
+        }
+
+        return response.Data.AddRelationship.Errors.IsNullOrEmpty();
+    }
+
+    public async Task<bool> UnlinkObjectManifestationToOccurrence(int objectId, int occurrenceId, CancellationToken cancellationToken = default)
+    {
+        var request = new GraphQLRequest<DelRelationshipArgs>() {
+            Query = DEL_RELATIONSHIP_QUERY,
+            Variables = new() {
+                Subject = Tables.Objects,
+                SubjectId = objectId,
+                Target = Tables.Occurrences,
+                TargetId = occurrenceId,
+                RelType = SubjectRelationshipTypes.ManifestationOf
+            }
+        };
+        var response = await PostAuthenticatedAsync<DelRelationshipArgs, DelRelationshipRoot>(ENDPOINT, request, cancellationToken);
+
+        if (response.Data.DeleteRelationship.Info.Count > 0)
+        {
+            _logger.LogInformation(response.Data.DeleteRelationship.Info.ToString());
+        }
+        if (response.Data.DeleteRelationship.Warnings.Count > 0)
+        {
+            _logger.LogWarning(response.Data.DeleteRelationship.Warnings.ToString());
+        }
+        if (response.Data.DeleteRelationship.Errors.Count > 0)
+        {
+            _logger.LogError(response.Data.DeleteRelationship.Errors.ToString());
+        }
+
+        return response.Data.DeleteRelationship.Errors.IsNullOrEmpty();
+    }
+
 
     public async Task<int> AddOrUpdateParatext(asec.Models.Archive.Paratext paratext, CancellationToken cancellationToken = default(CancellationToken))
     {
@@ -291,6 +386,53 @@ public class EditClient : BaseCollectiveAccessClient
     }
 
     public class AddData
+    {
+        public List<int> Id { get; set; }
+        public JsonArray Errors { get; set; }
+        public JsonArray Warnings { get; set; }
+        public JsonArray Info { get; set; }
+    }
+
+    // TODO: the following classes are basically just repeats of above. Figure out
+    // a way to collapse/reuse the classes better.
+
+    public class AddRelationshipArgs : GraphQLAuthVars
+    {
+        public string Subject { get; set; }
+        public int SubjectId { get; set; }
+        public string Target { get; set; }
+        public int TargetId { get; set; }
+        public string RelType { get; set; }
+    }
+
+    public class AddRelationshipRoot
+    {
+        public AddRelationshipData AddRelationship { get; set; }
+    }
+
+    public class AddRelationshipData
+    {
+        public List<int> Id { get; set; }
+        public JsonArray Errors { get; set; }
+        public JsonArray Warnings { get; set; }
+        public JsonArray Info { get; set; }
+    }
+
+    public class DelRelationshipArgs : GraphQLAuthVars
+    {
+        public string Subject { get; set; }
+        public int SubjectId { get; set; }
+        public string Target { get; set; }
+        public int TargetId { get; set; }
+        public string RelType { get; set; }
+    }
+
+    public class DelRelationshipRoot
+    {
+        public DelRelationshipData DeleteRelationship { get; set; }
+    }
+
+    public class DelRelationshipData
     {
         public List<int> Id { get; set; }
         public JsonArray Errors { get; set; }
