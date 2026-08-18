@@ -30,6 +30,61 @@ public class ArtefactController : ControllerBase
         _minioArtefactFolder = section.GetValue<string>("ArtefactFolder");
     }
 
+    [HttpGet("")]
+    [Produces(typeof(List<ViewModels.Artefact>))]
+    public async Task<IActionResult> ListArtefacts()
+    {
+        var artefacts = await _dbContext.DigitalObjects
+        .OfType<Artefact>()
+        .AsNoTracking()
+        .ToListAsync();
+
+        return Ok(artefacts.Select(ViewModels.Artefact.FromDBEntity));
+    }
+
+    [HttpPost("{artefactId}/link")]
+    [Produces(typeof(ViewModels.Artefact))]
+    public async Task<IActionResult> LinkArtefact(string artefactId, [FromBody] LinkArtefactCommand linkCommand)
+    {
+        var id = Guid.Parse(artefactId);
+        var versionId = Guid.Parse(linkCommand.VersionId);
+
+        var artefact = await _dbContext.DigitalObjects.OfType<Artefact>().FirstOrDefaultAsync(a => a.Id == id);
+        if (artefact == null)
+            return NotFound();
+        await _dbContext.Entry(artefact).Collection(a => a.WorkVersions).LoadAsync();
+        var version = await _dbContext.WorkVersions.FindAsync(versionId);
+        if (version == null)
+            return NotFound();
+
+        artefact.WorkVersions.Add(version);
+        await _dbContext.SaveChangesAsync();
+        return Ok(ViewModels.Artefact.FromDBEntity(artefact));
+    }
+
+    [HttpPost("{artefactId}/unlink")]
+    [Produces(typeof(ViewModels.Artefact))]
+    public async Task<IActionResult> UnlinkArtefact(string artefactId, [FromBody] LinkArtefactCommand linkCommand)
+    {
+        var id = Guid.Parse(artefactId);
+        var versionId = Guid.Parse(linkCommand.VersionId);
+
+        var artefact = await _dbContext.DigitalObjects.OfType<Artefact>().FirstOrDefaultAsync(a => a.Id == id);
+        if (artefact == null)
+            return NotFound();
+        await _dbContext.Entry(artefact).Collection(a => a.WorkVersions).LoadAsync();
+        var version = await _dbContext.WorkVersions.FindAsync(versionId);
+        if (version == null)
+            return NotFound();
+
+        if (!artefact.WorkVersions.Contains(version))
+            return BadRequest();
+
+        artefact.WorkVersions.Remove(version);
+        await _dbContext.SaveChangesAsync();
+        return Ok(ViewModels.Artefact.FromDBEntity(artefact));
+    }
+
     /// <summary>
     /// Gets the specified artefact's details.
     /// </summary>
@@ -115,4 +170,6 @@ public class ArtefactController : ControllerBase
 
         return Ok(ViewModels.Artefact.FromDBEntity(artefact));
     }
+
+    public sealed record LinkArtefactCommand(string VersionId);
 }
